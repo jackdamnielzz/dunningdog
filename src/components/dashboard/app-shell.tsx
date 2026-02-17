@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { APP_NAME } from "@/lib/constants";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -22,8 +22,14 @@ export function AppShell({ children }: AppShellProps) {
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-cyan-50">
       <header className="border-b border-emerald-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-lg font-semibold text-zinc-900">
-            {APP_NAME}
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/dunningdog-logo.png"
+              alt="DunningDog logo"
+              width={168}
+              height={44}
+              className="h-7 w-auto"
+            />
           </Link>
           <nav className="flex items-center gap-1 rounded-lg bg-zinc-100 p-1">
             {navItems.map((item) => (

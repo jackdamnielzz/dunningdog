@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,14 @@ export default function Home() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_20%_20%,#d9f5ee_0%,transparent_30%),radial-gradient(circle_at_90%_10%,#e2f4ff_0%,transparent_25%),linear-gradient(180deg,#f8fdfb_0%,#f6f8fb_100%)]">
       <main className="mx-auto max-w-6xl px-6 py-14">
         <header className="mb-16 flex items-center justify-between">
-          <span className="text-lg font-semibold text-zinc-900">DunningDog</span>
+          <Image
+            src="/dunningdog-logo.png"
+            alt="DunningDog logo"
+            width={168}
+            height={44}
+            className="h-8 w-auto"
+            priority
+          />
           <div className="flex items-center gap-3">
             <Link
               href="/pricing"
