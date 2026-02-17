@@ -1,0 +1,683 @@
+openapi: 3.0.3
+info:
+  title: DunningDog API
+  version: 1.0.0
+  description: Stable v1 API contracts for DunningDog MVP.
+  license:
+    name: Proprietary
+    url: https://dunningdog.com/legal/api-license
+x-doc-owner: Founding Engineer
+x-doc-status: Draft v1
+x-doc-last-reviewed: 2026-02-17
+x-doc-linked-adrs:
+  - ../adr/ADR-0001-tech-stack.md
+  - ../adr/ADR-0002-multi-tenant-model.md
+  - ../adr/ADR-0003-job-orchestration.md
+x-doc-linked-api-references:
+  - ./webhook-contracts.md
+  - ./error-model.md
+servers:
+  - url: https://api.dunningdog.com
+    description: Production
+  - url: https://api-preview.dunningdog.com
+    description: Preview
+security:
+  - bearerAuth: []
+paths:
+  /api/stripe/connect/start:
+    post:
+      summary: Start Stripe OAuth connect flow
+      operationId: startStripeConnect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workspaceId]
+              properties:
+                workspaceId:
+                  type: string
+      responses:
+        "200":
+          description: OAuth redirect URL generated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [redirectUrl, state]
+                properties:
+                  redirectUrl:
+                    type: string
+                    format: uri
+                  state:
+                    type: string
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "429":
+          $ref: "#/components/responses/TooManyRequestsProblem"
+        default:
+          $ref: "#/components/responses/ProblemResponse"
+
+  /api/stripe/connect/callback:
+    get:
+      summary: Handle Stripe OAuth callback
+      operationId: stripeConnectCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Stripe account connected
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [connectedAccount, workspace]
+                properties:
+                  connectedAccount:
+                    $ref: "#/components/schemas/ConnectedStripeAccount"
+                  workspace:
+                    $ref: "#/components/schemas/Workspace"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        default:
+          $ref: "#/components/responses/ProblemResponse"
+
+  /api/webhooks/stripe:
+    post:
+      summary: Receive Stripe webhook events
+      operationId: receiveStripeWebhook
+      security: []
+      parameters:
+        - name: Stripe-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Raw Stripe event payload
+      responses:
+        "200":
+          description: Event accepted or duplicate safely ignored
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [received, eventId, duplicate]
+                properties:
+                  received:
+                    type: boolean
+                  eventId:
+                    type: string
+                  duplicate:
+                    type: boolean
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "429":
+          $ref: "#/components/responses/TooManyRequestsProblem"
+        default:
+          $ref: "#/components/responses/ProblemResponse"
+
+  /api/dashboard/summary:
+    get:
+      summary: Get dashboard summary metrics
+      operationId: getDashboardSummary
+      parameters:
+        - name: workspaceId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: window
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, month, lifetime]
+            default: month
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "429":
+          $ref: "#/components/responses/TooManyRequestsProblem"
+        default:
+          $ref: "#/components/responses/ProblemResponse"
+
+  /api/dashboard/recoveries:
+    get:
+      summary: List recovery attempts
+      operationId: listRecoveries
+      parameters:
+        - name: workspaceId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/RecoveryStatus"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated recovery attempts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RecoveryAttemptWithOutcome"
+                  nextCursor:
+                    type: string
+                    nullable: true
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        default:
+          $ref: "#/components/responses/ProblemResponse"
+
+  /api/dunning/sequences:
+    post:
+      summary: Create dunning sequence
+      operationId: createDunningSequence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSequenceRequest"
+      responses:
+        "201":
+          description: Sequence created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DunningSequence"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        default:
+          $ref: "#/components/responses/ProblemResponse"
+
+  /api/dunning/sequences/{id}:
+    patch:
+      summary: Update dunning sequence
+      operationId: updateDunningSequence
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSequenceRequest"
+      responses:
+        "200":
+          description: Sequence updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DunningSequence"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "429":
+          $ref: "#/components/responses/TooManyRequestsProblem"
+        default:
+          $ref: "#/components/responses/ProblemResponse"
+
+  /api/customer/update-payment-session:
+    post:
+      summary: Create hosted payment update session
+      operationId: createUpdatePaymentSession
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recoveryToken]
+              properties:
+                recoveryToken:
+                  type: string
+      responses:
+        "200":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sessionUrl, expiresAt]
+                properties:
+                  sessionUrl:
+                    type: string
+                    format: uri
+                  expiresAt:
+                    type: string
+                    format: date-time
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        default:
+          $ref: "#/components/responses/ProblemResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    ProblemResponse:
+      description: Error response in Problem+JSON format
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    BadRequestProblem:
+      description: Bad request
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    UnauthorizedProblem:
+      description: Unauthorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ForbiddenProblem:
+      description: Forbidden
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotFoundProblem:
+      description: Not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    TooManyRequestsProblem:
+      description: Rate limited
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status, code, traceId]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        code:
+          type: string
+        traceId:
+          type: string
+        meta:
+          type: object
+          additionalProperties: true
+
+    DeclineType:
+      type: string
+      enum: [soft, hard]
+
+    RecoveryStatus:
+      type: string
+      enum: [pending, recovered, failed, abandoned]
+
+    DunningStepStatus:
+      type: string
+      enum: [scheduled, sent, opened, clicked, converted]
+
+    Workspace:
+      type: object
+      required: [id, name, ownerUserId, timezone, billingPlan, isActive, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        ownerUserId:
+          type: string
+        timezone:
+          type: string
+        billingPlan:
+          type: string
+          enum: [starter, pro, growth]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ConnectedStripeAccount:
+      type: object
+      required: [id, workspaceId, stripeAccountId, livemode, scopes, connectedAt]
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        stripeAccountId:
+          type: string
+        livemode:
+          type: boolean
+        scopes:
+          type: array
+          items:
+            type: string
+        connectedAt:
+          type: string
+          format: date-time
+        disconnectedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    SubscriptionAtRisk:
+      type: object
+      required:
+        [id, workspaceId, stripeCustomerId, stripeSubscriptionId, reason, riskDetectedAt]
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        stripeCustomerId:
+          type: string
+        stripeSubscriptionId:
+          type: string
+        reason:
+          type: string
+          enum: [card_expiring, payment_failed]
+        riskDetectedAt:
+          type: string
+          format: date-time
+        expirationDate:
+          type: string
+          format: date-time
+          nullable: true
+        activeRecoveryAttemptId:
+          type: string
+          nullable: true
+
+    DunningSequenceStep:
+      type: object
+      required: [id, delayHours, subjectTemplate, bodyTemplate, status]
+      properties:
+        id:
+          type: string
+        delayHours:
+          type: integer
+          minimum: 0
+        subjectTemplate:
+          type: string
+        bodyTemplate:
+          type: string
+        status:
+          $ref: "#/components/schemas/DunningStepStatus"
+
+    DunningSequence:
+      type: object
+      required: [id, workspaceId, name, isEnabled, steps, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        name:
+          type: string
+        isEnabled:
+          type: boolean
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/DunningSequenceStep"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RecoveryAttempt:
+      type: object
+      required:
+        [id, workspaceId, stripeInvoiceId, stripeCustomerId, declineType, status, amountDueCents, startedAt]
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        stripeInvoiceId:
+          type: string
+        stripeCustomerId:
+          type: string
+        declineType:
+          $ref: "#/components/schemas/DeclineType"
+        status:
+          $ref: "#/components/schemas/RecoveryStatus"
+        amountDueCents:
+          type: integer
+        recoveredAmountCents:
+          type: integer
+          nullable: true
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    RecoveryOutcome:
+      type: object
+      required: [id, workspaceId, recoveryAttemptId, outcome, occurredAt]
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        recoveryAttemptId:
+          type: string
+        outcome:
+          type: string
+          enum: [recovered, failed, abandoned]
+        reasonCode:
+          type: string
+          nullable: true
+        occurredAt:
+          type: string
+          format: date-time
+
+    MetricSnapshot:
+      type: object
+      required:
+        [id, workspaceId, periodStart, periodEnd, failedRevenueCents, recoveredRevenueCents, recoveryRate, atRiskCount, generatedAt]
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        periodStart:
+          type: string
+          format: date-time
+        periodEnd:
+          type: string
+          format: date-time
+        failedRevenueCents:
+          type: integer
+        recoveredRevenueCents:
+          type: integer
+        recoveryRate:
+          type: number
+          format: float
+        atRiskCount:
+          type: integer
+        generatedAt:
+          type: string
+          format: date-time
+
+    DashboardSummary:
+      type: object
+      required: [workspaceId, window, failedRevenueCents, recoveredRevenueCents, recoveryRate, atRiskCount, activeSequences, generatedAt]
+      properties:
+        workspaceId:
+          type: string
+        window:
+          type: string
+        failedRevenueCents:
+          type: integer
+        recoveredRevenueCents:
+          type: integer
+        recoveryRate:
+          type: number
+          format: float
+        atRiskCount:
+          type: integer
+        activeSequences:
+          type: integer
+        generatedAt:
+          type: string
+          format: date-time
+        latestSnapshot:
+          $ref: "#/components/schemas/MetricSnapshot"
+        atRiskPreview:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubscriptionAtRisk"
+
+    RecoveryAttemptWithOutcome:
+      type: object
+      required: [attempt]
+      properties:
+        attempt:
+          $ref: "#/components/schemas/RecoveryAttempt"
+        latestOutcome:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/RecoveryOutcome"
+
+    CreateSequenceRequest:
+      type: object
+      required: [workspaceId, name, isEnabled, steps]
+      properties:
+        workspaceId:
+          type: string
+        name:
+          type: string
+        isEnabled:
+          type: boolean
+        steps:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [delayHours, subjectTemplate, bodyTemplate]
+            properties:
+              delayHours:
+                type: integer
+                minimum: 0
+              subjectTemplate:
+                type: string
+              bodyTemplate:
+                type: string
+
+    UpdateSequenceRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        isEnabled:
+          type: boolean
+        steps:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              delayHours:
+                type: integer
+                minimum: 0
+              subjectTemplate:
+                type: string
+              bodyTemplate:
+                type: string

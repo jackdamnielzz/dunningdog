@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/pre-dunning",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/metric-snapshots",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

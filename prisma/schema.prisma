@@ -1,0 +1,254 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BillingPlan {
+  starter
+  pro
+  growth
+}
+
+enum MemberRole {
+  owner
+  admin
+}
+
+enum RiskReason {
+  card_expiring
+  payment_failed
+}
+
+enum DeclineType {
+  soft
+  hard
+}
+
+enum RecoveryStatus {
+  pending
+  recovered
+  failed
+  abandoned
+}
+
+enum DunningStepStatus {
+  scheduled
+  sent
+  opened
+  clicked
+  converted
+}
+
+enum ProcessingStatus {
+  received
+  processed
+  failed
+}
+
+enum RecoveryOutcomeType {
+  recovered
+  failed
+  abandoned
+}
+
+enum DeliveryStatus {
+  queued
+  sent
+  failed
+  opened
+  clicked
+  converted
+}
+
+model Workspace {
+  id                     String                   @id @default(cuid())
+  name                   String
+  ownerUserId            String
+  timezone               String                   @default("UTC")
+  billingPlan            BillingPlan              @default(starter)
+  isActive               Boolean                  @default(true)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  members                WorkspaceMember[]
+  connectedStripeAccount ConnectedStripeAccount?
+  dunningSequences       DunningSequence[]
+  subscriptionsAtRisk    SubscriptionAtRisk[]
+  recoveryAttempts       RecoveryAttempt[]
+  recoveryOutcomes       RecoveryOutcome[]
+  emailLogs              EmailLog[]
+  stripeEvents           StripeEvent[]
+  metricSnapshots        MetricSnapshot[]
+  oauthStates            StripeOAuthState[]
+}
+
+model WorkspaceMember {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  role        MemberRole
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model ConnectedStripeAccount {
+  id             String    @id @default(cuid())
+  workspaceId    String    @unique
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  stripeAccountId String   @unique
+  accessTokenEnc  String
+  refreshTokenEnc String?
+  scopes          String[]
+  livemode        Boolean
+  connectedAt     DateTime @default(now())
+  disconnectedAt  DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model StripeOAuthState {
+  id          String    @id @default(cuid())
+  state       String    @unique
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+}
+
+model DunningSequence {
+  id          String               @id @default(cuid())
+  workspaceId String
+  workspace   Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  isEnabled   Boolean              @default(true)
+  version     Int                  @default(1)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  steps       DunningSequenceStep[]
+
+  @@index([workspaceId])
+}
+
+model DunningSequenceStep {
+  id              String            @id @default(cuid())
+  sequenceId      String
+  sequence        DunningSequence   @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  stepOrder       Int
+  delayHours      Int
+  subjectTemplate String
+  bodyTemplate    String
+  status          DunningStepStatus @default(scheduled)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@unique([sequenceId, stepOrder])
+}
+
+model SubscriptionAtRisk {
+  id                     String          @id @default(cuid())
+  workspaceId            String
+  workspace              Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  stripeCustomerId       String
+  stripeSubscriptionId   String
+  reason                 RiskReason
+  riskDetectedAt         DateTime
+  expirationDate         DateTime?
+  activeRecoveryAttemptId String?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+
+  @@index([workspaceId, stripeSubscriptionId])
+  @@index([workspaceId, stripeCustomerId])
+}
+
+model RecoveryAttempt {
+  id                  String         @id @default(cuid())
+  workspaceId         String
+  workspace           Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  stripeInvoiceId     String
+  stripeCustomerId    String
+  declineType         DeclineType
+  status              RecoveryStatus @default(pending)
+  amountDueCents      Int
+  recoveredAmountCents Int?
+  startedAt           DateTime
+  endedAt             DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  outcomes            RecoveryOutcome[]
+  emailLogs           EmailLog[]
+
+  @@index([workspaceId, stripeCustomerId])
+  @@index([workspaceId, status])
+  @@unique([workspaceId, stripeInvoiceId])
+}
+
+model RecoveryOutcome {
+  id                String              @id @default(cuid())
+  workspaceId       String
+  workspace         Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  recoveryAttemptId String
+  recoveryAttempt   RecoveryAttempt     @relation(fields: [recoveryAttemptId], references: [id], onDelete: Cascade)
+  outcome           RecoveryOutcomeType
+  reasonCode        String?
+  occurredAt        DateTime
+  createdAt         DateTime            @default(now())
+
+  @@index([workspaceId, occurredAt])
+  @@index([recoveryAttemptId])
+}
+
+model EmailLog {
+  id               String          @id @default(cuid())
+  workspaceId      String
+  workspace        Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  recoveryAttemptId String?
+  recoveryAttempt  RecoveryAttempt? @relation(fields: [recoveryAttemptId], references: [id], onDelete: SetNull)
+  providerMessageId String?
+  templateKey      String
+  deliveryStatus   DeliveryStatus  @default(queued)
+  metadata         Json?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([workspaceId, createdAt])
+}
+
+model StripeEvent {
+  id             String           @id @default(cuid())
+  workspaceId    String
+  workspace      Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  stripeEventId  String           @unique
+  eventType      String
+  payloadJson    Json
+  receivedAt     DateTime         @default(now())
+  processedAt    DateTime?
+  processingStatus ProcessingStatus @default(received)
+  createdAt      DateTime         @default(now())
+
+  @@index([workspaceId, eventType])
+}
+
+model MetricSnapshot {
+  id                  String    @id @default(cuid())
+  workspaceId         String
+  workspace           Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  periodStart         DateTime
+  periodEnd           DateTime
+  failedRevenueCents  Int
+  recoveredRevenueCents Int
+  recoveryRate        Float
+  atRiskCount         Int
+  generatedAt         DateTime  @default(now())
+  createdAt           DateTime  @default(now())
+
+  @@unique([workspaceId, periodStart, periodEnd])
+  @@index([workspaceId, generatedAt])
+}
