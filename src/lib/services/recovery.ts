@@ -3,6 +3,9 @@ import { db } from "@/lib/db";
 import { HARD_DECLINE_CODES } from "@/lib/constants";
 import type { DeclineType } from "@/types/domain";
 import { ProblemError } from "@/lib/problem";
+import { isDatabaseUnavailableError, describeFailure } from "@/lib/runtime-fallback";
+import { getDemoSequence } from "@/lib/demo-data";
+import { log } from "@/lib/logger";
 
 export function classifyDeclineType(code?: string | null): DeclineType {
   if (!code) return "soft";
@@ -10,50 +13,67 @@ export function classifyDeclineType(code?: string | null): DeclineType {
 }
 
 export async function ensureDefaultSequence(workspaceId: string) {
-  const existing = await db.dunningSequence.findFirst({
-    where: { workspaceId },
-    include: { steps: true },
-  });
+  try {
+    const existing = await db.dunningSequence.findFirst({
+      where: { workspaceId },
+      include: { steps: true },
+    });
 
-  if (existing) return existing;
+    if (existing) return existing;
 
-  return db.dunningSequence.create({
-    data: {
-      workspaceId,
-      name: "Default Recovery Sequence",
-      isEnabled: true,
-      version: 1,
-      steps: {
-        create: [
-          {
-            stepOrder: 1,
-            delayHours: 0,
-            subjectTemplate: "Action needed: update your payment details",
-            bodyTemplate:
-              "We could not process your recent payment. Please update your payment method to avoid subscription interruption.",
-            status: "scheduled",
-          },
-          {
-            stepOrder: 2,
-            delayHours: 72,
-            subjectTemplate: "Reminder: your payment is still pending",
-            bodyTemplate:
-              "Your subscription is still at risk because payment details were not updated. Please review and update now.",
-            status: "scheduled",
-          },
-          {
-            stepOrder: 3,
-            delayHours: 168,
-            subjectTemplate: "Final reminder before access is affected",
-            bodyTemplate:
-              "Please update your payment method now to keep your subscription active.",
-            status: "scheduled",
-          },
-        ],
+    return db.dunningSequence.create({
+      data: {
+        workspaceId,
+        name: "Default Recovery Sequence",
+        isEnabled: true,
+        version: 1,
+        steps: {
+          create: [
+            {
+              stepOrder: 1,
+              delayHours: 0,
+              subjectTemplate: "Action needed: update your payment details",
+              bodyTemplate:
+                "We could not process your recent payment. Please update your payment method to avoid subscription interruption.",
+              status: "scheduled",
+            },
+            {
+              stepOrder: 2,
+              delayHours: 72,
+              subjectTemplate: "Reminder: your payment is still pending",
+              bodyTemplate:
+                "Your subscription is still at risk because payment details were not updated. Please review and update now.",
+              status: "scheduled",
+            },
+            {
+              stepOrder: 3,
+              delayHours: 168,
+              subjectTemplate: "Final reminder before access is affected",
+              bodyTemplate:
+                "Please update your payment method now to keep your subscription active.",
+              status: "scheduled",
+            },
+          ],
+        },
       },
-    },
-    include: { steps: true },
-  });
+      include: { steps: true },
+    });
+  } catch (error) {
+    if (!isDatabaseUnavailableError(error)) {
+      throw error;
+    }
+
+    log(
+      "warn",
+      "Using demo default sequence due to database connectivity issue",
+      {
+        workspaceId,
+        reason: describeFailure(error),
+      },
+    );
+
+    return getDemoSequence(workspaceId);
+  }
 }
 
 export async function upsertRecoveryAttemptFromFailedInvoice(

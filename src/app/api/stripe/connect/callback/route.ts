@@ -107,8 +107,8 @@ export async function GET(request: Request) {
         timezone: workspace.timezone,
         billingPlan: workspace.billingPlan,
         isActive: workspace.isActive,
-        createdAt: workspace.createdAt.toISOString(),
-        updatedAt: workspace.updatedAt.toISOString(),
+        createdAt: new Date(workspace.createdAt).toISOString(),
+        updatedAt: new Date(workspace.updatedAt).toISOString(),
       },
     };
 

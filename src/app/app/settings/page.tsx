@@ -1,7 +1,9 @@
 import { DEFAULT_WORKSPACE_ID } from "@/lib/constants";
 import { ensureWorkspaceExists } from "@/lib/auth";
-import { db } from "@/lib/db";
 import { isStripeConfigured } from "@/lib/stripe/client";
+import { isDatabaseUnavailableError, describeFailure } from "@/lib/runtime-fallback";
+import { getDemoConnectedStripeAccount } from "@/lib/demo-data";
+import { log } from "@/lib/logger";
 import { ConnectStripeButton } from "@/components/forms/connect-stripe-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +13,26 @@ export const dynamic = "force-dynamic";
 export default async function SettingsPage() {
   await ensureWorkspaceExists(DEFAULT_WORKSPACE_ID);
 
-  const connected = await db.connectedStripeAccount.findUnique({
-    where: { workspaceId: DEFAULT_WORKSPACE_ID },
-  });
+  const connected = await (async () => {
+    const { db } = await import("@/lib/db");
+
+    try {
+      return await db.connectedStripeAccount.findUnique({
+        where: { workspaceId: DEFAULT_WORKSPACE_ID },
+      });
+    } catch (error) {
+      if (!isDatabaseUnavailableError(error)) {
+        throw error;
+      }
+
+      log("warn", "Using demo connected stripe account due to database connectivity issue", {
+        workspaceId: DEFAULT_WORKSPACE_ID,
+        reason: describeFailure(error),
+      });
+
+      return getDemoConnectedStripeAccount(DEFAULT_WORKSPACE_ID);
+    }
+  })();
 
   return (
     <div className="space-y-6">
