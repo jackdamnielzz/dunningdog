@@ -1,7 +1,7 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { BarChart3, Clock3 } from "lucide-react";
-import { DEFAULT_WORKSPACE_ID } from "@/lib/constants";
-import { ensureWorkspaceExists } from "@/lib/auth";
+import { ensureWorkspaceExists, resolveWorkspaceContextFromHeaders } from "@/lib/auth";
 import { getDashboardSummary, getRecoveryAttempts } from "@/lib/services/dashboard";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { RecoveryTable } from "@/components/dashboard/recovery-table";
@@ -11,10 +11,11 @@ import { Button } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 
 export default async function AppDashboardPage() {
-  await ensureWorkspaceExists(DEFAULT_WORKSPACE_ID);
+  const workspace = await resolveWorkspaceContextFromHeaders(await headers());
+  await ensureWorkspaceExists(workspace.workspaceId);
   const [summary, recoveries] = await Promise.all([
-    getDashboardSummary(DEFAULT_WORKSPACE_ID, "month"),
-    getRecoveryAttempts(DEFAULT_WORKSPACE_ID, 8),
+    getDashboardSummary(workspace.workspaceId, "month"),
+    getRecoveryAttempts(workspace.workspaceId, 8),
   ]);
 
   return (
@@ -23,7 +24,7 @@ export default async function AppDashboardPage() {
         <div>
           <h1 className="text-3xl font-semibold text-zinc-900">Revenue Recovery Dashboard</h1>
           <p className="mt-1 text-sm text-zinc-600">
-            Workspace: <span className="mono">{DEFAULT_WORKSPACE_ID}</span>
+            Workspace: <span className="mono">{workspace.workspaceId}</span>
           </p>
         </div>
         <div className="flex gap-2">

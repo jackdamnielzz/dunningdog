@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { ProblemError, problemResponse, unknownProblemResponse } from "@/lib/problem";
+import { captureException } from "@/lib/observability";
 
 export async function parseJsonBody<T extends z.ZodTypeAny>(
   request: Request,
@@ -35,7 +36,15 @@ export function ok<T>(payload: T, status = 200) {
 
 export function routeError(error: unknown, instance: string) {
   if (error instanceof ProblemError) {
+    if (error.status >= 500) {
+      void captureException(error, {
+        instance,
+        code: error.code,
+        status: error.status,
+      });
+    }
     return problemResponse(error, instance);
   }
+  void captureException(error, { instance });
   return unknownProblemResponse(instance);
 }

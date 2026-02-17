@@ -45,6 +45,7 @@ export async function createSequence(input: z.infer<typeof createSequenceSchema>
 export async function updateSequence(
   id: string,
   input: z.infer<typeof updateSequenceSchema>,
+  workspaceId?: string,
 ) {
   const existing = await db.dunningSequence.findUnique({
     where: { id },
@@ -57,6 +58,15 @@ export async function updateSequence(
       status: 404,
       code: "DUNNING_SEQUENCE_NOT_FOUND",
       detail: `No sequence found for id ${id}.`,
+    });
+  }
+
+  if (workspaceId && existing.workspaceId !== workspaceId) {
+    throw new ProblemError({
+      title: "Workspace access denied",
+      status: 403,
+      code: "AUTH_FORBIDDEN",
+      detail: `Sequence ${id} does not belong to workspace ${workspaceId}.`,
     });
   }
 

@@ -4,22 +4,27 @@ import { z } from "zod";
 import { ok, parseJsonBody, routeError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
-import { ensureWorkspaceExists } from "@/lib/auth";
+import { ensureWorkspaceExists, resolveWorkspaceContextFromRequest } from "@/lib/auth";
+import { reportAnalyticsEvent } from "@/lib/observability";
 
 const schema = z.object({
-  workspaceId: z.string().min(2),
+  workspaceId: z.string().min(2).optional(),
 });
 
 export async function POST(request: Request) {
   try {
     const input = await parseJsonBody(request, schema);
-    await ensureWorkspaceExists(input.workspaceId);
+    const workspace = await resolveWorkspaceContextFromRequest(
+      request,
+      input.workspaceId ?? null,
+    );
+    await ensureWorkspaceExists(workspace.workspaceId);
 
     const state = nanoid(32);
     await db.stripeOAuthState.create({
       data: {
         state,
-        workspaceId: input.workspaceId,
+        workspaceId: workspace.workspaceId,
         expiresAt: addMinutes(new Date(), 10),
       },
     });
@@ -37,6 +42,15 @@ export async function POST(request: Request) {
       url.searchParams.set("redirect_uri", browserCallbackUrl);
       redirectUrl = url.toString();
     }
+
+    reportAnalyticsEvent({
+      event: "stripe_connect_started",
+      distinctId: workspace.workspaceId,
+      properties: {
+        workspaceId: workspace.workspaceId,
+        oauthMode: env.STRIPE_CONNECT_CLIENT_ID ? "live" : "demo",
+      },
+    });
 
     return ok({
       redirectUrl,

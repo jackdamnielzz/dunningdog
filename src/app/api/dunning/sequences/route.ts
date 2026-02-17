@@ -1,12 +1,28 @@
 import { createSequence, createSequenceSchema } from "@/lib/services/sequences";
-import { ensureWorkspaceExists } from "@/lib/auth";
+import { ensureWorkspaceExists, resolveWorkspaceContextFromRequest } from "@/lib/auth";
 import { ok, parseJsonBody, routeError } from "@/lib/api";
+import { reportAnalyticsEvent } from "@/lib/observability";
 
 export async function POST(request: Request) {
   try {
     const input = await parseJsonBody(request, createSequenceSchema);
-    await ensureWorkspaceExists(input.workspaceId);
-    const created = await createSequence(input);
+    const workspace = await resolveWorkspaceContextFromRequest(request, input.workspaceId);
+    await ensureWorkspaceExists(workspace.workspaceId);
+    const created = await createSequence({
+      ...input,
+      workspaceId: workspace.workspaceId,
+    });
+
+    reportAnalyticsEvent({
+      event: "sequence_created",
+      distinctId: workspace.workspaceId,
+      properties: {
+        workspaceId: workspace.workspaceId,
+        sequenceId: created.id,
+        stepCount: created.steps.length,
+      },
+    });
+
     return ok(
       {
         id: created.id,

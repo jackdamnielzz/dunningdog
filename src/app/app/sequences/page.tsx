@@ -1,5 +1,5 @@
-import { DEFAULT_WORKSPACE_ID } from "@/lib/constants";
-import { ensureWorkspaceExists } from "@/lib/auth";
+import { headers } from "next/headers";
+import { ensureWorkspaceExists, resolveWorkspaceContextFromHeaders } from "@/lib/auth";
 import { ensureDefaultSequence } from "@/lib/services/recovery";
 import { SequenceForm } from "@/components/forms/sequence-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export const dynamic = "force-dynamic";
 
 export default async function SequencesPage() {
-  await ensureWorkspaceExists(DEFAULT_WORKSPACE_ID);
-  const sequence = await ensureDefaultSequence(DEFAULT_WORKSPACE_ID);
+  const workspace = await resolveWorkspaceContextFromHeaders(await headers());
+  await ensureWorkspaceExists(workspace.workspaceId);
+  const sequence = await ensureDefaultSequence(workspace.workspaceId);
 
   return (
     <div className="space-y-6">
@@ -25,7 +26,7 @@ export default async function SequencesPage() {
         </CardHeader>
         <CardContent>
           <SequenceForm
-            workspaceId={DEFAULT_WORKSPACE_ID}
+            workspaceId={workspace.workspaceId}
             existingSequenceId={sequence.id}
             initialValues={{
               name: sequence.name,

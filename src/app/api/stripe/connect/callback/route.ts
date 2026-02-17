@@ -5,6 +5,7 @@ import { env } from "@/lib/env";
 import { encryptText } from "@/lib/crypto";
 import { ensureWorkspaceExists } from "@/lib/auth";
 import { requireStripeClient } from "@/lib/stripe/client";
+import { reportAnalyticsEvent } from "@/lib/observability";
 
 export async function GET(request: Request) {
   try {
@@ -111,6 +112,16 @@ export async function GET(request: Request) {
         updatedAt: new Date(workspace.updatedAt).toISOString(),
       },
     };
+
+    reportAnalyticsEvent({
+      event: "stripe_connect_completed",
+      distinctId: workspace.id,
+      properties: {
+        workspaceId: workspace.id,
+        stripeAccountId: connectedAccount.stripeAccountId,
+        livemode: connectedAccount.livemode,
+      },
+    });
 
     if (mode === "browser") {
       return Response.redirect(

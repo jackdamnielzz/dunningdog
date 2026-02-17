@@ -1,5 +1,5 @@
-import { DEFAULT_WORKSPACE_ID } from "@/lib/constants";
-import { ensureWorkspaceExists } from "@/lib/auth";
+import { headers } from "next/headers";
+import { ensureWorkspaceExists, resolveWorkspaceContextFromHeaders } from "@/lib/auth";
 import { getRecoveryAttempts } from "@/lib/services/dashboard";
 import { RecoveryTable } from "@/components/dashboard/recovery-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export const dynamic = "force-dynamic";
 
 export default async function RecoveriesPage() {
-  await ensureWorkspaceExists(DEFAULT_WORKSPACE_ID);
-  const recoveries = await getRecoveryAttempts(DEFAULT_WORKSPACE_ID, 50);
+  const workspace = await resolveWorkspaceContextFromHeaders(await headers());
+  await ensureWorkspaceExists(workspace.workspaceId);
+  const recoveries = await getRecoveryAttempts(workspace.workspaceId, 50);
 
   return (
     <div className="space-y-6">

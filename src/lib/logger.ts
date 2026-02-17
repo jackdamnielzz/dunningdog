@@ -1,3 +1,5 @@
+import { reportLoggedError } from "@/lib/observability";
+
 type LogLevel = "info" | "warn" | "error";
 
 export function log(level: LogLevel, message: string, meta?: Record<string, unknown>) {
@@ -10,6 +12,7 @@ export function log(level: LogLevel, message: string, meta?: Record<string, unkn
 
   if (level === "error") {
     console.error(JSON.stringify(payload));
+    reportLoggedError(message, meta);
     return;
   }
 
