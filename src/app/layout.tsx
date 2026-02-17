@@ -17,9 +17,6 @@ export const metadata: Metadata = {
   title: "DunningDog",
   description:
     "Recover failed subscription payments with automated pre-dunning, smart sequences, and clear ROI metrics.",
-  icons: {
-    icon: "/dunningdog-logo.png",
-  },
 };
 
 export default function RootLayout({

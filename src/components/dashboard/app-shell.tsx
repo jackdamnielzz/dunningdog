@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -21,15 +20,11 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-cyan-50">
       <header className="border-b border-emerald-100 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-4 md:flex-row md:items-end md:justify-between">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-4 md:flex-row md:items-center md:justify-between">
           <Link href="/" className="flex items-center">
-            <Image
-              src="/dunningdog-logo.png"
-              alt="DunningDog logo"
-              width={1536}
-              height={1024}
-              className="h-40 w-auto sm:h-56 md:h-[280px]"
-            />
+            <span className="text-2xl font-semibold tracking-tight text-zinc-900">
+              DunningDog
+            </span>
           </Link>
           <nav className="flex w-full items-center gap-1 rounded-lg bg-zinc-100 p-1 md:w-auto">
             {navItems.map((item) => (
