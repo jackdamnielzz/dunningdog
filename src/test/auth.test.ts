@@ -6,6 +6,7 @@ type LoadAuthOptions = {
   userId?: string | null;
   membershipWorkspaceId?: string | null;
   firstWorkspaceId?: string | null;
+  databaseUnavailable?: boolean;
 };
 
 async function loadAuth(options: LoadAuthOptions) {
@@ -108,7 +109,7 @@ async function loadAuth(options: LoadAuthOptions) {
   }));
 
   vi.doMock("@/lib/runtime-fallback", () => ({
-    isDatabaseUnavailableError: vi.fn(() => false),
+    isDatabaseUnavailableError: vi.fn(() => options.databaseUnavailable ?? false),
     describeFailure: vi.fn(() => "db unavailable"),
   }));
 
@@ -206,5 +207,66 @@ describe("auth workspace resolution", () => {
 
     expect(context.workspaceId).toBe("ws_demo_default");
     expect(context.source).toBe("fallback");
+  });
+
+  it("uses access token from cookies when authorization is missing", async () => {
+    const { auth, mockGetUser } = await loadAuth({
+      authConfigured: true,
+      userId: "user_cookie",
+    });
+
+    const token = "token_abcdefghijklmnopqrstuvwxyz";
+    const payload = JSON.stringify({ access_token: token });
+    const encoded = `base64-${Buffer.from(payload).toString("base64")}`;
+
+    const headers = new Headers({
+      cookie: `sb-auth-token=${encoded}`,
+    });
+
+    const context = await auth.resolveWorkspaceContextFromHeaders(headers);
+
+    expect(context.userId).toBe("user_cookie");
+    expect(mockGetUser).toHaveBeenCalledWith(token);
+  });
+
+  it("assembles chunked auth cookies in order", async () => {
+    const { auth, mockGetUser } = await loadAuth({
+      authConfigured: true,
+      userId: "user_chunked",
+    });
+
+    const token = "token_chunked_abcdefghijklmnopqrstuvwxyz";
+    const payload = encodeURIComponent(JSON.stringify({ access_token: token }));
+    const midpoint = Math.floor(payload.length / 2);
+    const partA = payload.slice(0, midpoint);
+    const partB = payload.slice(midpoint);
+
+    const headers = new Headers({
+      cookie: `sb-auth-token.1=${partB}; sb-auth-token.0=${partA}; sb-auth-token.sig=ignored`,
+    });
+
+    const context = await auth.resolveWorkspaceContextFromHeaders(headers);
+
+    expect(context.userId).toBe("user_chunked");
+    expect(mockGetUser).toHaveBeenCalledWith(token);
+  });
+
+  it("falls back to demo workspace when database is unavailable for authenticated users", async () => {
+    const { auth, mockFindUniqueMembership } = await loadAuth({
+      authConfigured: true,
+      userId: "user_1",
+      databaseUnavailable: true,
+    });
+
+    mockFindUniqueMembership.mockRejectedValueOnce(new Error("db down"));
+
+    const headers = new Headers({
+      authorization: "Bearer token_789",
+    });
+
+    const context = await auth.resolveWorkspaceContextFromHeaders(headers, "ws_member");
+
+    expect(context.source).toBe("fallback");
+    expect(context.workspaceId).toBe("ws_member");
   });
 });

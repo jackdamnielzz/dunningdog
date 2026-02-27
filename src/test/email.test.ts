@@ -97,6 +97,7 @@ describe("email service", () => {
       subject: "Payment failed",
       body: "Please update your card",
       templateKey: "step_2",
+      toEmail: "demo-customer@example.com",
     });
 
     expect(sendMock).not.toHaveBeenCalled();
@@ -105,6 +106,72 @@ describe("email service", () => {
         data: expect.objectContaining({
           deliveryStatus: "sent",
           templateKey: "step_2",
+        }),
+      }),
+    );
+  });
+
+  it("marks delivery failed when Resend throws", async () => {
+    const { email, sendMock, emailLogCreateMock, logMock } = await loadEmail({
+      demoMode: false,
+      resendEnabled: true,
+    });
+
+    sendMock.mockRejectedValueOnce(new Error("Resend timeout"));
+
+    await email.sendDunningEmail({
+      workspaceId: "ws_1",
+      subject: "Payment failed",
+      body: "Please update your card",
+      templateKey: "step_4",
+      toEmail: "customer@example.com",
+    });
+
+    expect(logMock).toHaveBeenCalledWith(
+      "error",
+      "Failed to send dunning email",
+      expect.objectContaining({
+        workspaceId: "ws_1",
+      }),
+    );
+    expect(emailLogCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          deliveryStatus: "failed",
+          templateKey: "step_4",
+        }),
+      }),
+    );
+  });
+
+  it("skips sending when no toEmail is provided", async () => {
+    const { email, sendMock, emailLogCreateMock, logMock } = await loadEmail({
+      demoMode: false,
+      resendEnabled: true,
+    });
+
+    await email.sendDunningEmail({
+      workspaceId: "ws_1",
+      subject: "Payment failed",
+      body: "Please update your card",
+      templateKey: "step_3",
+      toEmail: undefined,
+    });
+
+    expect(sendMock).not.toHaveBeenCalled();
+    expect(logMock).toHaveBeenCalledWith(
+      "warn",
+      "Skipping dunning email send: no recipient email resolved",
+      expect.objectContaining({
+        workspaceId: "ws_1",
+        templateKey: "step_3",
+      }),
+    );
+    expect(emailLogCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          deliveryStatus: "failed",
+          templateKey: "step_3",
         }),
       }),
     );

@@ -4,6 +4,8 @@ export interface RecoveryStartedEvent {
     workspaceId: string;
     recoveryAttemptId: string;
     stripeInvoiceId: string;
+    stripeCustomerId?: string;
+    customerEmail?: string;
   };
 }
 

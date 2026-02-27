@@ -12,8 +12,9 @@
 3. Supabase service role key.
 4. Resend API key.
 5. Inngest signing/event keys.
-6. Sentry auth tokens (if CI uses release APIs).
-7. PostHog ingest keys.
+6. Cron authorization secret (`CRON_SECRET`) for protected cron endpoints.
+7. Sentry auth tokens (if CI uses release APIs).
+8. PostHog ingest keys.
 
 ## Storage Rules
 1. Secrets live in Vercel environment variables by environment.

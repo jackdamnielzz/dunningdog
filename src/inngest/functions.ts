@@ -1,12 +1,13 @@
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db";
 import { sendDunningEmail } from "@/lib/services/email";
+import { resolveCustomerEmail } from "@/lib/services/customerEmail";
 
 export const recoveryStartedFunction = inngest.createFunction(
   { id: "recovery-started-sequence" },
   { event: "recovery/started" },
   async ({ event, step }) => {
-    const { workspaceId, recoveryAttemptId } = event.data;
+    const { workspaceId, recoveryAttemptId, stripeCustomerId, customerEmail } = event.data;
 
     const attempt = await step.run("load-recovery-attempt", async () =>
       db.recoveryAttempt.findUnique({
@@ -54,10 +55,41 @@ export const recoveryStartedFunction = inngest.createFunction(
         };
       }
 
+      const toEmail = await step.run(`resolve-email-${sequenceStep.stepOrder}`, async () =>
+        resolveCustomerEmail({
+          workspaceId,
+          stripeCustomerId: latestAttempt.stripeCustomerId ?? stripeCustomerId,
+          invoiceEmailHint: customerEmail,
+        }),
+      );
+
+      if (!toEmail) {
+        // No resolvable email: skip sending this step.
+        await step.run(`log-skip-${sequenceStep.stepOrder}`, async () =>
+          sendDunningEmail({
+            workspaceId,
+            recoveryAttemptId,
+            toEmail: undefined,
+            subject: sequenceStep.subjectTemplate,
+            body: sequenceStep.bodyTemplate,
+            templateKey: `sequence_${sequence.id}_step_${sequenceStep.stepOrder}`,
+            metadata: {
+              sequenceId: sequence.id,
+              sequenceStepId: sequenceStep.id,
+              stepOrder: sequenceStep.stepOrder,
+              skippedByWorkflow: true,
+              skipReason: "missing_customer_email",
+            },
+          }),
+        );
+        continue;
+      }
+
       await step.run(`send-step-${sequenceStep.stepOrder}`, async () =>
         sendDunningEmail({
           workspaceId,
           recoveryAttemptId,
+          toEmail,
           subject: sequenceStep.subjectTemplate,
           body: sequenceStep.bodyTemplate,
           templateKey: `sequence_${sequence.id}_step_${sequenceStep.stepOrder}`,
@@ -109,9 +141,39 @@ export const preDunningCandidateFunction = inngest.createFunction(
   { event: "predunning/candidate" },
   async ({ event, step }) => {
     const { workspaceId, stripeCustomerId, stripeSubscriptionId, expirationDate } = event.data;
+
+    const toEmail = await step.run("resolve-predunning-email", async () =>
+      resolveCustomerEmail({
+        workspaceId,
+        stripeCustomerId,
+        invoiceEmailHint: null,
+      }),
+    );
+
+    if (!toEmail) {
+      await step.run("log-skip-predunning-email", async () =>
+        sendDunningEmail({
+          workspaceId,
+          toEmail: undefined,
+          subject: "Heads up: your card will expire soon",
+          body: `Your payment method for subscription ${stripeSubscriptionId} is expected to expire around ${expirationDate}. Please update it to avoid service interruption.`,
+          templateKey: "predunning_default",
+          metadata: {
+            stripeCustomerId,
+            stripeSubscriptionId,
+            expirationDate,
+            skippedByWorkflow: true,
+            skipReason: "missing_customer_email",
+          },
+        }),
+      );
+      return { sent: false, skipped: true, reason: "missing_customer_email" };
+    }
+
     await step.run("send-predunning-email", async () =>
       sendDunningEmail({
         workspaceId,
+        toEmail,
         subject: "Heads up: your card will expire soon",
         body: `Your payment method for subscription ${stripeSubscriptionId} is expected to expire around ${expirationDate}. Please update it to avoid service interruption.`,
         templateKey: "predunning_default",
@@ -122,7 +184,7 @@ export const preDunningCandidateFunction = inngest.createFunction(
         },
       }),
     );
-    return { sent: true };
+    return { sent: true, skipped: false };
   },
 );
 

@@ -62,6 +62,7 @@ STRIPE_CONNECT_CLIENT_SECRET=sk_live_or_test_secret_for_oauth
 STRIPE_PRICE_STARTER_ID=price_...
 STRIPE_PRICE_PRO_ID=price_...
 STRIPE_PRICE_GROWTH_ID=price_...
+CRON_SECRET=long-random-secret-used-for-cron-auth
 ```
 
 2. Configure your Stripe Connect app:
@@ -125,12 +126,14 @@ API routes:
 - Cron jobs:
   - `/api/cron/pre-dunning`
   - `/api/cron/metric-snapshots`
+  - In production these endpoints require `Authorization: Bearer $CRON_SECRET` (or `x-cron-secret`).
 
 ## Testing & Quality
 ```bash
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm prod:check
 ```
 
 ## Notes

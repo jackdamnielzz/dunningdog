@@ -25,14 +25,17 @@
 3. Environment variables are managed per Vercel environment.
 
 ## Release Checklist
-1. Validate webhook endpoint and signature secret in target environment.
-2. Verify Stripe connect callback URLs.
-3. Execute smoke tests:
+1. Run production readiness preflight:
+   - `pnpm prod:check`
+2. Validate webhook endpoint and signature secret in target environment.
+3. Verify Stripe connect callback URLs.
+4. Validate `CRON_SECRET` is present and configured for cron invocations.
+5. Execute smoke tests:
    - auth/session,
    - stripe connect start,
    - webhook acceptance,
    - dashboard summary endpoint.
-4. Confirm Sentry release health signal.
+6. Confirm Sentry release health signal.
 
 ## Rollback Strategy
 1. Roll back to last known good Vercel deployment.

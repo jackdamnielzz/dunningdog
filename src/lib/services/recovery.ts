@@ -6,6 +6,7 @@ import { ProblemError } from "@/lib/problem";
 import { isDatabaseUnavailableError, describeFailure } from "@/lib/runtime-fallback";
 import { getDemoSequence } from "@/lib/demo-data";
 import { log } from "@/lib/logger";
+import { inngest } from "@/lib/inngest/client";
 
 export function classifyDeclineType(code?: string | null): DeclineType {
   if (!code) return "soft";
@@ -243,6 +244,42 @@ export async function processStripeWebhookEvent(params: {
     const invoice = event.data.object as Stripe.Invoice;
     const attempt = await upsertRecoveryAttemptFromFailedInvoice(workspaceId, invoice);
     await ensureDefaultSequence(workspaceId);
+
+    const invoiceAny = invoice as unknown as {
+      customer_email?: string | null;
+      customer_details?: { email?: string | null } | null;
+      customer?: { email?: string | null } | string | null;
+    };
+    const customerEmailHint =
+      invoiceAny.customer_email ??
+      invoiceAny.customer_details?.email ??
+      (typeof invoiceAny.customer === "object" ? invoiceAny.customer?.email ?? null : null) ??
+      null;
+
+    try {
+      await inngest.send({
+        id: `${event.id}:recovery_started`,
+        name: "recovery/started",
+        data: {
+          workspaceId,
+          recoveryAttemptId: attempt.id,
+          stripeInvoiceId: invoice.id,
+          stripeCustomerId: attempt.stripeCustomerId,
+          customerEmail: customerEmailHint ?? undefined,
+        },
+      });
+    } catch (error) {
+      // Mark as failed so a Stripe retry (duplicate event) can re-process and re-emit.
+      await db.stripeEvent.update({
+        where: { stripeEventId: event.id },
+        data: {
+          processedAt: new Date(),
+          processingStatus: "failed",
+        },
+      });
+      throw error;
+    }
+
     await db.stripeEvent.update({
       where: { stripeEventId: event.id },
       data: {

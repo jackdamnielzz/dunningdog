@@ -30,8 +30,9 @@
 13. `RESEND_API_KEY`
 14. `INNGEST_EVENT_KEY`
 15. `INNGEST_SIGNING_KEY`
-16. `SENTRY_DSN` (optional)
-17. `POSTHOG_KEY` (optional)
+16. `CRON_SECRET` (required for protected cron endpoints)
+17. `SENTRY_DSN` (optional)
+18. `POSTHOG_KEY` (optional)
 
 ## Standard Local Workflow
 1. Install dependencies.
@@ -46,6 +47,10 @@
    - If needed, include `--events` with supported event names from the checklist.
 7. Start Inngest dev server if required for recovery workflows.
 8. Execute unit/integration tests before committing.
+9. Run production preflight validation before release:
+   ```bash
+   pnpm prod:check
+   ```
 
 ## Seed Data
 1. One default workspace.

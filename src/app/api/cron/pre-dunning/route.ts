@@ -2,9 +2,12 @@ import { ok, routeError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { runPreDunningScan } from "@/lib/services/preDunning";
 import { inngest } from "@/lib/inngest/client";
+import { assertCronAuthorized } from "@/lib/cron-auth";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    assertCronAuthorized(request);
+
     const workspaces = await db.workspace.findMany({
       where: { isActive: true },
       select: { id: true },

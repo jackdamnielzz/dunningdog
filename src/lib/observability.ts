@@ -3,14 +3,18 @@ import { env } from "@/lib/env";
 type EventProperties = Record<string, unknown>;
 
 function parseSentryDsn(dsn: string) {
-  const parsed = new URL(dsn);
-  const projectId = parsed.pathname.replaceAll("/", "");
-  if (!parsed.username || !projectId) {
+  try {
+    const parsed = new URL(dsn);
+    const projectId = parsed.pathname.replaceAll("/", "");
+    if (!parsed.username || !projectId) {
+      return null;
+    }
+
+    const endpoint = `${parsed.protocol}//${parsed.host}/api/${projectId}/envelope/?sentry_key=${parsed.username}&sentry_version=7`;
+    return endpoint;
+  } catch {
     return null;
   }
-
-  const endpoint = `${parsed.protocol}//${parsed.host}/api/${projectId}/envelope/?sentry_key=${parsed.username}&sentry_version=7`;
-  return endpoint;
 }
 
 function toErrorLike(input: unknown) {
@@ -19,6 +23,42 @@ function toErrorLike(input: unknown) {
   }
 
   return new Error(typeof input === "string" ? input : "Unknown error");
+}
+
+function resolveRelease() {
+  return env.APP_RELEASE || process.env.VERCEL_GIT_COMMIT_SHA || undefined;
+}
+
+function withServerContext(properties?: EventProperties): EventProperties {
+  const base: EventProperties = {
+    source: "server",
+    environment: env.NODE_ENV,
+  };
+
+  const release = resolveRelease();
+  if (release) {
+    base.release = release;
+  }
+
+  return {
+    ...base,
+    ...(properties ?? {}),
+  };
+}
+
+async function postWithTimeout(url: string, init: RequestInit) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), env.OBSERVABILITY_TIMEOUT_MS);
+  try {
+    await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+  } catch {
+    // No-op: telemetry should never break request handling.
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function captureException(
@@ -44,6 +84,7 @@ export async function captureException(
     level: "error",
     platform: "javascript",
     environment: env.NODE_ENV,
+    release: resolveRelease(),
     message: error.message,
     exception: {
       values: [
@@ -54,7 +95,7 @@ export async function captureException(
         },
       ],
     },
-    extra: context ?? {},
+    extra: withServerContext(context),
   };
 
   const envelope = `${JSON.stringify({
@@ -62,13 +103,13 @@ export async function captureException(
     sent_at: sentAt,
   })}\n${JSON.stringify({ type: "event" })}\n${JSON.stringify(event)}`;
 
-  await fetch(endpoint, {
+  await postWithTimeout(endpoint, {
     method: "POST",
     headers: {
       "content-type": "application/x-sentry-envelope",
     },
     body: envelope,
-  }).catch(() => undefined);
+  });
 }
 
 export async function captureEvent(params: {
@@ -81,7 +122,7 @@ export async function captureEvent(params: {
   }
 
   const captureUrl = `${env.POSTHOG_HOST}/capture/`;
-  await fetch(captureUrl, {
+  await postWithTimeout(captureUrl, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -90,10 +131,10 @@ export async function captureEvent(params: {
       api_key: env.POSTHOG_KEY,
       event: params.event,
       distinct_id: params.distinctId,
-      properties: params.properties ?? {},
+      properties: withServerContext(params.properties),
       timestamp: new Date().toISOString(),
     }),
-  }).catch(() => undefined);
+  });
 }
 
 export function reportLoggedError(message: string, meta?: EventProperties) {

@@ -15,7 +15,33 @@ interface SendEmailParams {
 }
 
 export async function sendDunningEmail(params: SendEmailParams) {
-  const to = params.toEmail ?? "customer@example.com";
+  const to = params.toEmail;
+
+  if (!to) {
+    // Prevent silently sending to placeholder addresses in production paths.
+    log("warn", "Skipping dunning email send: no recipient email resolved", {
+      workspaceId: params.workspaceId,
+      recoveryAttemptId: params.recoveryAttemptId,
+      templateKey: params.templateKey,
+      metadata: params.metadata,
+    });
+
+    return db.emailLog.create({
+      data: {
+        workspaceId: params.workspaceId,
+        recoveryAttemptId: params.recoveryAttemptId,
+        providerMessageId: null,
+        templateKey: params.templateKey,
+        deliveryStatus: "failed",
+        metadata: {
+          ...(params.metadata ?? {}),
+          skipped: true,
+          skipReason: "missing_to_email",
+        } as Prisma.InputJsonValue,
+      },
+    });
+  }
+
   const resend = getResendClient();
 
   let deliveryStatus: "sent" | "failed" = "sent";
