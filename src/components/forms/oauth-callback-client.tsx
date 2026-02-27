@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 type CallbackState = "loading" | "error";
 
@@ -34,7 +33,6 @@ function readInteger(value: string | null) {
 }
 
 export function OAuthCallbackClient() {
-  const router = useRouter();
   const [state, setState] = useState<CallbackState>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -101,12 +99,10 @@ export function OAuthCallbackClient() {
         return;
       }
 
-      if (window.location.hash) {
-        window.history.replaceState(null, "", window.location.pathname + window.location.search);
-      }
-
-      router.replace(payload.next ?? nextPath);
-      router.refresh();
+      // Use full page navigation instead of Next.js client-side routing.
+      // This ensures cookies set by the session endpoint are fully committed
+      // before the server-side auth guard runs on the target page.
+      window.location.assign(payload.next ?? nextPath);
     }
 
     void completeOAuth();
@@ -114,7 +110,7 @@ export function OAuthCallbackClient() {
     return () => {
       isMounted = false;
     };
-  }, [router]);
+  }, []);
 
   if (state === "loading") {
     return (

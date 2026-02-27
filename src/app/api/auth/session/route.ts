@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ok, parseJsonBody, routeError } from "@/lib/api";
 import { env } from "@/lib/env";
+import { log } from "@/lib/logger";
 import { ProblemError } from "@/lib/problem";
 import { createSupabaseClient } from "@/lib/supabase";
 
@@ -75,8 +76,17 @@ export async function POST(request: Request) {
     }
 
     const input = await parseJsonBody(request, schema);
-    const oauthStateCookie = readCookieValue(request.headers.get("cookie"), OAUTH_STATE_COOKIE);
+    const cookieHeader = request.headers.get("cookie");
+    const oauthStateCookie = readCookieValue(cookieHeader, OAUTH_STATE_COOKIE);
+    log("info", "OAuth session exchange started", {
+      next: input.next,
+      hasStateCookie: Boolean(oauthStateCookie),
+      stateMatches: Boolean(oauthStateCookie && oauthStateCookie === input.state),
+    });
     if (!oauthStateCookie || oauthStateCookie !== input.state) {
+      log("warn", "OAuth state validation failed", {
+        hasStateCookie: Boolean(oauthStateCookie),
+      });
       throw new ProblemError({
         title: "OAuth state validation failed",
         status: 401,
@@ -97,6 +107,10 @@ export async function POST(request: Request) {
 
     const userResult = await supabase.auth.getUser(input.accessToken);
     if (userResult.error || !userResult.data.user) {
+      log("error", "Supabase auth.getUser failed", {
+        err: userResult.error?.message ?? "No user returned",
+        code: userResult.error?.code,
+      });
       throw new ProblemError({
         title: "OAuth session is invalid",
         status: 401,
@@ -106,6 +120,10 @@ export async function POST(request: Request) {
     }
 
     const nextPath = normalizeNextPath(input.next);
+    log("info", "OAuth session established", {
+      userId: userResult.data.user.id,
+      next: nextPath,
+    });
     const response = ok({
       authenticated: true,
       next: nextPath,

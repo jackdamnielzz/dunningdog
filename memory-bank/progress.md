@@ -32,6 +32,31 @@
 
 **Full details:** See [`memory-bank/activeContext.md`](activeContext.md)
 
+### 2026-02-27: OAuth Post-Login Redirect Bug Fix (Completed)
+
+**Executed:** Fixed production bug where users completed Google OAuth but landed on marketing homepage instead of `/app` dashboard
+
+| Item | Status |
+|------|--------|
+| Root cause identified: `router.replace()` races cookie persistence before SSR auth guard | ✅ Complete |
+| Fix: replaced `router.replace()` + `router.refresh()` with `window.location.assign()` in `OAuthCallbackClient` | ✅ Complete |
+| Removed unused `useRouter` import from callback component | ✅ Complete |
+| Cleaned up temporary debug logging from `/app` layout auth guard | ✅ Complete |
+| All auth tests pass (7/7), typecheck passes | ✅ Complete |
+
+### 2026-02-27: Google OAuth Flow Hardened + Production Env Fix (Completed)
+
+**Executed:** OAuth login flow hardening, production blocker identification, and env var fix
+
+| Item | Status |
+|------|--------|
+| Auth guard added to `/app` layout (`src/app/app/layout.tsx`) — all `/app/*` routes now require authentication | ✅ Complete |
+| Session endpoint error logging (`src/app/api/auth/session/route.ts`) — `auth.getUser()` failures now log details | ✅ Complete |
+| Full Google OAuth flow validated: start → Google → Supabase → callback → session cookie → /app | ✅ Code complete |
+| Production blocker: `SUPABASE_ANON_KEY` misconfigured in Vercel | ✅ Fixed via CLI |
+| Vercel env var fix: removed bad key, re-added correct JWT to all environments | ✅ Complete |
+| Production redeployment triggered via `npx vercel --prod` | ✅ Deployed |
+
 ### 2026-02-27: Post-Runbook Stabilization (Completed)
 
 **Executed:** Reliability hardening after Runbook 6 completion

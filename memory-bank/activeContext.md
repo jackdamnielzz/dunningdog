@@ -1,8 +1,68 @@
-# Active Context — Runbook 6 Execution
+# Active Context — Google OAuth Login Flow
 
-**Last updated:** 2026-02-27T10:47:00Z  
-**Status:** Steps 0–13 completed + post-runbook stabilization delivered  
+**Last updated:** 2026-02-27T13:44:00Z
+**Status:** OAuth post-login redirect bug fixed; ready for production redeployment
 **Runbook reference:** [`docs/operations/runbooks.md`](../docs/operations/runbooks.md) -> Runbook 6
+
+---
+
+## Current Focus: OAuth Post-Login Redirect Bug Fix (2026-02-27)
+
+**Problem:** Users completed Google OAuth but landed on the marketing homepage (unauthenticated view) instead of the `/app` dashboard.
+
+**Root cause:** [`OAuthCallbackClient()`](../src/components/forms/oauth-callback-client.tsx:36) used Next.js `router.replace()` + `router.refresh()` for post-login navigation. This client-side routing raced cookie persistence — the `sb-auth-token` cookie set by the session endpoint wasn't committed before the SSR auth guard in [`InternalAppLayout()`](../src/app/app/layout.tsx:7) checked for it, causing a redirect to `/login`.
+
+**Fix applied:**
+1. **Full page navigation** — Replaced `router.replace()` + `router.refresh()` with `window.location.assign()` in [`OAuthCallbackClient()`](../src/components/forms/oauth-callback-client.tsx:36). This forces a full page load, ensuring cookies are fully committed before the server renders the target page.
+2. **Removed `useRouter` dependency** — No longer needed since we use `window.location.assign()`.
+3. **Cleaned up temporary debug logging** — Removed verbose cookie-name logging from [`InternalAppLayout()`](../src/app/app/layout.tsx:7) (was added during investigation). The production-useful logging in the session endpoint was kept.
+
+**Tests:** All 7 auth tests pass (`auth-session-route.test.ts` 4/4, `auth-oauth-start-route.test.ts` 3/3). Typecheck passes.
+
+### Previous hardening (still in place):
+1. **Auth guard at `/app` layout level** — [`src/app/app/layout.tsx`](../src/app/app/layout.tsx) enforces authentication for all `/app/*` routes, redirecting unauthenticated users to `/login`.
+2. **Session endpoint error logging** — [`src/app/api/auth/session/route.ts`](../src/app/api/auth/session/route.ts) logs `auth.getUser()` failure details for production debugging.
+
+### Full OAuth Flow
+
+```
+User clicks "Sign in with Google"
+  → POST /api/auth/oauth/start (initiates Supabase OAuth)
+  → Google consent screen
+  → Supabase handles Google callback
+  → /auth/callback (client-side: exchanges code for session)
+  → POST /api/auth/session (sets sb-auth-token cookie)
+  → Redirect to /app (protected by layout auth guard)
+```
+
+### Key Auth Files
+
+| File | Purpose |
+|------|---------|
+| [`src/app/api/auth/oauth/start/route.ts`](../src/app/api/auth/oauth/start/route.ts) | Initiates Google OAuth via Supabase |
+| [`src/app/auth/callback/page.tsx`](../src/app/auth/callback/page.tsx) | Client-side callback handler |
+| [`src/components/forms/oauth-callback-client.tsx`](../src/components/forms/oauth-callback-client.tsx) | OAuth callback client component |
+| [`src/app/api/auth/session/route.ts`](../src/app/api/auth/session/route.ts) | Sets `sb-auth-token` session cookie |
+| [`src/app/app/layout.tsx`](../src/app/app/layout.tsx) | Auth guard for all `/app/*` routes |
+| [`src/components/forms/social-auth-buttons.tsx`](../src/components/forms/social-auth-buttons.tsx) | Google sign-in button UI |
+| [`src/lib/supabase.ts`](../src/lib/supabase.ts) | Supabase client factory |
+| [`src/lib/auth.ts`](../src/lib/auth.ts) | Auth helper (workspace resolution) |
+
+### Vercel Env Var Fix ✅ (2026-02-27T13:14Z)
+
+**Resolved:** The `SUPABASE_ANON_KEY` environment variable in Vercel was misconfigured (contained extra characters). Fixed via CLI:
+
+1. Removed the bad `SUPABASE_ANON_KEY` from all environments using `npx vercel env rm`
+2. Re-added the correct raw JWT value (from `.env.local`) to production, preview, and development
+3. Triggered production redeployment with `npx vercel --prod`
+
+**Current Vercel env vars** (project: `tunuxs-projects/dunningdog`, production URL: `https://dunningdog.vercel.app`):
+- `SUPABASE_ANON_KEY` — ✅ corrected (raw JWT, starts with `eyJ...`)
+- `SUPABASE_URL` — ✅ set (`https://ktpsrzznftgxkywjxiek.supabase.co`)
+- `APP_BASE_URL` — ✅ set
+- `NEXT_PUBLIC_APP_BASE_URL` — ✅ set
+
+The Google OAuth flow should now work end-to-end in production.
 
 ---
 
