@@ -1,21 +1,29 @@
-# Handoff — OAuth `bad_oauth_state` + localhost redirect ✅ RESOLVED
+# Handoff — OAuth `bad_oauth_state` ✅ RESOLVED
 
 ## Goal
 Fix the production issue where Google OAuth login from `https://dunningdog.vercel.app` redirects to `http://localhost:3000/?error=invalid_request&error_code=bad_oauth_state` instead of completing sign-in.
 
 ## Resolution (2026-02-27)
 
-**Root cause:** Supabase Dashboard had `site_url` set to `http://localhost:3000` and `uri_allow_list` only contained `http://localhost:3000/auth/callback`. This caused Supabase to redirect to localhost on OAuth errors and reject the production callback URL.
+**Root causes:**
+1. Supabase Dashboard had `site_url` set to `http://localhost:3000` and `uri_allow_list` only contained `http://localhost:3000/auth/callback`.
+2. App passed a custom `state` param to Supabase `/auth/v1/authorize`, which conflicts with Supabase's own `state` management and triggers `bad_oauth_state`.
 
-**Fix applied via Supabase Management API:**
+**Fixes applied:**
+1. **Supabase Dashboard config via Management API:**
 - `site_url`: `http://localhost:3000` → `https://dunningdog.vercel.app` ✅
 - `uri_allow_list`: Added `https://dunningdog.vercel.app/auth/callback` (kept `http://localhost:3000/auth/callback` for local dev) ✅
 - `external_google_enabled`: `true` ✅ (already configured)
 
+2. **Supabase state conflict fix in app:**
+   - Stop sending `state` to Supabase authorize.
+   - Include app state in callback URL as `app_state`.
+   - Read `app_state` in [`OAuthCallbackClient()`](src/components/forms/oauth-callback-client.tsx:35).
+
 **No code changes were needed.** All application code and Vercel env vars were already correct.
 
 **Verified post-fix:**
-- OAuth start route returns `redirect_to=https://dunningdog.vercel.app/auth/callback?next=/app` ✅
+- OAuth start route returns `redirect_to=https://dunningdog.vercel.app/auth/callback?next=/app&app_state=...` ✅
 - Production deployment is healthy (`https://dunningdog.vercel.app`) ✅
 
 ## Files Reviewed (no changes needed)

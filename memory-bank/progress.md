@@ -32,7 +32,7 @@
 
 **Full details:** See [`memory-bank/activeContext.md`](activeContext.md)
 
-### 2026-02-27: OAuth `bad_oauth_state` + localhost redirect (Completed)
+### 2026-02-27: OAuth `bad_oauth_state` (Completed)
 
 **Fixed:** Google OAuth from `https://dunningdog.vercel.app` was redirecting to `http://localhost:3000/?error=bad_oauth_state`
 
@@ -43,6 +43,7 @@
 | Verified Vercel env vars (`APP_BASE_URL=https://dunningdog.vercel.app`) | ✅ Complete |
 | Fixed `site_url` → `https://dunningdog.vercel.app` via Management API | ✅ Complete |
 | Fixed `uri_allow_list` → added production callback URL via Management API | ✅ Complete |
+| Fixed Supabase state conflict by moving app state to `app_state` in `redirect_to` | ✅ Complete |
 | Verified OAuth start route returns correct `redirect_to` | ✅ Complete |
 
 ### 2026-02-27: OAuth Post-Login Redirect Bug Fix (Completed)
