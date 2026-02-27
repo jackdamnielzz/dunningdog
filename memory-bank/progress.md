@@ -32,18 +32,18 @@
 
 **Full details:** See [`memory-bank/activeContext.md`](activeContext.md)
 
-### 2026-02-27: OAuth `bad_oauth_state` + localhost redirect (In Progress)
+### 2026-02-27: OAuth `bad_oauth_state` + localhost redirect (Completed)
 
-**Investigated:** Google OAuth from `https://dunningdog.vercel.app` redirects to `http://localhost:3000/?error=bad_oauth_state`
+**Fixed:** Google OAuth from `https://dunningdog.vercel.app` was redirecting to `http://localhost:3000/?error=bad_oauth_state`
 
 | Item | Status |
 |------|--------|
-| Root cause identified: Supabase Dashboard Site URL = `http://localhost:3000` | ✅ Complete |
+| Root cause identified: Supabase Dashboard `site_url` = `http://localhost:3000` | ✅ Complete |
 | Verified code is correct — no code changes needed | ✅ Complete |
 | Verified Vercel env vars (`APP_BASE_URL=https://dunningdog.vercel.app`) | ✅ Complete |
-| **ACTION: Change Supabase Dashboard Site URL** to `https://dunningdog.vercel.app` | ⏳ Pending (manual) |
-| **ACTION: Add Redirect URLs** in Supabase Dashboard | ⏳ Pending (manual) |
-| Test OAuth flow after Supabase config fix | ⏳ Pending |
+| Fixed `site_url` → `https://dunningdog.vercel.app` via Management API | ✅ Complete |
+| Fixed `uri_allow_list` → added production callback URL via Management API | ✅ Complete |
+| Verified OAuth start route returns correct `redirect_to` | ✅ Complete |
 
 ### 2026-02-27: OAuth Post-Login Redirect Bug Fix (Completed)
 
