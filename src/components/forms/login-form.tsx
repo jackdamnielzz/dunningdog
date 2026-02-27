@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SocialAuthButtons } from "@/components/forms/social-auth-buttons";
 
 interface LoginFormProps {
   nextPath: string;
@@ -100,6 +101,15 @@ export function LoginForm({ nextPath }: LoginFormProps) {
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Signing in..." : "Sign in"}
       </Button>
+
+      <div className="relative py-2">
+        <div className="h-px w-full bg-zinc-200" />
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-sm text-zinc-500">
+          Or continue with
+        </span>
+      </div>
+
+      <SocialAuthButtons nextPath={nextTarget} />
     </form>
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Sora, IBM_Plex_Mono } from "next/font/google";
+import { Sora, IBM_Plex_Mono, Roboto } from "next/font/google";
 import "./globals.css";
 
 const sora = Sora({
@@ -10,6 +10,12 @@ const sora = Sora({
 const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
   weight: ["400", "500"],
+  subsets: ["latin"],
+});
+
+const roboto = Roboto({
+  variable: "--font-roboto",
+  weight: ["500"],
   subsets: ["latin"],
 });
 
@@ -26,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${sora.variable} ${plexMono.variable} antialiased`}>
+      <body className={`${sora.variable} ${plexMono.variable} ${roboto.variable} antialiased`}>
         {children}
       </body>
     </html>
