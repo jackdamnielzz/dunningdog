@@ -1,21 +1,39 @@
 # Active Context — Google OAuth Login Flow
 
-**Last updated:** 2026-02-27T13:44:00Z
-**Status:** OAuth post-login redirect bug fixed; ready for production redeployment
+**Last updated:** 2026-02-27T13:54:00Z
+**Status:** Supabase Dashboard URL configuration fix needed — no code changes required
 **Runbook reference:** [`docs/operations/runbooks.md`](../docs/operations/runbooks.md) -> Runbook 6
 
 ---
 
-## Current Focus: OAuth Post-Login Redirect Bug Fix (2026-02-27)
+## Current Focus: Supabase Dashboard OAuth URL Fix (2026-02-27)
 
-**Problem:** Users completed Google OAuth but landed on the marketing homepage (unauthenticated view) instead of the `/app` dashboard.
+**Problem:** After Google OAuth login on `https://dunningdog.vercel.app`, the browser redirects to `http://localhost:3000/?error=invalid_request&error_code=bad_oauth_state&error_description=OAuth+state+parameter+is+invalid` instead of completing sign-in.
 
-**Root cause:** [`OAuthCallbackClient()`](../src/components/forms/oauth-callback-client.tsx:36) used Next.js `router.replace()` + `router.refresh()` for post-login navigation. This client-side routing raced cookie persistence — the `sb-auth-token` cookie set by the session endpoint wasn't committed before the SSR auth guard in [`InternalAppLayout()`](../src/app/app/layout.tsx:7) checked for it, causing a redirect to `/login`.
+**Root cause:** The Supabase Dashboard (Authentication → URL Configuration) has:
+- **Site URL** set to `http://localhost:3000` instead of `https://dunningdog.vercel.app`
+- **Redirect URLs** whitelist missing `https://dunningdog.vercel.app/auth/callback`
 
-**Fix applied:**
-1. **Full page navigation** — Replaced `router.replace()` + `router.refresh()` with `window.location.assign()` in [`OAuthCallbackClient()`](../src/components/forms/oauth-callback-client.tsx:36). This forces a full page load, ensuring cookies are fully committed before the server renders the target page.
-2. **Removed `useRouter` dependency** — No longer needed since we use `window.location.assign()`.
-3. **Cleaned up temporary debug logging** — Removed verbose cookie-name logging from [`InternalAppLayout()`](../src/app/app/layout.tsx:7) (was added during investigation). The production-useful logging in the session endpoint was kept.
+This causes Supabase to redirect to localhost on OAuth errors, and the `bad_oauth_state` error occurs because Supabase's internal PKCE flow cannot work correctly when the Site URL doesn't match the actual origin.
+
+**Code is confirmed correct** — no code changes needed. All Vercel env vars verified:
+- `APP_BASE_URL` = `https://dunningdog.vercel.app` ✅
+- `NEXT_PUBLIC_APP_BASE_URL` = `https://dunningdog.vercel.app` ✅
+- `SUPABASE_URL` = `https://ktpsrzznftgxkywjxiek.supabase.co` ✅
+
+**Fix required (manual, Supabase Dashboard):**
+1. Go to https://supabase.com/dashboard/project/ktpsrzznftgxkywjxiek/auth/url-configuration
+2. Change **Site URL** to `https://dunningdog.vercel.app`
+3. Add **Redirect URLs**: `https://dunningdog.vercel.app/auth/callback` and `http://localhost:3000/auth/callback`
+4. Verify Google provider config has correct Client ID/Secret
+5. Verify the Supabase callback URI is in Google Cloud Console OAuth credentials
+
+See [`memory-bank/handoff.md`](handoff.md) for full step-by-step instructions.
+
+### Previous fix (still in place):
+1. **Full page navigation** — `window.location.assign()` in [`OAuthCallbackClient()`](../src/components/forms/oauth-callback-client.tsx:36) ensures cookies are committed before SSR auth guard runs.
+2. **Auth guard at `/app` layout level** — [`src/app/app/layout.tsx`](../src/app/app/layout.tsx) enforces authentication for all `/app/*` routes.
+3. **Session endpoint error logging** — [`src/app/api/auth/session/route.ts`](../src/app/api/auth/session/route.ts) logs `auth.getUser()` failure details.
 
 **Tests:** All 7 auth tests pass (`auth-session-route.test.ts` 4/4, `auth-oauth-start-route.test.ts` 3/3). Typecheck passes.
 
