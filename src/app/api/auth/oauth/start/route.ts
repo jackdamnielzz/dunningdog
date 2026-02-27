@@ -52,13 +52,14 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const provider = parseProvider(url.searchParams.get("provider"));
     const nextPath = normalizeNextPath(url.searchParams.get("next"));
-    const callbackUrl = `${env.APP_BASE_URL}/auth/callback?next=${encodeURIComponent(nextPath)}`;
     const state = createOAuthState();
+    const callbackUrl = new URL(`${env.APP_BASE_URL}/auth/callback`);
+    callbackUrl.searchParams.set("next", nextPath);
+    callbackUrl.searchParams.set("app_state", state);
 
     const authorizeUrl = new URL(`${env.SUPABASE_URL}/auth/v1/authorize`);
     authorizeUrl.searchParams.set("provider", mapToSupabaseProvider(provider));
-    authorizeUrl.searchParams.set("redirect_to", callbackUrl);
-    authorizeUrl.searchParams.set("state", state);
+    authorizeUrl.searchParams.set("redirect_to", callbackUrl.toString());
 
     const response = NextResponse.redirect(authorizeUrl, { status: 302 });
     response.cookies.set(OAUTH_STATE_COOKIE, state, {

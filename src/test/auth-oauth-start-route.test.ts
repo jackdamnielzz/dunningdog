@@ -26,8 +26,9 @@ describe("auth oauth start route", () => {
     const location = response.headers.get("location");
     expect(location).toContain("https://project.supabase.co/auth/v1/authorize");
     expect(location).toContain("provider=google");
-    expect(location).toContain(encodeURIComponent("http://localhost:3000/auth/callback?next=%2Fapp%2Fsettings"));
-    expect(location).toContain("state=");
+    expect(location).toContain(
+      encodeURIComponent("http://localhost:3000/auth/callback?next=%2Fapp%2Fsettings&app_state="),
+    );
     expect(response.headers.get("set-cookie")).toContain("sb-oauth-state=");
   });
 

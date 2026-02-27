@@ -56,7 +56,11 @@ export function OAuthCallbackClient() {
         return;
       }
 
-      const state = hashParams.get("state") ?? query.get("state");
+      const state =
+        hashParams.get("state") ??
+        query.get("state") ??
+        hashParams.get("app_state") ??
+        query.get("app_state");
       if (!state) {
         if (!isMounted) return;
         setState("error");
