@@ -7,7 +7,7 @@ import { createSupabaseClient } from "@/lib/supabase";
 
 const schema = z.object({
   accessToken: z.string().min(20),
-  refreshToken: z.string().min(20).optional(),
+  refreshToken: z.string().min(1).optional(),
   expiresIn: z.coerce.number().int().min(60).max(2_592_000).optional(),
   next: z.string().optional(),
   state: z.string().min(8),
