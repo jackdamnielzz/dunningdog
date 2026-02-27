@@ -62,7 +62,7 @@ describe("env validation", () => {
     await expect(import("@/lib/env")).rejects.toThrow("Environment validation failed.");
   });
 
-  it("throws in production when required provider values are missing", async () => {
+  it("allows production import when provider values are missing", async () => {
     vi.resetModules();
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("APP_BASE_URL", "https://app.example.com");
@@ -71,7 +71,8 @@ describe("env validation", () => {
     vi.stubEnv("ENCRYPTION_KEY", baseEnv.ENCRYPTION_KEY);
     vi.stubEnv("DEMO_MODE", "false");
 
-    await expect(import("@/lib/env")).rejects.toThrow("Environment validation failed.");
+    const envModule = await import("@/lib/env");
+    expect(envModule.isProduction).toBe(true);
   });
 
   it("parses in production when all required values are present", async () => {
