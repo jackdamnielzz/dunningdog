@@ -1,75 +1,33 @@
 # Progress — DunningDog
 
-**Last updated:** 2026-02-17
-
 ## Milestones
 
-### ✅ Milestone 1: Project Foundation
-- [x] Project scaffold (Next.js 15, TypeScript, pnpm, Tailwind CSS 4)
-- [x] Database schema design (11 models, 9 enums)
-- [x] Prisma schema with indexes and unique constraints
-- [x] Domain types and shared DTOs
-- [x] Environment validation with Zod
-- [x] Local development setup (Docker Compose + PostgreSQL 16)
-- [x] Comprehensive documentation tree (product, architecture, ADRs, engineering, security, operations, GTM)
+### 2026-02-27: Runbook 6 — Local End-to-End Validation (Completed)
 
-### ✅ Milestone 2: Stripe Integration
-- [x] Stripe OAuth Connect flow (start + callback routes)
-- [x] Stripe webhook ingestion with signature verification
-- [x] Idempotent event processing (4 event types)
-- [x] Token encryption for stored credentials
-- [x] Decline code classification (soft vs hard)
+**Executed:** Full local E2E test flow (OAuth → webhooks → recovery → cron → dashboard)
 
-### ✅ Milestone 3: Core Recovery Engine
-- [x] Recovery service (create/update recovery attempts)
-- [x] Dunning sequence management (CRUD with versioning)
-- [x] Inngest dunning orchestration (3 functions)
-- [x] Pre-dunning detection (14-day card expiration scan)
-- [x] Email service via Resend with EmailLog audit trail
-- [x] Metric snapshot generation
+| Step | Description | Status |
+|------|-------------|--------|
+| 0 | Tool verification (node, pnpm, stripe) | ✅ Complete |
+| 1 | `.env.local` setup | ✅ Complete |
+| 2 | Supabase credentials | ✅ Complete |
+| 3 | Stripe credentials + Connect OAuth setup | ✅ Complete |
+| 4 | DB setup + app start | ✅ Complete |
+| 5 | Stripe listen + Inngest dev server | ✅ Complete |
+| 6 | Connect Stripe via OAuth | ✅ Complete (`acct_1T5O5REBwzL1NHyf`) |
+| 7 | Verify DB records (Prisma Studio) | ✅ Complete |
+| 8 | Trigger failed payment → recovery flow | ✅ Complete (webhook 200, Inngest triggered) |
+| 9 | Trigger successful payment → recovery resolved | ✅ Complete (webhook 200, Inngest finalized) |
+| 10 | Payment update endpoint | ✅ 200 (`sessionUrl` + `expiresAt`) with fresh recovery attempt (`cmm4r6dxf0001jdg0j2saneqz`) |
+| 11 | Cron endpoints | ✅ pre-dunning 200 / ✅ metric-snapshots 200 |
+| 12 | Final UI verification | ✅ All pages load with real data (200) |
+| 13 | Supabase auth session (advanced) | ✅ Completed (Supabase token flow + `WorkspaceMember` row verified) |
 
-### ✅ Milestone 4: Dashboard & UI
-- [x] App shell with navigation
-- [x] Dashboard summary cards (failed revenue, recovered, rate, at-risk, active)
-- [x] Recovery attempts table
-- [x] Sequence management page
-- [x] Settings page (Stripe connect)
-- [x] Marketing landing page
-- [x] Pricing page
-- [x] Docs page
-- [x] Demo/fallback mode for development
+**Key Issues Encountered:**
+1. Standard Connect OAuth accounts can't be triggered via `stripe trigger --stripe-account` (403) — temporary platform account used for webhook trigger tests
+2. Historical recovery attempts tied to prior temporary account context can still return 500 on payment-session endpoint
+3. Prisma CLI needs `.env` not `.env.local`
+4. Supabase auth still has no login UI (manual token flow required in local validation)
+5. Supabase new key format (`sb_publishable_*`) — had to use legacy JWT keys
 
-### 🔶 Milestone 5: Auth & End-to-End (In Progress)
-- [x] Replace hardcoded workspace IDs with workspace resolution logic (Supabase user + membership aware)
-- [ ] End-to-end Stripe flow testing (OAuth → webhooks → dunning → recovery)
-- [ ] Hosted payment update page integration testing (live Stripe sandbox validation pending)
-- [x] DunningDog's own billing flow (checkout endpoint + settings plan controls + persisted billingPlan)
-
-### 🔶 Milestone 6: Quality & Observability (In Progress)
-- [ ] Increase test coverage to ≥85% for services
-- [x] Set up CI/CD pipeline (GitHub Actions with lint/typecheck/test/OpenAPI/docs checks)
-- [x] Initialize server-side Sentry reporting hook
-- [x] Initialize server-side PostHog event capture hook
-- [ ] Security audit (OWASP top-10 check)
-
-### ⬜ Milestone 7: Launch
-- [ ] Production environment setup on Vercel
-- [ ] Production database on Supabase
-- [ ] DNS and custom domain configuration
-- [ ] Stripe production keys and webhook endpoints
-- [ ] Beta launch to 5-10 users
-- [ ] Monitoring and SLO validation
-
-## Overall Progress
-
-| Phase | Status | Completion |
-|-------|--------|------------|
-| Foundation | ✅ Complete | 100% |
-| Stripe Integration | ✅ Complete | 100% |
-| Core Recovery Engine | ✅ Complete | 100% |
-| Dashboard & UI | ✅ Complete | 100% |
-| Auth & End-to-End | 🔶 In Progress | 75% |
-| Quality & Observability | 🔶 In Progress | 60% |
-| Launch | ⬜ Not Started | 0% |
-
-**Estimated overall MVP completion: ~88%**
+**Full details:** See [`memory-bank/activeContext.md`](activeContext.md)

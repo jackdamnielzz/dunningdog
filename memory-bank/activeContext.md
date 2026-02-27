@@ -1,73 +1,139 @@
-# Active Context — DunningDog
+# Active Context — Runbook 6 Execution
 
-**Last updated:** 2026-02-17
+**Last updated:** 2026-02-27T10:34:00Z  
+**Status:** Steps 0–13 completed (with one historical test artifact noted under Step 10)  
+**Runbook reference:** [`docs/operations/runbooks.md`](../docs/operations/runbooks.md) -> Runbook 6
 
-## What is DunningDog?
+---
 
-DunningDog is a **Stripe-first failed-payment recovery SaaS** for indie SaaS founders and small subscription businesses ($500–$20K MRR). It layers on top of Stripe's native Smart Retries to recover the ~43% of failed payments that Stripe doesn't catch automatically.
+## What Was Done (Chronological)
 
-## Current State
+### Step 0: Tool Verification ✅
+- **Node.js v24.13.0** - already installed
+- **pnpm 10.8.0** - already installed
+- **Stripe CLI v1.37.1** - installed via `winget install Stripe.StripeCLI`
+- **Docker** - not installed, skipped; using Supabase-hosted Postgres instead
 
-The project is in **late MVP development**. The core architecture, database schema, all services, API routes, and UI pages are built. The app runs in a "demo mode" with fallback data when no real database/Stripe credentials are configured.
+### Step 1: `.env.local` Created ✅
+- Started from existing `.env.local`
+- Generated secrets:
+  - `CRON_SECRET=6831f69ad10b1050aa207d5e7e9186dfba079b13c3fbf91c`
+  - `ENCRYPTION_KEY=82680741089eb15fbbb6e48ca4cc4102f5f442b2b00d6380`
+- Set `DEMO_MODE=false`
+- Set local Inngest keys and optional monitoring/email vars
 
-### What's Working
-- Full Next.js 15 App Router scaffold with TypeScript
-- Prisma schema with 11 models (Workspace, RecoveryAttempt, DunningSequence, etc.)
-- Stripe OAuth connect flow (start + callback)
-- Stripe webhook ingestion (4 event types, idempotent)
-- Recovery service (decline classification, recovery attempt tracking)
-- Dunning sequence CRUD with Zod validation
-- Inngest-powered dunning orchestration (3 background functions)
-- Pre-dunning scan (14-day card expiration detection)
-- Email service via Resend with audit trail
-- Dashboard with KPI summary cards and recovery table
-- Metric snapshot generation (monthly aggregation)
-- Marketing pages (landing, pricing, docs)
-- Demo/fallback mode for development without external services
-- Workspace-aware app pages and API routes (no more hardcoded workspace IDs in dashboard flows)
-- DunningDog billing flow in settings (plan selection + checkout initiation + plan persistence)
-- CI workflow (`.github/workflows/ci.yml`) with quality gates
-- Server-side observability hooks for Sentry errors and PostHog milestone events
-- Expanded automated test suite (10 files / 26 tests)
+### Step 2: Supabase Values ✅
+- **Project ID:** `ktpsrzznftgxkywjxiek`
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL` configured
+- Used legacy JWT-style keys required by current app wiring
 
-### What Needs Work
-- **Supabase auth session validation in browser**: backend workspace resolution is wired, but still needs full browser/session flow validation with real Supabase project settings
-- **Hosted payment update page**: API endpoint exists and logic is in place, but real Stripe Billing Portal integration still needs full sandbox validation
-- **Coverage target gap**: coverage improved significantly, but still below the stated ≥85% service target
-- **Observability maturity**: lightweight HTTP reporting is active, but full SDK features (release health, richer client telemetry) are not yet enabled
+### Step 3: Stripe Values ✅
+- **Stripe platform account:** `acct_1SCoVIAVDaT7HcpG`
+- Stripe key + Connect OAuth client values set
+- Connect callback URL configured
+- Starter/Pro/Growth price IDs configured
 
-### What's Not Started (Post-MVP)
-- Paddle / Lemon Squeezy integrations
-- In-app JavaScript payment update widget
-- Slack/Discord notifications
-- A/B testing for email sequences
-- Cancellation save / pause flows
+### Step 4: Database & App Setup ✅
+- `.env` created for Prisma CLI (`DATABASE_URL` only)
+- `pnpm install` and `pnpm db:setup` succeeded
+- App started on `http://localhost:3000`
 
-## Current Focus
+### Step 5: Webhooks & Inngest ✅
+- `stripe listen ... --forward-to ... --forward-connect-to ...` configured
+- `STRIPE_WEBHOOK_SECRET` set from CLI output
+- Inngest dev server connected to `http://localhost:3000/api/inngest`
 
-The immediate priorities before MVP launch are:
-1. Execute real end-to-end Stripe + Supabase validation runs (OAuth → webhooks → dunning → recovery)
-2. Raise service-layer coverage to the ≥85% target
-3. Harden observability from lightweight hooks to full production telemetry posture
+### Step 6: Stripe OAuth Connection ✅
+- Connected account via OAuth created in app settings
+- Initial connected account recorded in DB with encrypted access token
 
-## Tech Stack Quick Reference
+### Step 7: Database Verification ✅
+- Prisma Studio verified `ConnectedStripeAccount` row and encrypted token fields
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 15 App Router + TypeScript |
-| UI | shadcn/ui + Tailwind CSS 4 |
-| Database | PostgreSQL 16 (Supabase) + Prisma 6 |
-| Auth | Supabase Auth |
-| Payments | Stripe (OAuth Connect + Webhooks) |
-| Email | Resend |
-| Background Jobs | Inngest |
-| Cron | Vercel Cron |
-| Hosting | Vercel |
-| Testing | Vitest |
-| Package Manager | pnpm 9+ |
+### Step 8: Trigger Failed Payment ✅
+- CLI limitation encountered for Standard Connect account (`stripe trigger --stripe-account` -> 403)
+- Temporary platform-controlled account created: `acct_1T5O9EPK0xpRqzUX`
+- Webhook ingestion and recovery-start flow validated end-to-end (`StripeEvent`, `RecoveryAttempt`, `SubscriptionAtRisk`, Inngest event)
 
-## Key Architecture Decisions
+### Step 9: Trigger Successful Payment ✅
+- `invoice.payment_succeeded` webhook validated
+- Recovery finalize flow validated
 
-- **ADR-0001**: Next.js + Prisma + Supabase + Vercel monolith (simplicity for solo dev)
-- **ADR-0002**: Multi-tenant via `workspace_id` on every record (no cross-workspace joins)
-- **ADR-0003**: Inngest for event-driven dunning orchestration with idempotent steps
+### Step 10: Payment Update Endpoint ✅ (revalidated)
+- Historical run attempt (`attempt:cmm4qrlw60009jdm8qehx5nzw`) still returns **500** because its customer belongs a previous temporary account context.
+- Created fresh Stripe customer on platform and fresh recovery attempt (`cmm4r6dxf0001jdg0j2saneqz`).
+- `POST /api/customer/update-payment-session` returned **200** with:
+  - `sessionUrl` (Stripe Billing Portal)
+  - `expiresAt`
+
+### Step 11: Cron Endpoints ✅
+- Realigned `ConnectedStripeAccount.stripeAccountId` to the account that matches decrypted OAuth token:
+  - before: `acct_1T5O9EPK0xpRqzUX`
+  - token account: `acct_1T5O5REBwzL1NHyf`
+  - after: `acct_1T5O5REBwzL1NHyf`
+- `GET /api/cron/pre-dunning` with bearer `CRON_SECRET` -> **200** (`{"executed":true,"workspaces":1,"candidates":1}`)
+- `GET /api/cron/metric-snapshots` -> **200** (`{"executed":true,"count":1,...}`)
+
+### Step 12: Final UI Verification ✅
+- `/app`, `/app/recoveries`, `/app/settings` render correctly when auth/session expectations are met
+
+### Step 13: Supabase Auth Session Validation ✅
+- Re-enabled Supabase vars in `.env.local`
+- Restarted dev server
+- Created Supabase test user via Admin API
+- Obtained access token via password grant
+- Requested `http://localhost:3000/app/settings` with `Authorization: Bearer <access_token>` -> **200**
+- Verified `WorkspaceMember` row created:
+  - `userId=1a19cde7-7c42-492c-b56a-dcd4b271ec3c`
+  - `workspaceId=cmm4r8ely0000jdus93ttf4lr`
+  - `role=owner`
+
+---
+
+## Known Issues & Workarounds Used
+
+### Issue 1: Standard Connect OAuth accounts cannot be targeted by `stripe trigger --stripe-account`
+- **Problem:** Stripe CLI returned 403 for Standard OAuth connected account
+- **Workaround:** temporary platform-controlled account for webhook trigger testing
+- **Current state:** webhook/recovery validations completed; DB account/token alignment restored for pre-dunning
+
+### Issue 2: Historical recovery attempt can still 500 on payment-session endpoint
+- **Problem:** old attempt references a customer from previous temporary account context
+- **Impact:** specific historical attempt token returns 500
+- **Workaround:** validated Step 10 with fresh recovery attempt tied to current reachable customer context
+
+### Issue 3: Supabase auth blocks `/app/*` without session
+- **Problem:** no dedicated login page in app yet
+- **Workaround used:** Step 13 validated via Supabase token flow and Bearer-auth request
+
+### Issue 4: Prisma CLI reads `.env` (not `.env.local`)
+- **Workaround:** keep minimal `.env` with `DATABASE_URL`
+
+### Issue 5: Supabase dashboard default key format differs
+- **Workaround:** used legacy JWT keys required by current implementation
+
+---
+
+## Current State of `.env.local`
+
+Supabase vars are currently **enabled**:
+
+```env
+SUPABASE_URL=https://ktpsrzznftgxkywjxiek.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+Stripe connection state in DB:
+- `ConnectedStripeAccount.stripeAccountId=acct_1T5O5REBwzL1NHyf`
+- `accessTokenEnc` decrypts to token for the same account (aligned)
+
+---
+
+## Running Services
+
+To continue local validation, keep these running:
+1. **App:** `pnpm dev` (port 3000)
+2. **Stripe listener:** `stripe listen --events invoice.payment_failed,invoice.payment_succeeded,customer.subscription.updated,payment_method.automatically_updated --forward-to http://localhost:3000/api/webhooks/stripe --forward-connect-to http://localhost:3000/api/webhooks/stripe`
+3. **Inngest dev:** `npx -y inngest-cli@latest dev -u http://localhost:3000/api/inngest`
+4. **Prisma Studio:** `pnpm prisma studio` (port 5555)

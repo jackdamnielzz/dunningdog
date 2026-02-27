@@ -1,22 +1,24 @@
 # Implementation Status — DunningDog
 
-**Last updated:** 2026-02-17
+**Last updated:** 2026-02-27
 
 ## Feature Completion Overview
 
 | Feature | Completion | Notes |
 |---------|-----------|-------|
+| Build health baseline | 100% | `pnpm test -- --run`, `pnpm lint`, and `pnpm typecheck` all pass after pre-dunning route/service type alignment |
 | Project scaffold & config | 100% | Next.js 15, TypeScript, pnpm, Tailwind, ESLint, Vitest |
 | Database schema (Prisma) | 100% | 11 models, 9 enums, all indexes and constraints |
 | Domain types & DTOs | 100% | Shared enums, Zod schemas, dashboard DTOs |
 | Environment validation | 100% | Zod-validated env vars with demo mode support |
+| Production env gating | 95% | Production now enforces provider secret presence, HTTPS app URLs, secure key lengths, and `DEMO_MODE=false`; final env value provisioning still pending |
 | Stripe OAuth Connect | 100% | Start + callback routes, encrypted token storage |
-| Stripe webhook ingestion | 100% | Signature verification, idempotent processing, 4 event types |
-| Recovery service | 100% | Decline classification, attempt upsert, success marking |
+| Stripe webhook ingestion | 95% | Signature verification + idempotent processing + request header/size hardening; still needs final live production webhook verification run |
+| Recovery service | 100% | Decline classification, attempt upsert, success marking, emits `recovery/started` after failed invoice |
 | Dunning sequence management | 100% | CRUD, Zod validation, versioning, transactional step replacement |
 | Inngest background functions | 100% | 3 functions: dunning sequence, recovery finalize, pre-dunning notify |
-| Pre-dunning detection | 100% | 14-day card expiration window scan via Vercel Cron |
-| Email service (Resend) | 100% | Transactional sends with EmailLog audit trail, demo mode fallback |
+| Pre-dunning detection | 100% | 14-day card expiration window scan via Vercel Cron + active Stripe scan for expiring default cards |
+| Email service (Resend) | 100% | Transactional sends with EmailLog audit trail; no placeholder sends in production paths; missing email skips |
 | Metric snapshots | 100% | Monthly aggregation and upsert via Vercel Cron |
 | Dashboard API | 100% | Summary endpoint (time windows) + recoveries list + demo fallback |
 | Dashboard UI | 100% | Summary cards, golden metric, recovery table, app shell |
@@ -27,13 +29,17 @@
 | Error handling | 100% | Problem+JSON model, structured error responses |
 | Crypto utilities | 100% | Token encryption/decryption for Stripe credentials |
 | Documentation | 100% | Full tree: product, architecture, ADRs, engineering, security, ops, GTM |
-| Supabase Auth integration | 80% | Workspace resolution now uses Supabase user + membership checks; app pages no longer hardcode workspace IDs |
-| Hosted payment update page | 60% | Billing Portal session endpoint implemented; route-level logic validated in code, still needs full live Stripe sandbox runbook pass |
-| Test coverage | 40% | Expanded from 2 to 10 test files (26 tests), service layer now substantially covered; still below ≥85% target |
+| Supabase Auth integration | 90% | Workspace resolution uses Supabase user + membership checks; Step 13 manual token session validation completed and `WorkspaceMember` auto-provision confirmed |
+| Hosted payment update page | 75% | Endpoint returns Billing Portal session URLs in live local validation; historical attempts from prior temporary account context can still fail and should be cleaned/normalized |
+| Cron endpoint security | 95% | `/api/cron/*` routes now require `CRON_SECRET`-backed auth header; still needs final Vercel production validation |
+| Stripe+Supabase live validation runbook execution | 100% | Runbook 6 executed end-to-end on 2026-02-27: OAuth connect ✅, webhook flow ✅, recovery lifecycle ✅, payment update endpoint ✅, pre-dunning + metric cron ✅, UI pages ✅, Step 13 Supabase auth session ✅ |
+| Test coverage | 88% | Coverage target exceeded: ~87.62% statements (branches 76.27%, functions 95.69%, lines 89.44%) with 122 passing tests across 24 files |
 | DunningDog's own billing | 85% | Plan checkout endpoint + settings UI + Stripe/demo plan persistence flow added |
 | CI/CD pipeline | 75% | GitHub Actions CI added (lint, typecheck, tests, OpenAPI lint, docs link check) |
-| Sentry integration | 70% | Server-side Sentry envelope reporting added via centralized observability module |
-| PostHog integration | 70% | Server-side PostHog capture wired for onboarding, sequence, and billing milestones |
+| Sentry integration | 82% | Server-side Sentry envelope reporting hardened with safe DSN parsing, release tagging, timeout-protected sends, and consistent server metadata |
+| PostHog integration | 82% | Server-side PostHog capture hardened with timeout-protected sends and consistent server metadata across milestone events |
+| Browser/API security headers | 90% | Global security headers enabled through Next.js config (frame, mime, referrer, permissions, HSTS, cross-origin policy) |
+| Production readiness preflight | 90% | `pnpm prod:check` added; currently reports local production-profile gaps (placeholder/non-https base URLs and missing `CRON_SECRET`) |
 | Paddle/Lemon Squeezy | 0% | Deferred to post-MVP |
 | In-app payment widget | 0% | Deferred to post-MVP |
 | Slack/Discord notifications | 0% | Deferred to post-MVP |
@@ -62,6 +68,8 @@ Next.js App (Vercel)
 
 ## Key Risks & Blockers
 
-1. **Service coverage target not yet met**: current automated coverage improved materially but remains below the ≥85% target
-2. **Live provider validation pending**: Supabase-authenticated browser sessions and Stripe billing sandbox flows still require full end-to-end run validation
-3. **Observability is lightweight**: direct Sentry/PostHog HTTP capture is in place, but full SDK-level features (release health/session replay/client telemetry) are not enabled
+1. **Local trigger constraints for Standard Connect remain awkward**: `stripe trigger --stripe-account` still does not work for Standard OAuth accounts, so future local webhook reruns need the same workaround strategy
+2. **Supabase auth still requires manual token injection**: No login UI exists yet; `/app/*` needs a valid Supabase session when auth vars are enabled
+3. **Production environment values not finalized**: production preflight currently fails until final HTTPS base URLs and `CRON_SECRET` are set in deploy environments
+4. **Security audit pending**: formal OWASP top-10 check is still open before launch readiness
+5. **Observability still server-only**: telemetry transport is hardened, but richer client-side SDK features (session replay/release health) are not yet enabled
