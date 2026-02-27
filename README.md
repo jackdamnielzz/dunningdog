@@ -44,6 +44,21 @@ pnpm dev
 
 Open `http://localhost:3000`.
 
+## Google Login Setup (Supabase Auth)
+To make `Continue with Google` work end-to-end:
+
+1. In Supabase: `Authentication -> Providers -> Google`, enable Google.
+2. In Google Cloud Console, create OAuth credentials and configure the consent screen.
+3. Add these Authorized redirect URIs in Google Cloud:
+   - `https://<your-project-ref>.supabase.co/auth/v1/callback`
+4. In Supabase Auth URL configuration, set:
+   - Site URL: `APP_BASE_URL` (for local: `http://localhost:3000`)
+   - Additional redirect URL: `APP_BASE_URL/auth/callback`
+5. Ensure app env vars are set:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `APP_BASE_URL`
+
 ## Stripe Test Connection Checklist
 This section is the fastest way to validate Stripe connection end-to-end in test mode.
 

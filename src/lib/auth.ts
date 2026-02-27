@@ -196,6 +196,10 @@ async function getAuthenticatedUserId(headers: Pick<Headers, "get">) {
   return data.user.id;
 }
 
+export async function getAuthenticatedUserIdFromHeaders(headers: Pick<Headers, "get">) {
+  return getAuthenticatedUserId(headers);
+}
+
 async function resolveWorkspaceForAuthenticatedUser(
   userId: string,
   requestedWorkspaceId?: string,

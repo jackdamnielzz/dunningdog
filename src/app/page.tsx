@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getAuthenticatedUserIdFromHeaders } from "@/lib/auth";
 import {
   Card,
   CardContent,
@@ -9,7 +12,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default function Home() {
+export default async function Home() {
+  const requestHeaders = await headers();
+  const userId = await getAuthenticatedUserIdFromHeaders(requestHeaders);
+  if (userId) {
+    redirect("/app");
+  }
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_20%_20%,#d9f5ee_0%,transparent_30%),radial-gradient(circle_at_90%_10%,#e2f4ff_0%,transparent_25%),linear-gradient(180deg,#f8fdfb_0%,#f6f8fb_100%)]">
       <main className="mx-auto max-w-6xl px-6 py-14">

@@ -20,6 +20,19 @@ function readHashParams() {
   return new URLSearchParams(hash);
 }
 
+function readInteger(value: string | null) {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
 export function OAuthCallbackClient() {
   const router = useRouter();
   const [state, setState] = useState<CallbackState>("loading");
@@ -45,6 +58,14 @@ export function OAuthCallbackClient() {
         return;
       }
 
+      const state = hashParams.get("state") ?? query.get("state");
+      if (!state) {
+        if (!isMounted) return;
+        setState("error");
+        setErrorMessage("Missing OAuth state. Please start sign-in again.");
+        return;
+      }
+
       const accessToken = hashParams.get("access_token") ?? query.get("access_token");
       if (!accessToken) {
         if (!isMounted) return;
@@ -52,6 +73,8 @@ export function OAuthCallbackClient() {
         setErrorMessage("No access token found in OAuth callback response.");
         return;
       }
+      const refreshToken = hashParams.get("refresh_token") ?? query.get("refresh_token");
+      const expiresIn = readInteger(hashParams.get("expires_in") ?? query.get("expires_in"));
 
       const response = await fetch("/api/auth/session", {
         method: "POST",
@@ -60,7 +83,10 @@ export function OAuthCallbackClient() {
         },
         body: JSON.stringify({
           accessToken,
+          refreshToken: refreshToken ?? undefined,
+          expiresIn,
           next: nextPath,
+          state,
         }),
       });
       const payload = (await response.json().catch(() => ({}))) as {
@@ -113,4 +139,3 @@ export function OAuthCallbackClient() {
     </div>
   );
 }
-

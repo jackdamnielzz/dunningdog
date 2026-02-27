@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 import { env } from "@/lib/env";
 import { ProblemError, problemResponse } from "@/lib/problem";
 
 type SupportedProvider = "google" | "microsoft";
+const OAUTH_STATE_COOKIE = "sb-oauth-state";
+const OAUTH_STATE_TTL_SECONDS = 10 * 60;
+
+function createOAuthState() {
+  return randomBytes(24).toString("hex");
+}
 
 function normalizeNextPath(path: string | null) {
   if (!path || !path.startsWith("/") || path.startsWith("//")) {
@@ -46,12 +53,23 @@ export async function GET(request: Request) {
     const provider = parseProvider(url.searchParams.get("provider"));
     const nextPath = normalizeNextPath(url.searchParams.get("next"));
     const callbackUrl = `${env.APP_BASE_URL}/auth/callback?next=${encodeURIComponent(nextPath)}`;
+    const state = createOAuthState();
 
     const authorizeUrl = new URL(`${env.SUPABASE_URL}/auth/v1/authorize`);
     authorizeUrl.searchParams.set("provider", mapToSupabaseProvider(provider));
     authorizeUrl.searchParams.set("redirect_to", callbackUrl);
+    authorizeUrl.searchParams.set("state", state);
 
-    return NextResponse.redirect(authorizeUrl, { status: 302 });
+    const response = NextResponse.redirect(authorizeUrl, { status: 302 });
+    response.cookies.set(OAUTH_STATE_COOKIE, state, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      secure: env.NODE_ENV === "production",
+      maxAge: OAUTH_STATE_TTL_SECONDS,
+    });
+
+    return response;
   } catch (error) {
     if (error instanceof ProblemError) {
       return problemResponse(error, "/api/auth/oauth/start");
@@ -67,4 +85,3 @@ export async function GET(request: Request) {
     );
   }
 }
-

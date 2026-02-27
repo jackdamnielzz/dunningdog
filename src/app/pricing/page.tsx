@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getAuthenticatedUserIdFromHeaders } from "@/lib/auth";
 
 const tiers = [
   {
@@ -23,7 +26,13 @@ const tiers = [
   },
 ];
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const requestHeaders = await headers();
+  const userId = await getAuthenticatedUserIdFromHeaders(requestHeaders);
+  if (userId) {
+    redirect("/app");
+  }
+
   return (
     <div className="min-h-screen bg-zinc-50 px-6 py-14">
       <main className="mx-auto max-w-6xl">

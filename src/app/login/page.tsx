@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginForm } from "@/components/forms/login-form";
+import { getAuthenticatedUserIdFromHeaders } from "@/lib/auth";
 
 interface LoginPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -20,6 +23,11 @@ function readParam(
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const nextPath = readParam(params, "next") ?? "/app";
+  const requestHeaders = await headers();
+  const userId = await getAuthenticatedUserIdFromHeaders(requestHeaders);
+  if (userId) {
+    redirect(nextPath);
+  }
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_15%_15%,#d9f5ee_0%,transparent_35%),radial-gradient(circle_at_85%_10%,#e2f4ff_0%,transparent_28%),linear-gradient(180deg,#f8fdfb_0%,#f6f8fb_100%)] px-4 py-12 sm:px-6 sm:py-16">
