@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -73,7 +74,15 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="password">Password</Label>
+          <Link
+            href="/forgot-password"
+            className="text-xs font-medium text-emerald-700 hover:text-emerald-600"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <Input
           id="password"
           type="password"
@@ -94,4 +103,3 @@ export function LoginForm({ nextPath }: LoginFormProps) {
     </form>
   );
 }
-
