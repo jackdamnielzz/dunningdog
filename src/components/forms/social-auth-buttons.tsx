@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 interface SocialAuthButtonsProps {
   nextPath: string;
 }
@@ -60,11 +58,13 @@ function MicrosoftIcon() {
 export function SocialAuthButtons({ nextPath }: SocialAuthButtonsProps) {
   const googleLabel = "Continue with Google";
   const microsoftLabel = "Continue with Microsoft";
+  const googleHref = buildStartUrl("google", nextPath);
+  const microsoftHref = buildStartUrl("microsoft", nextPath);
 
   return (
     <div className="space-y-2">
-      <Link
-        href={buildStartUrl("google", nextPath)}
+      <a
+        href={googleHref}
         className="inline-flex h-10 w-full items-center justify-center rounded-md border border-[#747775] bg-white px-3 text-[14px] font-medium leading-5 text-[#1F1F1F] transition-colors hover:bg-[#f8f9fa]"
         style={{ fontFamily: "var(--font-roboto), Roboto, sans-serif" }}
         aria-label={googleLabel}
@@ -73,9 +73,9 @@ export function SocialAuthButtons({ nextPath }: SocialAuthButtonsProps) {
           <GoogleIcon />
           <span>{googleLabel}</span>
         </span>
-      </Link>
-      <Link
-        href={buildStartUrl("microsoft", nextPath)}
+      </a>
+      <a
+        href={microsoftHref}
         className="inline-flex h-10 w-full items-center justify-center rounded-md border border-zinc-300 bg-white px-3 text-[14px] font-medium leading-5 text-zinc-900 transition-colors hover:bg-zinc-50"
         style={{ fontFamily: "var(--font-roboto), Roboto, sans-serif" }}
         aria-label={microsoftLabel}
@@ -84,7 +84,7 @@ export function SocialAuthButtons({ nextPath }: SocialAuthButtonsProps) {
           <MicrosoftIcon />
           <span>{microsoftLabel}</span>
         </span>
-      </Link>
+      </a>
     </div>
   );
 }
