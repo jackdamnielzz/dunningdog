@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { ensureWorkspaceExists, resolveWorkspaceContextFromHeaders } from "@/lib/auth";
+import { ProblemError } from "@/lib/problem";
 import { confirmBillingCheckoutSession } from "@/lib/services/billing";
 import { isStripeConfigured } from "@/lib/stripe/client";
 import { isDatabaseUnavailableError, describeFailure } from "@/lib/runtime-fallback";
@@ -35,7 +37,13 @@ const plans = [
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const query = await searchParams;
-  const workspace = await resolveWorkspaceContextFromHeaders(await headers());
+  const requestHeaders = await headers();
+  const workspace = await resolveWorkspaceContextFromHeaders(requestHeaders).catch((error) => {
+    if (error instanceof ProblemError && error.code === "AUTH_UNAUTHORIZED") {
+      redirect("/login?next=/app/settings");
+    }
+    throw error;
+  });
   let workspaceRecord = await ensureWorkspaceExists(workspace.workspaceId);
 
   const billingStatus = readParam(query, "billing");

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { BarChart3, Clock3 } from "lucide-react";
 import { ensureWorkspaceExists, resolveWorkspaceContextFromHeaders } from "@/lib/auth";
+import { ProblemError } from "@/lib/problem";
 import { getDashboardSummary, getRecoveryAttempts } from "@/lib/services/dashboard";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { RecoveryTable } from "@/components/dashboard/recovery-table";
@@ -11,7 +13,13 @@ import { Button } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 
 export default async function AppDashboardPage() {
-  const workspace = await resolveWorkspaceContextFromHeaders(await headers());
+  const requestHeaders = await headers();
+  const workspace = await resolveWorkspaceContextFromHeaders(requestHeaders).catch((error) => {
+    if (error instanceof ProblemError && error.code === "AUTH_UNAUTHORIZED") {
+      redirect("/login?next=/app");
+    }
+    throw error;
+  });
   await ensureWorkspaceExists(workspace.workspaceId);
   const [summary, recoveries] = await Promise.all([
     getDashboardSummary(workspace.workspaceId, "month"),

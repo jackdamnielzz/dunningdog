@@ -11,6 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
+    "runbook6:smoke": "tsx scripts/runbook6-smoke.ts",
+    "prod:check": "tsx scripts/production-readiness.ts",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",

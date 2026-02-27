@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   { href: "/app", label: "Dashboard" },
@@ -17,6 +19,20 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setIsLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login?next=/app");
+      router.refresh();
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-cyan-50">
       <header className="border-b border-emerald-100 bg-white/90 backdrop-blur">
@@ -26,7 +42,8 @@ export function AppShell({ children }: AppShellProps) {
               DunningDog
             </span>
           </Link>
-          <nav className="flex w-full items-center gap-1 rounded-lg bg-zinc-100 p-1 md:w-auto">
+          <div className="flex w-full items-center justify-between gap-3 md:w-auto">
+            <nav className="flex items-center gap-1 rounded-lg bg-zinc-100 p-1">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -41,7 +58,11 @@ export function AppShell({ children }: AppShellProps) {
                 {item.label}
               </Link>
             ))}
-          </nav>
+            </nav>
+            <Button size="sm" variant="outline" onClick={handleLogout} disabled={isLoggingOut}>
+              {isLoggingOut ? "Signing out..." : "Sign out"}
+            </Button>
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>

@@ -29,10 +29,11 @@
 | Error handling | 100% | Problem+JSON model, structured error responses |
 | Crypto utilities | 100% | Token encryption/decryption for Stripe credentials |
 | Documentation | 100% | Full tree: product, architecture, ADRs, engineering, security, ops, GTM |
-| Supabase Auth integration | 90% | Workspace resolution uses Supabase user + membership checks; Step 13 manual token session validation completed and `WorkspaceMember` auto-provision confirmed |
-| Hosted payment update page | 75% | Endpoint returns Billing Portal session URLs in live local validation; historical attempts from prior temporary account context can still fail and should be cleaned/normalized |
+| Supabase Auth integration | 96% | Workspace resolution uses Supabase user + membership checks, `/login` page and auth API routes are implemented, unauthenticated `/app/*` now redirects to login, and `WorkspaceMember` auto-provision is confirmed |
+| Hosted payment update page | 88% | Endpoint now handles missing Stripe customers gracefully (fallback URL instead of 500) and returns Billing Portal session URLs for valid customers; historical data cleanup remains optional |
 | Cron endpoint security | 95% | `/api/cron/*` routes now require `CRON_SECRET`-backed auth header; still needs final Vercel production validation |
 | Stripe+Supabase live validation runbook execution | 100% | Runbook 6 executed end-to-end on 2026-02-27: OAuth connect ✅, webhook flow ✅, recovery lifecycle ✅, payment update endpoint ✅, pre-dunning + metric cron ✅, UI pages ✅, Step 13 Supabase auth session ✅ |
+| Runbook smoke automation | 85% | `pnpm runbook6:smoke` added to automatically verify Step 10 + Step 11 endpoints in local/dev flow; CI wiring and hosted-env smoke run remain |
 | Test coverage | 88% | Coverage target exceeded: ~87.62% statements (branches 76.27%, functions 95.69%, lines 89.44%) with 122 passing tests across 24 files |
 | DunningDog's own billing | 85% | Plan checkout endpoint + settings UI + Stripe/demo plan persistence flow added |
 | CI/CD pipeline | 75% | GitHub Actions CI added (lint, typecheck, tests, OpenAPI lint, docs link check) |
@@ -69,7 +70,7 @@ Next.js App (Vercel)
 ## Key Risks & Blockers
 
 1. **Local trigger constraints for Standard Connect remain awkward**: `stripe trigger --stripe-account` still does not work for Standard OAuth accounts, so future local webhook reruns need the same workaround strategy
-2. **Supabase auth still requires manual token injection**: No login UI exists yet; `/app/*` needs a valid Supabase session when auth vars are enabled
+2. **Supabase auth UX is minimal**: Login/sign-out flow now exists, but there is no full account UX yet (signup, password reset, invite/onboarding)
 3. **Production environment values not finalized**: production preflight currently fails until final HTTPS base URLs and `CRON_SECRET` are set in deploy environments
 4. **Security audit pending**: formal OWASP top-10 check is still open before launch readiness
 5. **Observability still server-only**: telemetry transport is hardened, but richer client-side SDK features (session replay/release health) are not yet enabled

@@ -1,8 +1,27 @@
 # Active Context — Runbook 6 Execution
 
-**Last updated:** 2026-02-27T10:34:00Z  
-**Status:** Steps 0–13 completed (with one historical test artifact noted under Step 10)  
+**Last updated:** 2026-02-27T10:47:00Z  
+**Status:** Steps 0–13 completed + post-runbook stabilization delivered  
 **Runbook reference:** [`docs/operations/runbooks.md`](../docs/operations/runbooks.md) -> Runbook 6
+
+---
+
+## Post-Runbook Stabilization (2026-02-27) ✅
+
+- Hardened `POST /api/customer/update-payment-session` so Stripe `No such customer` errors no longer produce a 500; route now logs and falls back to in-app recoveries URL.
+- Added real local login flow:
+  - `POST /api/auth/login` (Supabase password grant + `sb-auth-token` cookie set)
+  - `POST /api/auth/logout` (session cookie cleared)
+  - `/login` page with credential form
+- Added auth-aware redirects for app pages: unauthenticated `/app/*` requests now redirect to `/login?next=...` instead of showing a 500 page.
+- Added sign-out button in app shell.
+- Added smoke validation automation:
+  - script: `scripts/runbook6-smoke.ts`
+  - npm command: `pnpm runbook6:smoke`
+  - validated output: Step 10 + Step 11 (pre-dunning + metric snapshots) pass.
+- Added targeted tests:
+  - `src/test/customer-update-session-route.test.ts`
+  - `src/test/auth-login-route.test.ts`
 
 ---
 
@@ -103,8 +122,9 @@
 - **Workaround:** validated Step 10 with fresh recovery attempt tied to current reachable customer context
 
 ### Issue 3: Supabase auth blocks `/app/*` without session
-- **Problem:** no dedicated login page in app yet
-- **Workaround used:** Step 13 validated via Supabase token flow and Bearer-auth request
+- **Problem:** app pages require valid Supabase session when auth vars are enabled
+- **Current state:** dedicated `/login` page and auth API routes now exist; unauthenticated app requests redirect to login
+- **Remaining gap:** no signup/forgot-password screens yet
 
 ### Issue 4: Prisma CLI reads `.env` (not `.env.local`)
 - **Workaround:** keep minimal `.env` with `DATABASE_URL`

@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { ensureWorkspaceExists, resolveWorkspaceContextFromHeaders } from "@/lib/auth";
+import { ProblemError } from "@/lib/problem";
 import { getRecoveryAttempts } from "@/lib/services/dashboard";
 import { RecoveryTable } from "@/components/dashboard/recovery-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export const dynamic = "force-dynamic";
 
 export default async function RecoveriesPage() {
-  const workspace = await resolveWorkspaceContextFromHeaders(await headers());
+  const requestHeaders = await headers();
+  const workspace = await resolveWorkspaceContextFromHeaders(requestHeaders).catch((error) => {
+    if (error instanceof ProblemError && error.code === "AUTH_UNAUTHORIZED") {
+      redirect("/login?next=/app/recoveries");
+    }
+    throw error;
+  });
   await ensureWorkspaceExists(workspace.workspaceId);
   const recoveries = await getRecoveryAttempts(workspace.workspaceId, 50);
 

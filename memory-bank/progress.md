@@ -31,3 +31,16 @@
 5. Supabase new key format (`sb_publishable_*`) — had to use legacy JWT keys
 
 **Full details:** See [`memory-bank/activeContext.md`](activeContext.md)
+
+### 2026-02-27: Post-Runbook Stabilization (Completed)
+
+**Executed:** Reliability hardening after Runbook 6 completion
+
+| Item | Status |
+|------|--------|
+| Step 10 endpoint hardening (`No such customer` fallback) | ✅ Complete |
+| Real login flow (`/login`, `/api/auth/login`, `/api/auth/logout`) | ✅ Complete |
+| Unauthenticated `/app/*` redirect to login (no more raw 500 page) | ✅ Complete |
+| App shell sign-out control | ✅ Complete |
+| Runbook smoke script (`pnpm runbook6:smoke`) | ✅ Complete |
+| Targeted route tests for login + payment update fallback | ✅ Complete |
