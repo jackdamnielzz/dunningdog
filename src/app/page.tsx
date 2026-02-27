@@ -24,8 +24,11 @@ export default function Home() {
             >
               Pricing
             </Link>
-            <Link href="/app">
-              <Button size="sm">Open app</Button>
+            <Link href="/login">
+              <Button size="sm" variant="outline">Sign in</Button>
+            </Link>
+            <Link href="/register">
+              <Button size="sm">Create account</Button>
             </Link>
           </div>
         </header>
@@ -44,14 +47,17 @@ export default function Home() {
               dollar from one dashboard.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/app">
+              <Link href="/register">
                 <Button className="gap-2">
-                  Launch Dashboard
+                  Create Account
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
+              <Link href="/login">
+                <Button variant="outline">Sign in</Button>
+              </Link>
               <Link href="/docs">
-                <Button variant="outline">Read Product Docs</Button>
+                <Button variant="ghost">Read Product Docs</Button>
               </Link>
             </div>
           </div>

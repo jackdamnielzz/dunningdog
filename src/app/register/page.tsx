@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LoginForm } from "@/components/forms/login-form";
+import { RegisterForm } from "@/components/forms/register-form";
 
-interface LoginPageProps {
+interface RegisterPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
@@ -17,7 +17,7 @@ function readParam(
   return value ?? null;
 }
 
-export default async function LoginPage({ searchParams }: LoginPageProps) {
+export default async function RegisterPage({ searchParams }: RegisterPageProps) {
   const params = await searchParams;
   const nextPath = readParam(params, "next") ?? "/app";
 
@@ -30,20 +30,20 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Sign in</CardTitle>
+            <CardTitle>Create account</CardTitle>
             <CardDescription>
-              Sign in with your DunningDog account to access your workspace.
+              Create your DunningDog account to start tracking recoveries.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <LoginForm nextPath={nextPath} />
+            <RegisterForm nextPath={nextPath} />
             <p className="text-sm text-zinc-600">
-              No account yet?{" "}
+              Already have an account?{" "}
               <Link
-                href={`/register?next=${encodeURIComponent(nextPath)}`}
+                href={`/login?next=${encodeURIComponent(nextPath)}`}
                 className="font-medium text-emerald-700 hover:text-emerald-600"
               >
-                Create one
+                Sign in
               </Link>
               .
             </p>

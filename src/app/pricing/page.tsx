@@ -27,6 +27,20 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-zinc-50 px-6 py-14">
       <main className="mx-auto max-w-6xl">
+        <header className="mb-10 flex items-center justify-between">
+          <Link href="/" className="text-3xl font-semibold tracking-tight text-zinc-900">
+            DunningDog
+          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/login">
+              <Button size="sm" variant="outline">Sign in</Button>
+            </Link>
+            <Link href="/register">
+              <Button size="sm">Create account</Button>
+            </Link>
+          </div>
+        </header>
+
         <h1 className="text-4xl font-semibold text-zinc-900">Pricing</h1>
         <p className="mt-3 max-w-xl text-zinc-600">
           Simple plans designed for Stripe-first indie teams. Start with a fixed monthly
@@ -49,7 +63,7 @@ export default function PricingPage() {
                     <li key={feature}>• {feature}</li>
                   ))}
                 </ul>
-                <Link href="/app">
+                <Link href="/register">
                   <Button className="w-full">Choose {tier.name}</Button>
                 </Link>
               </CardContent>
