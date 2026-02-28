@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { getResendClient } from "@/lib/resend";
+import { getSmtpTransporter } from "@/lib/smtp";
 import { env, isDemoMode } from "@/lib/env";
 import { log } from "@/lib/logger";
 import { getBranding } from "@/lib/services/branding";
@@ -53,23 +53,23 @@ export async function sendDunningEmail(params: SendEmailParams) {
   });
 
   const fromName = branding?.companyName ?? "DunningDog";
-  const from = `${fromName} <${env.RESEND_FROM_EMAIL}>`;
+  const from = `${fromName} <${env.SMTP_FROM_EMAIL}>`;
 
-  const resend = getResendClient();
+  const transporter = getSmtpTransporter();
 
   let deliveryStatus: "sent" | "failed" = "sent";
   let providerMessageId: string | undefined;
 
-  if (!isDemoMode && resend) {
+  if (!isDemoMode && transporter) {
     try {
-      const response = await resend.emails.send({
+      const info = await transporter.sendMail({
         from,
         to,
         subject: params.subject,
         text: params.body,
         html,
       });
-      providerMessageId = response.data?.id;
+      providerMessageId = info.messageId;
     } catch (error) {
       deliveryStatus = "failed";
       log("error", "Failed to send dunning email", {

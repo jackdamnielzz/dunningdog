@@ -34,7 +34,7 @@ async function loadPreDunning(isDemoMode: boolean) {
       APP_BASE_URL: "http://localhost:3000",
       NEXT_PUBLIC_APP_BASE_URL: "http://localhost:3000",
       DATABASE_URL: "postgresql://localhost/dunningdog",
-      RESEND_FROM_EMAIL: "billing@dunningdog.com",
+      SMTP_FROM_EMAIL: "info@dunningdog.com",
       POSTHOG_HOST: "https://eu.i.posthog.com",
       ENCRYPTION_KEY: "development-only-encryption-key",
     },

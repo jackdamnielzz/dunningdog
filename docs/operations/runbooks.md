@@ -115,7 +115,7 @@
    APP_BASE_URL=http://localhost:3000
    NEXT_PUBLIC_APP_BASE_URL=http://localhost:3000
    DATABASE_URL=postgresql://postgres:postgres@localhost:5432/dunningdog
-   RESEND_FROM_EMAIL=billing@dunningdog.com
+   SMTP_FROM_EMAIL=info@dunningdog.com
    ```
 5. Generate secure local secrets in `D-Manual`:
    ```powershell
@@ -162,7 +162,9 @@
 6. Temporary placeholders allowed for local run:
    - `INNGEST_EVENT_KEY=dev-inngest-event-key`
    - `INNGEST_SIGNING_KEY=dev-inngest-signing-key`
-   - `RESEND_API_KEY=` (may stay empty for local flow)
+   - `SMTP_HOST=` (may stay empty for local flow)
+   - `SMTP_USER=` (may stay empty for local flow)
+   - `SMTP_PASS=` (may stay empty for local flow)
 7. Save `.env.local` (`Ctrl+S`).
 
 ### 4) Start database and app

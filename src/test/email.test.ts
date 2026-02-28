@@ -2,14 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type EmailOptions = {
   demoMode: boolean;
-  resendEnabled: boolean;
+  smtpEnabled: boolean;
 };
 
 async function loadEmail(options: EmailOptions) {
   vi.resetModules();
 
-  const sendMock = vi.fn().mockResolvedValue({
-    data: { id: "re_msg_1" },
+  const sendMailMock = vi.fn().mockResolvedValue({
+    messageId: "<test-msg-id@dunningdog.com>",
   });
   const emailLogCreateMock = vi.fn().mockResolvedValue({
     id: "email_log_1",
@@ -27,19 +27,15 @@ async function loadEmail(options: EmailOptions) {
 
   vi.doMock("@/lib/env", () => ({
     env: {
-      RESEND_FROM_EMAIL: "billing@dunningdog.com",
+      SMTP_FROM_EMAIL: "info@dunningdog.com",
     },
     isDemoMode: options.demoMode,
   }));
 
-  vi.doMock("@/lib/resend", () => ({
-    getResendClient: () =>
-      options.resendEnabled
-        ? {
-            emails: {
-              send: sendMock,
-            },
-          }
+  vi.doMock("@/lib/smtp", () => ({
+    getSmtpTransporter: () =>
+      options.smtpEnabled
+        ? { sendMail: sendMailMock }
         : null,
   }));
 
@@ -50,7 +46,7 @@ async function loadEmail(options: EmailOptions) {
   const email = await import("@/lib/services/email");
   return {
     email,
-    sendMock,
+    sendMailMock,
     emailLogCreateMock,
     logMock,
   };
@@ -61,10 +57,10 @@ describe("email service", () => {
     vi.clearAllMocks();
   });
 
-  it("sends through Resend when live mode is enabled", async () => {
-    const { email, sendMock, emailLogCreateMock } = await loadEmail({
+  it("sends through SMTP when live mode is enabled", async () => {
+    const { email, sendMailMock, emailLogCreateMock } = await loadEmail({
       demoMode: false,
-      resendEnabled: true,
+      smtpEnabled: true,
     });
 
     await email.sendDunningEmail({
@@ -75,7 +71,13 @@ describe("email service", () => {
       toEmail: "customer@example.com",
     });
 
-    expect(sendMock).toHaveBeenCalledTimes(1);
+    expect(sendMailMock).toHaveBeenCalledTimes(1);
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "customer@example.com",
+        subject: "Payment failed",
+      }),
+    );
     expect(emailLogCreateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -86,10 +88,10 @@ describe("email service", () => {
     );
   });
 
-  it("records demo-mode email sends without calling Resend", async () => {
-    const { email, sendMock, emailLogCreateMock } = await loadEmail({
+  it("records demo-mode email sends without calling SMTP", async () => {
+    const { email, sendMailMock, emailLogCreateMock } = await loadEmail({
       demoMode: true,
-      resendEnabled: false,
+      smtpEnabled: false,
     });
 
     await email.sendDunningEmail({
@@ -100,7 +102,7 @@ describe("email service", () => {
       toEmail: "demo-customer@example.com",
     });
 
-    expect(sendMock).not.toHaveBeenCalled();
+    expect(sendMailMock).not.toHaveBeenCalled();
     expect(emailLogCreateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -111,13 +113,13 @@ describe("email service", () => {
     );
   });
 
-  it("marks delivery failed when Resend throws", async () => {
-    const { email, sendMock, emailLogCreateMock, logMock } = await loadEmail({
+  it("marks delivery failed when SMTP throws", async () => {
+    const { email, sendMailMock, emailLogCreateMock, logMock } = await loadEmail({
       demoMode: false,
-      resendEnabled: true,
+      smtpEnabled: true,
     });
 
-    sendMock.mockRejectedValueOnce(new Error("Resend timeout"));
+    sendMailMock.mockRejectedValueOnce(new Error("SMTP timeout"));
 
     await email.sendDunningEmail({
       workspaceId: "ws_1",
@@ -145,9 +147,9 @@ describe("email service", () => {
   });
 
   it("skips sending when no toEmail is provided", async () => {
-    const { email, sendMock, emailLogCreateMock, logMock } = await loadEmail({
+    const { email, sendMailMock, emailLogCreateMock, logMock } = await loadEmail({
       demoMode: false,
-      resendEnabled: true,
+      smtpEnabled: true,
     });
 
     await email.sendDunningEmail({
@@ -158,7 +160,7 @@ describe("email service", () => {
       toEmail: undefined,
     });
 
-    expect(sendMock).not.toHaveBeenCalled();
+    expect(sendMailMock).not.toHaveBeenCalled();
     expect(logMock).toHaveBeenCalledWith(
       "warn",
       "Skipping dunning email send: no recipient email resolved",

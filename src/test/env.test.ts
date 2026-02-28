@@ -15,8 +15,11 @@ const baseEnv = {
   STRIPE_PRICE_STARTER_ID: "price_starter",
   STRIPE_PRICE_PRO_ID: "price_pro",
   STRIPE_PRICE_GROWTH_ID: "price_growth",
-  RESEND_API_KEY: "re_key",
-  RESEND_FROM_EMAIL: "billing@dunningdog.com",
+  SMTP_HOST: "mail.privateemail.com",
+  SMTP_PORT: "465",
+  SMTP_USER: "info@dunningdog.com",
+  SMTP_PASS: "test_password",
+  SMTP_FROM_EMAIL: "info@dunningdog.com",
   INNGEST_EVENT_KEY: "inngest_event",
   INNGEST_SIGNING_KEY: "inngest_signing",
   CRON_SECRET: "long-enough-cron-secret",
@@ -36,7 +39,7 @@ describe("env validation", () => {
     vi.stubEnv("APP_BASE_URL", baseEnv.APP_BASE_URL);
     vi.stubEnv("NEXT_PUBLIC_APP_BASE_URL", baseEnv.NEXT_PUBLIC_APP_BASE_URL);
     vi.stubEnv("DATABASE_URL", baseEnv.DATABASE_URL);
-    vi.stubEnv("RESEND_FROM_EMAIL", baseEnv.RESEND_FROM_EMAIL);
+    vi.stubEnv("SMTP_FROM_EMAIL", baseEnv.SMTP_FROM_EMAIL);
     vi.stubEnv("POSTHOG_HOST", baseEnv.POSTHOG_HOST);
     vi.stubEnv("ENCRYPTION_KEY", baseEnv.ENCRYPTION_KEY);
     vi.stubEnv("DEMO_MODE", "false");
@@ -54,7 +57,7 @@ describe("env validation", () => {
     vi.stubEnv("APP_BASE_URL", "not-a-url");
     vi.stubEnv("NEXT_PUBLIC_APP_BASE_URL", baseEnv.NEXT_PUBLIC_APP_BASE_URL);
     vi.stubEnv("DATABASE_URL", baseEnv.DATABASE_URL);
-    vi.stubEnv("RESEND_FROM_EMAIL", baseEnv.RESEND_FROM_EMAIL);
+    vi.stubEnv("SMTP_FROM_EMAIL", baseEnv.SMTP_FROM_EMAIL);
     vi.stubEnv("POSTHOG_HOST", baseEnv.POSTHOG_HOST);
     vi.stubEnv("ENCRYPTION_KEY", baseEnv.ENCRYPTION_KEY);
     vi.stubEnv("DEMO_MODE", baseEnv.DEMO_MODE);
