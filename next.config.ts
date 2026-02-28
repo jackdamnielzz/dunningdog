@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -34,10 +35,30 @@ const nextConfig: NextConfig = {
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains; preload",
           },
+          {
+            key: "X-DNS-Prefetch-Control",
+            value: "off",
+          },
+          {
+            key: "Content-Security-Policy-Report-Only",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://eu.i.posthog.com",
+              "connect-src 'self' https://*.supabase.co https://api.stripe.com https://eu.i.posthog.com https://ingest.sentry.io",
+              "img-src 'self' data: blob:",
+              "font-src 'self' https://fonts.gstatic.com",
+              "frame-src https://js.stripe.com https://hooks.stripe.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+            ].join("; "),
+          },
         ],
       },
     ];
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  sourcemaps: { disable: true },
+  disableLogger: true,
+});

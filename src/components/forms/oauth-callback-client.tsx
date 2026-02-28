@@ -56,40 +56,52 @@ export function OAuthCallbackClient() {
         return;
       }
 
-      const state =
-        hashParams.get("state") ??
-        query.get("state") ??
+      // Read app_state first (DunningDog's own state), then Supabase's state as fallback
+      const appState =
         hashParams.get("app_state") ??
-        query.get("app_state");
-      if (!state) {
+        query.get("app_state") ??
+        hashParams.get("state") ??
+        query.get("state");
+      if (!appState) {
         if (!isMounted) return;
         setState("error");
         setErrorMessage("Missing OAuth state. Please start sign-in again.");
         return;
       }
 
+      // Detect PKCE flow (code in query) vs implicit flow (access_token in hash)
+      const code = query.get("code");
       const accessToken = hashParams.get("access_token") ?? query.get("access_token");
-      if (!accessToken) {
+
+      let body: Record<string, unknown>;
+
+      if (code) {
+        // PKCE flow: send code to server for exchange
+        body = { code, state: appState, next: nextPath };
+      } else if (accessToken) {
+        // Implicit flow (legacy fallback)
+        const refreshToken = hashParams.get("refresh_token") ?? query.get("refresh_token");
+        const expiresIn = readInteger(hashParams.get("expires_in") ?? query.get("expires_in"));
+        body = {
+          accessToken,
+          refreshToken: refreshToken ?? undefined,
+          expiresIn,
+          next: nextPath,
+          state: appState,
+        };
+      } else {
         if (!isMounted) return;
         setState("error");
-        setErrorMessage("No access token found in OAuth callback response.");
+        setErrorMessage("No authorization code or access token found in OAuth callback response.");
         return;
       }
-      const refreshToken = hashParams.get("refresh_token") ?? query.get("refresh_token");
-      const expiresIn = readInteger(hashParams.get("expires_in") ?? query.get("expires_in"));
 
       const response = await fetch("/api/auth/session", {
         method: "POST",
         headers: {
           "content-type": "application/json",
         },
-        body: JSON.stringify({
-          accessToken,
-          refreshToken: refreshToken ?? undefined,
-          expiresIn,
-          next: nextPath,
-          state,
-        }),
+        body: JSON.stringify(body),
       });
       const payload = (await response.json().catch(() => ({}))) as {
         detail?: string;

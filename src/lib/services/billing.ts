@@ -1,3 +1,4 @@
+import type Stripe from "stripe";
 import type { BillingPlan } from "@prisma/client";
 import { db } from "@/lib/db";
 import { env, isDemoMode } from "@/lib/env";
@@ -72,10 +73,16 @@ export async function createBillingCheckoutSession(params: {
     };
   }
 
+  const workspace = await db.workspace.findUnique({
+    where: { id: params.workspaceId },
+    select: { stripeCustomerId: true },
+  });
+
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],
     client_reference_id: params.workspaceId,
+    ...(workspace?.stripeCustomerId ? { customer: workspace.stripeCustomerId } : {}),
     success_url: `${env.APP_BASE_URL}/app/settings?billing=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${env.APP_BASE_URL}/app/settings?billing=canceled`,
     metadata: {
@@ -163,4 +170,93 @@ export async function confirmBillingCheckoutSession(
     },
   });
   return updated;
+}
+
+export async function createBillingPortalSession(params: {
+  workspaceId: string;
+  returnUrl: string;
+}) {
+  const stripe = getStripeClient();
+  if (!stripe || isDemoMode) {
+    return { portalUrl: params.returnUrl };
+  }
+
+  const workspace = await db.workspace.findUnique({
+    where: { id: params.workspaceId },
+    select: { stripeCustomerId: true },
+  });
+
+  if (!workspace?.stripeCustomerId) {
+    throw new ProblemError({
+      title: "No billing account found",
+      status: 404,
+      code: "BILLING_CUSTOMER_NOT_FOUND",
+      detail: "This workspace has no Stripe billing account. Complete a checkout first.",
+    });
+  }
+
+  const session = await stripe.billingPortal.sessions.create({
+    customer: workspace.stripeCustomerId,
+    return_url: params.returnUrl,
+  });
+
+  return { portalUrl: session.url };
+}
+
+function resolvePlanFromEvent(event: Stripe.Event): BillingPlan | undefined {
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const metadataPlan = session.metadata?.billingPlan;
+    if (metadataPlan === "starter" || metadataPlan === "pro" || metadataPlan === "growth") {
+      return metadataPlan;
+    }
+  }
+  return undefined;
+}
+
+export async function handleBillingWebhookEvent(event: Stripe.Event) {
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const workspaceId = session.metadata?.workspaceId ?? session.client_reference_id;
+    if (!workspaceId || !session.customer) return;
+
+    const plan = resolvePlanFromEvent(event);
+
+    await db.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        stripeCustomerId: String(session.customer),
+        billingSubscriptionId: session.subscription ? String(session.subscription) : undefined,
+        billingStatus: "active",
+        ...(plan ? { billingPlan: plan } : {}),
+      },
+    });
+
+    log("info", "Billing checkout completed via webhook", { workspaceId, plan });
+    reportAnalyticsEvent({
+      event: "billing_plan_updated",
+      distinctId: workspaceId,
+      properties: { workspaceId, plan, source: "webhook" },
+    });
+  }
+
+  if (event.type === "customer.subscription.updated") {
+    const sub = event.data.object as Stripe.Subscription;
+    const customerId = String(sub.customer);
+    await db.workspace.updateMany({
+      where: { stripeCustomerId: customerId },
+      data: { billingStatus: sub.status },
+    });
+    log("info", "Billing subscription updated via webhook", { customerId, status: sub.status });
+  }
+
+  if (event.type === "customer.subscription.deleted") {
+    const sub = event.data.object as Stripe.Subscription;
+    const customerId = String(sub.customer);
+    await db.workspace.updateMany({
+      where: { stripeCustomerId: customerId },
+      data: { billingStatus: "canceled", billingSubscriptionId: null },
+    });
+    log("info", "Billing subscription deleted via webhook", { customerId });
+  }
 }

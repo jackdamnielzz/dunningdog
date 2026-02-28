@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Sora, IBM_Plex_Mono, Roboto } from "next/font/google";
 import { DevServiceWorkerReset } from "@/components/dev/dev-sw-reset";
+import { PostHogProvider } from "@/components/providers/posthog-provider";
 import "./globals.css";
 
 const sora = Sora({
@@ -35,7 +36,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${sora.variable} ${plexMono.variable} ${roboto.variable} antialiased`}>
         <DevServiceWorkerReset />
-        {children}
+        <PostHogProvider>{children}</PostHogProvider>
       </body>
     </html>
   );

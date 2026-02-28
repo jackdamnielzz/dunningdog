@@ -13,6 +13,9 @@ export interface WorkspaceDTO {
   ownerUserId: string;
   timezone: string;
   billingPlan: "starter" | "pro" | "growth";
+  stripeCustomerId: string | null;
+  billingSubscriptionId: string | null;
+  billingStatus: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

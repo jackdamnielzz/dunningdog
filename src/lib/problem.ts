@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 type ProblemCode =
   | `AUTH_${string}`
+  | `BILLING_${string}`
   | `STRIPE_${string}`
   | `DUNNING_${string}`
   | `VALIDATION_${string}`

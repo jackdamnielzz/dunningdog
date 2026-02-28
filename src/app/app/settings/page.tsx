@@ -8,6 +8,7 @@ import { isDatabaseUnavailableError, describeFailure } from "@/lib/runtime-fallb
 import { getDemoConnectedStripeAccount } from "@/lib/demo-data";
 import { log } from "@/lib/logger";
 import { ConnectStripeButton } from "@/components/forms/connect-stripe-button";
+import { ManageSubscriptionButton } from "@/components/forms/manage-subscription-button";
 import { UpgradePlanButton } from "@/components/forms/upgrade-plan-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -165,6 +166,11 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               </div>
             ))}
           </div>
+          {workspaceRecord.stripeCustomerId ? (
+            <div className="pt-2">
+              <ManageSubscriptionButton />
+            </div>
+          ) : null}
         </CardContent>
       </Card>
     </div>

@@ -9,6 +9,12 @@ export const SUPPORTED_STRIPE_WEBHOOK_EVENTS = new Set([
   "payment_method.automatically_updated",
 ]);
 
+export const SUPPORTED_BILLING_WEBHOOK_EVENTS = new Set([
+  "checkout.session.completed",
+  "customer.subscription.updated",
+  "customer.subscription.deleted",
+]);
+
 export const HARD_DECLINE_CODES = new Set([
   "do_not_honor",
   "lost_card",

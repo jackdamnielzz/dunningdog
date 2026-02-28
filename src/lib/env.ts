@@ -36,10 +36,14 @@ const envSchema = z.object({
   INNGEST_SIGNING_KEY: z.string().optional(),
   CRON_SECRET: z.string().min(16).optional(),
   SENTRY_DSN: z.string().optional(),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
   APP_RELEASE: z.string().optional(),
   OBSERVABILITY_TIMEOUT_MS: z.coerce.number().int().min(100).max(10000).default(2000),
   POSTHOG_KEY: z.string().optional(),
   POSTHOG_HOST: z.string().url().default("https://eu.i.posthog.com"),
+  NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
+  NEXT_PUBLIC_POSTHOG_HOST: z.string().url().default("https://eu.i.posthog.com"),
+  STRIPE_BILLING_WEBHOOK_SECRET: z.string().optional(),
   ENCRYPTION_KEY: z
     .string()
     .min(16)

@@ -5,15 +5,26 @@ import { log } from "@/lib/logger";
 import { ProblemError } from "@/lib/problem";
 import { createSupabaseClient } from "@/lib/supabase";
 
-const schema = z.object({
+const implicitSchema = z.object({
   accessToken: z.string().min(20),
   refreshToken: z.string().min(1).optional(),
   expiresIn: z.coerce.number().int().min(60).max(2_592_000).optional(),
   next: z.string().optional(),
   state: z.string().min(8),
+  code: z.undefined().optional(),
 });
 
+const pkceSchema = z.object({
+  code: z.string().min(1),
+  next: z.string().optional(),
+  state: z.string().min(8),
+  accessToken: z.undefined().optional(),
+});
+
+const schema = z.union([pkceSchema, implicitSchema]);
+
 const OAUTH_STATE_COOKIE = "sb-oauth-state";
+const PKCE_VERIFIER_COOKIE = "sb-pkce-verifier";
 const REFRESH_TOKEN_COOKIE = "sb-refresh-token";
 
 function buildSessionCookieValue(accessToken: string, refreshToken?: string) {
@@ -64,6 +75,62 @@ function readCookieValue(cookieHeader: string | null, cookieName: string) {
   return null;
 }
 
+interface TokenExchangeResult {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn?: number;
+}
+
+async function exchangePkceCode(code: string, codeVerifier: string): Promise<TokenExchangeResult> {
+  const tokenUrl = `${env.SUPABASE_URL}/auth/v1/token?grant_type=pkce`;
+  const response = await fetch(tokenUrl, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      apikey: env.SUPABASE_ANON_KEY!,
+    },
+    body: JSON.stringify({
+      auth_code: code,
+      code_verifier: codeVerifier,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    log("error", "PKCE code exchange failed", {
+      status: response.status,
+      body: body.slice(0, 200),
+    });
+    throw new ProblemError({
+      title: "OAuth code exchange failed",
+      status: 401,
+      code: "AUTH_PKCE_EXCHANGE_FAILED",
+      detail: "Could not exchange the authorization code for a session. Please sign in again.",
+    });
+  }
+
+  const payload = (await response.json()) as {
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+  };
+
+  if (!payload.access_token) {
+    throw new ProblemError({
+      title: "OAuth code exchange failed",
+      status: 401,
+      code: "AUTH_PKCE_EXCHANGE_FAILED",
+      detail: "Supabase did not return an access token.",
+    });
+  }
+
+  return {
+    accessToken: payload.access_token,
+    refreshToken: payload.refresh_token,
+    expiresIn: payload.expires_in,
+  };
+}
+
 export async function POST(request: Request) {
   try {
     if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
@@ -80,6 +147,7 @@ export async function POST(request: Request) {
     const oauthStateCookie = readCookieValue(cookieHeader, OAUTH_STATE_COOKIE);
     log("info", "OAuth session exchange started", {
       next: input.next,
+      flow: input.code ? "pkce" : "implicit",
       hasStateCookie: Boolean(oauthStateCookie),
       stateMatches: Boolean(oauthStateCookie && oauthStateCookie === input.state),
     });
@@ -95,6 +163,34 @@ export async function POST(request: Request) {
       });
     }
 
+    let accessToken: string;
+    let refreshToken: string | undefined;
+    let expiresIn: number | undefined;
+
+    if (input.code) {
+      // PKCE flow: exchange code for tokens server-side
+      const codeVerifier = readCookieValue(cookieHeader, PKCE_VERIFIER_COOKIE);
+      if (!codeVerifier) {
+        throw new ProblemError({
+          title: "PKCE verifier missing",
+          status: 401,
+          code: "AUTH_PKCE_VERIFIER_MISSING",
+          detail: "The PKCE code verifier cookie is missing or expired. Please sign in again.",
+        });
+      }
+
+      const tokens = await exchangePkceCode(input.code, codeVerifier);
+      accessToken = tokens.accessToken;
+      refreshToken = tokens.refreshToken;
+      expiresIn = tokens.expiresIn;
+    } else {
+      // Implicit flow (legacy fallback)
+      const implicit = input as z.infer<typeof implicitSchema>;
+      accessToken = implicit.accessToken;
+      refreshToken = implicit.refreshToken;
+      expiresIn = implicit.expiresIn;
+    }
+
     const supabase = createSupabaseClient();
     if (!supabase) {
       throw new ProblemError({
@@ -105,7 +201,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const userResult = await supabase.auth.getUser(input.accessToken);
+    const userResult = await supabase.auth.getUser(accessToken);
     if (userResult.error || !userResult.data.user) {
       log("error", "Supabase auth.getUser failed", {
         err: userResult.error?.message ?? "No user returned",
@@ -130,16 +226,16 @@ export async function POST(request: Request) {
       userId: userResult.data.user.id,
     });
 
-    response.cookies.set("sb-auth-token", buildSessionCookieValue(input.accessToken, input.refreshToken), {
+    response.cookies.set("sb-auth-token", buildSessionCookieValue(accessToken, refreshToken), {
       path: "/",
       httpOnly: true,
       sameSite: "lax",
       secure: env.NODE_ENV === "production",
-      maxAge: input.expiresIn ?? 3600,
+      maxAge: expiresIn ?? 3600,
     });
 
-    if (input.refreshToken) {
-      response.cookies.set(REFRESH_TOKEN_COOKIE, input.refreshToken, {
+    if (refreshToken) {
+      response.cookies.set(REFRESH_TOKEN_COOKIE, refreshToken, {
         path: "/",
         httpOnly: true,
         sameSite: "lax",
@@ -157,6 +253,15 @@ export async function POST(request: Request) {
     }
 
     response.cookies.set(OAUTH_STATE_COOKIE, "", {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      secure: env.NODE_ENV === "production",
+      maxAge: 0,
+    });
+
+    // Clear PKCE verifier cookie
+    response.cookies.set(PKCE_VERIFIER_COOKIE, "", {
       path: "/",
       httpOnly: true,
       sameSite: "lax",

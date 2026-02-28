@@ -65,14 +65,17 @@ enum DeliveryStatus {
 }
 
 model Workspace {
-  id                     String                   @id @default(cuid())
-  name                   String
-  ownerUserId            String
-  timezone               String                   @default("UTC")
-  billingPlan            BillingPlan              @default(starter)
-  isActive               Boolean                  @default(true)
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime                 @updatedAt
+  id                      String                   @id @default(cuid())
+  name                    String
+  ownerUserId             String
+  timezone                String                   @default("UTC")
+  billingPlan             BillingPlan              @default(starter)
+  stripeCustomerId        String?
+  billingSubscriptionId   String?
+  billingStatus           String?
+  isActive                Boolean                  @default(true)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
   members                WorkspaceMember[]
   connectedStripeAccount ConnectedStripeAccount?
   dunningSequences       DunningSequence[]

@@ -25,6 +25,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^6.16.2",
+    "@sentry/nextjs": "^10.40.0",
     "@supabase/supabase-js": "^2.96.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -33,6 +34,7 @@
     "lucide-react": "^0.574.0",
     "nanoid": "^5.1.6",
     "next": "16.1.6",
+    "posthog-js": "^1.356.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.1",
@@ -42,7 +44,12 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/json-schema": "^7.0.15",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -50,11 +57,12 @@
     "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "jsdom": "^27.2.0",
+    "jsdom": "^27.4.0",
     "prisma": "^6.16.2",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "vitest-axe": "^0.1.0"
   }
 }

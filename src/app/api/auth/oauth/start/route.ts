@@ -1,14 +1,23 @@
 import { NextResponse } from "next/server";
-import { randomBytes } from "crypto";
+import { createHash, randomBytes } from "crypto";
 import { env } from "@/lib/env";
 import { ProblemError, problemResponse } from "@/lib/problem";
 
 type SupportedProvider = "google" | "microsoft";
 const OAUTH_STATE_COOKIE = "sb-oauth-state";
+const PKCE_VERIFIER_COOKIE = "sb-pkce-verifier";
 const OAUTH_STATE_TTL_SECONDS = 10 * 60;
 
 function createOAuthState() {
   return randomBytes(24).toString("hex");
+}
+
+function createPkceVerifier() {
+  return randomBytes(32).toString("base64url");
+}
+
+function computeCodeChallenge(verifier: string) {
+  return createHash("sha256").update(verifier).digest("base64url");
 }
 
 function normalizeNextPath(path: string | null) {
@@ -57,12 +66,24 @@ export async function GET(request: Request) {
     callbackUrl.searchParams.set("next", nextPath);
     callbackUrl.searchParams.set("app_state", state);
 
+    const codeVerifier = createPkceVerifier();
+    const codeChallenge = computeCodeChallenge(codeVerifier);
+
     const authorizeUrl = new URL(`${env.SUPABASE_URL}/auth/v1/authorize`);
     authorizeUrl.searchParams.set("provider", mapToSupabaseProvider(provider));
     authorizeUrl.searchParams.set("redirect_to", callbackUrl.toString());
+    authorizeUrl.searchParams.set("code_challenge", codeChallenge);
+    authorizeUrl.searchParams.set("code_challenge_method", "S256");
 
     const response = NextResponse.redirect(authorizeUrl, { status: 302 });
     response.cookies.set(OAUTH_STATE_COOKIE, state, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      secure: env.NODE_ENV === "production",
+      maxAge: OAUTH_STATE_TTL_SECONDS,
+    });
+    response.cookies.set(PKCE_VERIFIER_COOKIE, codeVerifier, {
       path: "/",
       httpOnly: true,
       sameSite: "lax",
