@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ForgotPasswordForm } from "@/components/forms/forgot-password-form";
+import { SiteFooter } from "@/components/marketing/site-footer";
 
 export default function ForgotPasswordPage() {
   return (
@@ -22,7 +23,7 @@ export default function ForgotPasswordPage() {
           </CardContent>
         </Card>
       </main>
+      <SiteFooter />
     </div>
   );
 }
-

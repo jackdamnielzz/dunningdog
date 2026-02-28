@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginForm } from "@/components/forms/login-form";
+import { SiteFooter } from "@/components/marketing/site-footer";
 import { getAuthenticatedUserIdFromHeaders } from "@/lib/auth";
 
 interface LoginPageProps {
@@ -58,6 +59,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </CardContent>
         </Card>
       </main>
+      <SiteFooter />
     </div>
   );
 }

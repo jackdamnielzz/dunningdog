@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RegisterForm } from "@/components/forms/register-form";
+import { SiteFooter } from "@/components/marketing/site-footer";
 import { getAuthenticatedUserIdFromHeaders } from "@/lib/auth";
 
 interface RegisterPageProps {
@@ -58,6 +59,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           </CardContent>
         </Card>
       </main>
+      <SiteFooter />
     </div>
   );
 }

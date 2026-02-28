@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SiteFooter } from "@/components/marketing/site-footer";
 import { getAuthenticatedUserIdFromHeaders } from "@/lib/auth";
 import {
   Card,
@@ -124,6 +125,7 @@ export default async function Home() {
           ))}
         </section>
       </main>
+      <SiteFooter />
     </div>
   );
 }

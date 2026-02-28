@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { notFound } from "next/navigation";
+import { SiteFooter } from "@/components/marketing/site-footer";
 
 interface DocFilePageProps {
   params: Promise<{ slug: string[] }>;
@@ -30,15 +31,18 @@ export default async function DocFilePage({ params }: DocFilePageProps) {
   const content = await fs.readFile(filePath, "utf8");
 
   return (
-    <div className="min-h-screen bg-zinc-50 px-6 py-10">
-      <main className="mx-auto max-w-5xl rounded-xl border border-zinc-200 bg-white p-6">
-        <h1 className="mb-4 text-xl font-semibold text-zinc-900">
-          docs/{slug.join("/")}
-        </h1>
-        <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg bg-zinc-900 p-4 text-sm leading-6 text-zinc-100">
-          {content}
-        </pre>
+    <div className="min-h-screen bg-zinc-50">
+      <main className="mx-auto max-w-5xl px-6 py-10">
+        <div className="rounded-xl border border-zinc-200 bg-white p-6">
+          <h1 className="mb-4 text-xl font-semibold text-zinc-900">
+            docs/{slug.join("/")}
+          </h1>
+          <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg bg-zinc-900 p-4 text-sm leading-6 text-zinc-100">
+            {content}
+          </pre>
+        </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

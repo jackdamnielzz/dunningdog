@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResetPasswordForm } from "@/components/forms/reset-password-form";
+import { SiteFooter } from "@/components/marketing/site-footer";
 
 export default function ResetPasswordPage() {
   return (
@@ -22,7 +23,7 @@ export default function ResetPasswordPage() {
           </CardContent>
         </Card>
       </main>
+      <SiteFooter />
     </div>
   );
 }
-

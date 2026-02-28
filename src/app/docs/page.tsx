@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SiteFooter } from "@/components/marketing/site-footer";
 
 const docLinks = [
   { href: "/docs/README.md", label: "Documentation Index", desc: "Read the full execution blueprint." },
@@ -37,6 +38,7 @@ export default function DocsPage() {
           ))}
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

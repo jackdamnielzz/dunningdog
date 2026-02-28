@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { SiteFooter } from "@/components/marketing/site-footer";
 import { getAuthenticatedUserIdFromHeaders } from "@/lib/auth";
 
 const tiers = [
@@ -80,6 +81,7 @@ export default async function PricingPage() {
           ))}
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }
