@@ -1,6 +1,6 @@
 🚀 Deep-Dive Business Brief: DunningDog
 1. Executive Summary
-DunningDog is a lightweight, affordable failed payment recovery tool built specifically for indie SaaS founders, solo creators, and small subscription businesses running $500–$20K MRR on Stripe. Involuntary churn from failed payments accounts for up to 40% of total churn and costs subscription businesses 10–20% of annual recurring revenue. While enterprise tools like Churnkey, Butter, and Baremetrics Recover exist, they start at $50–$500+/month — completely out of reach for bootstrapped founders. Stripe's built-in Smart Retries recover ~57% of failed payments, but that still leaves 43% of failures unrecovered. DunningDog fills this gap: it layers on top of Stripe's native tools with pre-dunning detection, customizable email sequences, smart retry scheduling, and a hosted payment update page — all for $29/month. The timing is ideal: the indie SaaS ecosystem is booming, subscription fatigue is rising, and every dollar of recovered revenue matters more than ever in a cost-conscious economy.
+DunningDog is a lightweight, affordable failed payment recovery tool built specifically for indie SaaS founders, solo creators, and small subscription businesses running $500–$20K MRR on Stripe. Involuntary churn from failed payments accounts for up to 40% of total churn and costs subscription businesses 10–20% of annual recurring revenue. While enterprise tools like Churnkey, Butter, and Baremetrics Recover exist, they start at $50–$500+/month — completely out of reach for bootstrapped founders. Stripe's built-in Smart Retries recover ~57% of failed payments, but that still leaves 43% of failures unrecovered. DunningDog fills this gap: it layers on top of Stripe's native tools with pre-dunning detection, customizable email sequences, smart retry scheduling, and a hosted payment update page — all starting at $49/month. The timing is ideal: the indie SaaS ecosystem is booming, subscription fatigue is rising, and every dollar of recovered revenue matters more than ever in a cost-conscious economy.
 
 2. Problem Analysis
 The Pain in Numbers:
@@ -64,7 +64,7 @@ Discord/Slack	MicroConf Connect, Indie Worldwide, various founder communities
 Newsletters	IndieHackers, TLDR Founders, MicroConf, SaaS Weekly
 Product Hunt	Active SaaS founder audience; ideal launch platform
 Willingness to Pay:
-High. Failed payment recovery has directly measurable ROI. If a founder is losing $200/month to failed payments and DunningDog recovers even 50% of that, the $29/month subscription pays for itself 3–4x over. Reddit users explicitly state they'd pay for an affordable dunning tool — they just can't stomach enterprise pricing. The value proposition is mathematical, not emotional: "DunningDog recovered $347 for you this month. Your plan costs $29."
+High. Failed payment recovery has directly measurable ROI. If a founder is losing $200/month to failed payments and DunningDog recovers even 50% of that, the $49/month subscription pays for itself 3–4x over. Reddit users explicitly state they'd pay for an affordable dunning tool — they just can't stomach enterprise pricing. The value proposition is mathematical, not emotional: "DunningDog recovered $347 for you this month. Your plan costs $49."
 
 5. Competitive Landscape
 
@@ -74,7 +74,7 @@ Churn Buster	Dedicated dunning tool, proven recovery rates, good email sequences
 Baremetrics Recover	Part of broader analytics suite; easy Stripe integration	Dunning is a secondary feature, not the core product; basic email templates; recovery rates lag behind specialists	Starts ~$108/mo (includes full Baremetrics)
 Butter Payments	Advanced ML retry optimization; high recovery rates	Enterprise-focused; B2C subscription focus; expensive; no indie/creator tier	Custom pricing, $200+/mo
 Stripe Smart Retries	Free, built-in, ML-optimized, recovers ~57% of failures	No pre-dunning; basic/ugly email templates; no hosted payment update page; no recovery dashboard; can't customize	Free (included with Stripe)
-🐕 DunningDog	Affordable, indie-focused, 5-min setup, pre-dunning, custom emails, hosted update page, recovery dashboard	New entrant; needs to prove recovery rates	$29–$79/mo
+🐕 DunningDog	Affordable, indie-focused, 5-min setup, pre-dunning, custom emails, hosted update page, recovery dashboard	New entrant; needs to prove recovery rates	$49–$299/mo
 Your Competitive Edge:
 DunningDog is not competing with Churnkey or Butter — you're competing with "doing nothing" or "using Stripe's basics." Your real competition is the founder who thinks "Stripe handles it well enough" — your job is to show them how much revenue they're leaving on the table. Position DunningDog as the upgrade from Stripe's built-in dunning, not as the budget version of Churnkey.
 
@@ -82,29 +82,33 @@ DunningDog is not competing with Churnkey or Butter — you're competing with "d
 Pricing Tiers:
 
 
-🐶 Starter	🐕 Pro	🦮 Growth
-Price	$29/mo	$49/mo	$79/mo
-MRR Tracked	Up to $5K	Up to $20K	Up to $50K
+🐶 Starter	🐕 Pro	🦮 Scale
+Price	$49/mo	$149/mo	$299/mo
+Annual Price	$39/mo	$124/mo	$249/mo
+MRR Tracked	Up to $10K	Up to $50K	Up to $200K
 Pre-Dunning Alerts	✅	✅	✅
-Email Sequences	3-step	5-step customizable	Unlimited + A/B testing
-Hosted Update Page	✅ (DunningDog branding)	✅ (Custom branding)	✅ (White-label)
-Recovery Dashboard	Basic	Full analytics	Full + export
+Email Sequences	3-step	Unlimited	Unlimited
+Custom Email Branding	❌	✅	✅
+Hosted Update Page	❌	❌	✅ (White-label)
+Recovery Dashboard	✅	✅	✅ + advanced exports
 Slack/Discord Alerts	❌	✅	✅
-In-App Widget	❌	❌	✅
-Support	Email	Priority email	Priority + onboarding call
+API Access	❌	❌	✅
+Support	Email	Priority email	Priority + onboarding
+Enterprise	Contact us for custom plans above $200k MRR (SLA, dedicated account manager, custom integrations).
+
 Alternative Model (Consider for V2):
 
 Performance-based: Free to use, DunningDog takes 5–10% of recovered revenue. This eliminates friction entirely and aligns incentives — but requires more sophisticated tracking and may reduce margins.
-Annual Billing: Offer 2 months free on annual plans ($290/yr, $490/yr, $790/yr).
+Annual Billing: 2 months free on annual plans ($468/yr, $1,488/yr, $2,988/yr).
 
 Target MRR Milestones:
 
 
 Milestone	Timeframe	Target	How
-First paying customer	Month 1	$29–$49 MRR	Direct outreach + beta invites
-Validation	Month 3	$300–$500 MRR	10–15 paying users from community marketing
-Sustainability	Month 6	$1,000–$2,000 MRR	30–50 users via Product Hunt launch + organic
-Growth	Month 12	$3,000–$5,000 MRR	80–120 users via SEO + referrals + integrations
+First paying customer	Month 1	$49–$149 MRR	Direct outreach + beta invites
+Validation	Month 3	$500–$1,500 MRR	10–15 paying users from community marketing
+Sustainability	Month 6	$3,000–$5,000 MRR	30–50 users via Product Hunt launch + organic
+Growth	Month 12	$8,000–$15,000 MRR	80–120 users via SEO + referrals + integrations
 Key Metrics to Track:
 
 
@@ -183,7 +187,7 @@ Action	Channel	Goal
 Product Hunt launch (Tuesday, 12:01 AM PST)	Product Hunt	Top 5 of the day, 200+ upvotes, 30+ signups
 Cross-post launch on Reddit, IH, Twitter	Multi-channel	Amplify PH launch with community support
 Write "How I Built X" blog post	IndieHackers + personal blog	SEO + founder storytelling
-Offer "Founder's Deal" — $19/mo for life (first 50 users)	Email + PH	Urgency-driven conversion; early adopters become evangelists
+Offer "Founder's Deal" — $29/mo for life (first 50 users)	Email + PH	Urgency-driven conversion; early adopters become evangelists
 Month 3–6: Organic Growth Engine
 
 
@@ -198,7 +202,7 @@ Seek reviews on G2, Capterra	Review platforms	Long-term credibility and SEO
 
 #	Risk	Likelihood	Impact	Mitigation
 1	Stripe builds better native dunning — Stripe's 2025 Sessions previewed "Authorization Boost" and improved retry tools. If Stripe significantly upgrades their free dunning, DunningDog's value prop weakens.	Medium	High	Stay ahead by focusing on what Stripe will never do well: customizable branded emails, pre-dunning, hosted update pages, and a dedicated recovery dashboard. Stripe is a platform, not a dunning specialist. Also: expand to Paddle + Lemon Squeezy early to reduce Stripe dependency.
-2	Low initial recovery rates — If DunningDog's recovery rate doesn't meaningfully beat Stripe's built-in ~57%, users won't see enough value to justify $29/month.	Medium	High	Invest heavily in pre-dunning (catching cards before they fail) — this is something Stripe's Smart Retries don't do. Pre-dunning alone can recover 10–15% of would-be failures. Publish transparent recovery stats to build trust.
+2	Low initial recovery rates — If DunningDog's recovery rate doesn't meaningfully beat Stripe's built-in ~57%, users won't see enough value to justify $49/month.	Medium	High	Invest heavily in pre-dunning (catching cards before they fail) — this is something Stripe's Smart Retries don't do. Pre-dunning alone can recover 10–15% of would-be failures. Publish transparent recovery stats to build trust.
 3	Small TAM ceiling — Indie founders with $500–$20K MRR is a defined (and capped) market. Growth may plateau.	Low-Medium	Medium	Plan the expansion path early: (1) add Paddle/Lemon Squeezy integrations, (2) move upmarket with a $149+ tier for $20K–$100K MRR SaaS, (3) add voluntary churn features (cancel flows) to compete with Churnkey at a lower price.
 4	Security/trust concerns — Users must grant OAuth access to their Stripe account. Some founders may be hesitant to give a new tool access to their billing data.	Medium	Medium	Use Stripe Connect (OAuth) with minimal required permissions (read-only where possible). Display security badges, explain data handling clearly, and offer a "read-only dashboard mode" so users can see what DunningDog would do before granting full access. SOC2 aspirational for later.
 5	Churn of your own customers — Ironic risk: if DunningDog works so well that customers feel they've "fixed" their churn problem, they might cancel thinking they no longer need it.	Low	Medium	Continuously show value: monthly "Recovery Report" emails showing how much was saved. Make the dashboard addictive. Introduce a "what would have happened without DunningDog" counterfactual metric.
@@ -218,4 +222,4 @@ How to track it:
 Recovery Rate = (Revenue Successfully Recovered / Total Revenue from Failed Payments) × 100
 Display this prominently on every user's dashboard.
 Send a monthly "Recovery Report" email: "This month, DunningDog recovered $X of $Y in failed payments (Z% recovery rate). Your ROI this month: X:1."
-The magic moment: When a user opens their first Recovery Report email and sees "DunningDog recovered $412 this month. Your plan costs $29." — that's the moment they become a customer for life.
+The magic moment: When a user opens their first Recovery Report email and sees "DunningDog recovered $412 this month. Your plan costs $49." — that's the moment they become a customer for life.

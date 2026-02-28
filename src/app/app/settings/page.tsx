@@ -31,9 +31,9 @@ function readParam(
 }
 
 const plans = [
-  { id: "starter", name: "Starter", cap: "Up to $5k MRR tracked" },
-  { id: "pro", name: "Pro", cap: "Up to $20k MRR tracked" },
-  { id: "growth", name: "Growth", cap: "Up to $50k MRR tracked" },
+  { id: "starter", name: "Starter", price: "$49/mo", cap: "Up to $10k MRR" },
+  { id: "pro", name: "Pro", price: "$149/mo", cap: "Up to $50k MRR" },
+  { id: "growth", name: "Scale", price: "$299/mo", cap: "Up to $200k MRR" },
 ] as const;
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
@@ -149,22 +149,35 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             ) : null}
           </div>
           <div className="grid gap-3 md:grid-cols-3">
-            {plans.map((plan) => (
-              <div
-                key={plan.id}
-                className="space-y-3 rounded-lg border border-zinc-200 bg-white p-4"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-zinc-900">{plan.name}</p>
-                  <p className="text-xs text-zinc-600">{plan.cap}</p>
+            {plans.map((plan) => {
+              const isCurrent = workspaceRecord.billingPlan === plan.id;
+              return (
+                <div
+                  key={plan.id}
+                  className={`space-y-3 rounded-lg border-2 bg-white p-4 ${
+                    isCurrent
+                      ? "border-emerald-500 ring-1 ring-emerald-200"
+                      : "border-zinc-200"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-zinc-900">{plan.name}</p>
+                      {isCurrent && (
+                        <Badge variant="success">Current</Badge>
+                      )}
+                    </div>
+                    <p className="mt-1 text-lg font-bold text-zinc-900">{plan.price}</p>
+                    <p className="text-xs text-zinc-500">{plan.cap}</p>
+                  </div>
+                  <UpgradePlanButton
+                    workspaceId={workspace.workspaceId}
+                    plan={plan.id}
+                    currentPlan={workspaceRecord.billingPlan}
+                  />
                 </div>
-                <UpgradePlanButton
-                  workspaceId={workspace.workspaceId}
-                  plan={plan.id}
-                  currentPlan={workspaceRecord.billingPlan}
-                />
-              </div>
-            ))}
+              );
+            })}
           </div>
           {workspaceRecord.stripeCustomerId ? (
             <div className="pt-2">
