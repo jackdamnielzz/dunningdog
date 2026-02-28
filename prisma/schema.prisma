@@ -64,6 +64,18 @@ enum DeliveryStatus {
   converted
 }
 
+enum NotificationChannelType {
+  slack
+  discord
+}
+
+enum NotificationEventKind {
+  recovery_started
+  recovery_succeeded
+  recovery_failed
+  predunning_sent
+}
+
 model Workspace {
   id                      String                   @id @default(cuid())
   name                    String
@@ -76,16 +88,20 @@ model Workspace {
   isActive                Boolean                  @default(true)
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
-  members                WorkspaceMember[]
-  connectedStripeAccount ConnectedStripeAccount?
-  dunningSequences       DunningSequence[]
-  subscriptionsAtRisk    SubscriptionAtRisk[]
-  recoveryAttempts       RecoveryAttempt[]
-  recoveryOutcomes       RecoveryOutcome[]
-  emailLogs              EmailLog[]
-  stripeEvents           StripeEvent[]
-  metricSnapshots        MetricSnapshot[]
-  oauthStates            StripeOAuthState[]
+  members                 WorkspaceMember[]
+  connectedStripeAccount  ConnectedStripeAccount?
+  dunningSequences        DunningSequence[]
+  subscriptionsAtRisk     SubscriptionAtRisk[]
+  recoveryAttempts        RecoveryAttempt[]
+  recoveryOutcomes        RecoveryOutcome[]
+  emailLogs               EmailLog[]
+  stripeEvents            StripeEvent[]
+  metricSnapshots         MetricSnapshot[]
+  oauthStates             StripeOAuthState[]
+  emailBranding           EmailBranding?
+  notificationChannels    NotificationChannel[]
+  paymentUpdateTokens     PaymentUpdateToken[]
+  apiKeys                 ApiKey[]
 }
 
 model WorkspaceMember {
@@ -254,4 +270,62 @@ model MetricSnapshot {
 
   @@unique([workspaceId, periodStart, periodEnd])
   @@index([workspaceId, generatedAt])
+}
+
+model EmailBranding {
+  id          String    @id @default(cuid())
+  workspaceId String    @unique
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  companyName String?
+  logoUrl     String?
+  accentColor String    @default("#10b981")
+  footerText  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model NotificationChannel {
+  id          String                  @id @default(cuid())
+  workspaceId String
+  workspace   Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  type        NotificationChannelType
+  label       String                  @default("")
+  webhookUrl  String
+  events      NotificationEventKind[]
+  isEnabled   Boolean                 @default(true)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  @@index([workspaceId])
+}
+
+model PaymentUpdateToken {
+  id                String    @id @default(cuid())
+  workspaceId       String
+  workspace         Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  recoveryAttemptId String
+  token             String    @unique
+  expiresAt         DateTime
+  usedAt            DateTime?
+  createdAt         DateTime  @default(now())
+
+  @@index([token])
+  @@index([workspaceId])
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  prefix      String
+  hashedKey   String    @unique
+  label       String    @default("")
+  scopes      String[]
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId])
+  @@index([hashedKey])
 }

@@ -13,13 +13,13 @@ export const createSequenceSchema = z.object({
   workspaceId: z.string().min(2),
   name: z.string().min(2).max(80),
   isEnabled: z.boolean().default(true),
-  steps: z.array(sequenceStepSchema.omit({ id: true })).min(1).max(8),
+  steps: z.array(sequenceStepSchema.omit({ id: true })).min(1).max(20),
 });
 
 export const updateSequenceSchema = z.object({
   name: z.string().min(2).max(80).optional(),
   isEnabled: z.boolean().optional(),
-  steps: z.array(sequenceStepSchema).min(1).max(8).optional(),
+  steps: z.array(sequenceStepSchema).min(1).max(20).optional(),
 });
 
 export async function createSequence(input: z.infer<typeof createSequenceSchema>) {

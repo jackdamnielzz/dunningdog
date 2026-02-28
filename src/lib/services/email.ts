@@ -2,6 +2,8 @@ import { db } from "@/lib/db";
 import { getResendClient } from "@/lib/resend";
 import { env, isDemoMode } from "@/lib/env";
 import { log } from "@/lib/logger";
+import { getBranding } from "@/lib/services/branding";
+import { renderDunningEmailHtml } from "@/lib/services/email-template";
 import type { Prisma } from "@prisma/client";
 
 interface SendEmailParams {
@@ -11,6 +13,7 @@ interface SendEmailParams {
   subject: string;
   body: string;
   templateKey: string;
+  paymentUpdateUrl?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -18,7 +21,6 @@ export async function sendDunningEmail(params: SendEmailParams) {
   const to = params.toEmail;
 
   if (!to) {
-    // Prevent silently sending to placeholder addresses in production paths.
     log("warn", "Skipping dunning email send: no recipient email resolved", {
       workspaceId: params.workspaceId,
       recoveryAttemptId: params.recoveryAttemptId,
@@ -42,6 +44,17 @@ export async function sendDunningEmail(params: SendEmailParams) {
     });
   }
 
+  const branding = await getBranding(params.workspaceId).catch(() => null);
+  const html = renderDunningEmailHtml({
+    subject: params.subject,
+    body: params.body,
+    branding,
+    paymentUpdateUrl: params.paymentUpdateUrl,
+  });
+
+  const fromName = branding?.companyName ?? "DunningDog";
+  const from = `${fromName} <${env.RESEND_FROM_EMAIL}>`;
+
   const resend = getResendClient();
 
   let deliveryStatus: "sent" | "failed" = "sent";
@@ -50,10 +63,11 @@ export async function sendDunningEmail(params: SendEmailParams) {
   if (!isDemoMode && resend) {
     try {
       const response = await resend.emails.send({
-        from: env.RESEND_FROM_EMAIL,
+        from,
         to,
         subject: params.subject,
         text: params.body,
+        html,
       });
       providerMessageId = response.data?.id;
     } catch (error) {

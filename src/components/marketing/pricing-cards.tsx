@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-type FeatureStatus = "included" | "coming" | "excluded";
+type FeatureStatus = "included" | "excluded";
 
 interface Feature {
   text: string;
@@ -41,9 +41,11 @@ const tiers: Tier[] = [
       { text: "3-step email sequence", status: "included" },
       { text: "Recovery dashboard & metrics", status: "included" },
       { text: "Stripe integration", status: "included" },
+      { text: "Analytics & CSV exports", status: "included" },
       { text: "Custom email branding", status: "excluded" },
       { text: "Slack & Discord alerts", status: "excluded" },
       { text: "White-label payment page", status: "excluded" },
+      { text: "API access", status: "excluded" },
     ],
   },
   {
@@ -59,12 +61,14 @@ const tiers: Tier[] = [
     features: [
       { text: "Automated payment recovery", status: "included" },
       { text: "Pre-dunning alerts (expiring cards)", status: "included" },
-      { text: "Unlimited sequence steps", status: "coming" },
+      { text: "Unlimited sequence steps", status: "included" },
       { text: "Recovery dashboard & metrics", status: "included" },
       { text: "Stripe integration", status: "included" },
-      { text: "Custom email branding", status: "coming" },
-      { text: "Slack & Discord alerts", status: "coming" },
+      { text: "Analytics & CSV exports", status: "included" },
+      { text: "Custom email branding", status: "included" },
+      { text: "Slack & Discord alerts", status: "included" },
       { text: "White-label payment page", status: "excluded" },
+      { text: "API access", status: "excluded" },
     ],
   },
   {
@@ -80,12 +84,14 @@ const tiers: Tier[] = [
     features: [
       { text: "Automated payment recovery", status: "included" },
       { text: "Pre-dunning alerts (expiring cards)", status: "included" },
-      { text: "Unlimited sequence steps", status: "coming" },
+      { text: "Unlimited sequence steps", status: "included" },
       { text: "Recovery dashboard & metrics", status: "included" },
       { text: "Stripe integration", status: "included" },
-      { text: "Custom email branding", status: "coming" },
-      { text: "Slack & Discord alerts", status: "coming" },
-      { text: "White-label payment page", status: "coming" },
+      { text: "Analytics & CSV exports", status: "included" },
+      { text: "Custom email branding", status: "included" },
+      { text: "Slack & Discord alerts", status: "included" },
+      { text: "White-label payment page", status: "included" },
+      { text: "API access", status: "included" },
     ],
   },
 ];
@@ -101,23 +107,6 @@ function FeatureIcon({ status }: { status: FeatureStatus }) {
         stroke="currentColor"
       >
         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-      </svg>
-    );
-  }
-  if (status === "coming") {
-    return (
-      <svg
-        className="mt-0.5 h-4 w-4 shrink-0 text-amber-500"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={2}
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
       </svg>
     );
   }
@@ -258,11 +247,6 @@ export function PricingCards() {
                       >
                         {feature.text}
                       </span>
-                      {feature.status === "coming" && (
-                        <span className="ml-auto shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                          Coming Q2
-                        </span>
-                      )}
                     </li>
                   ))}
                 </ul>

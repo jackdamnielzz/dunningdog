@@ -36,15 +36,12 @@ export default async function SequencesPage() {
           <SequenceForm
             workspaceId={workspace.workspaceId}
             existingSequenceId={sequence.id}
-            initialValues={{
-              name: sequence.name,
-              step1Subject: sequence.steps[0]?.subjectTemplate,
-              step1Body: sequence.steps[0]?.bodyTemplate,
-              step2Subject: sequence.steps[1]?.subjectTemplate,
-              step2Body: sequence.steps[1]?.bodyTemplate,
-              step3Subject: sequence.steps[2]?.subjectTemplate,
-              step3Body: sequence.steps[2]?.bodyTemplate,
-            }}
+            initialName={sequence.name}
+            initialSteps={sequence.steps.map((s) => ({
+              delayHours: s.delayHours,
+              subjectTemplate: s.subjectTemplate,
+              bodyTemplate: s.bodyTemplate,
+            }))}
           />
         </CardContent>
       </Card>

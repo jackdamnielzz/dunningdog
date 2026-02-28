@@ -63,6 +63,19 @@ export async function getDashboardSummary(
         ? Number(((recoveredRevenueCents / failedRevenueCents) * 100).toFixed(2))
         : 0;
 
+    const [softDeclines, hardDeclines] = await Promise.all([
+      db.recoveryAttempt.aggregate({
+        where: { workspaceId, declineType: "soft", startedAt: { gte: windowStart } },
+        _count: true,
+        _sum: { amountDueCents: true },
+      }),
+      db.recoveryAttempt.aggregate({
+        where: { workspaceId, declineType: "hard", startedAt: { gte: windowStart } },
+        _count: true,
+        _sum: { amountDueCents: true },
+      }),
+    ]);
+
     return {
       workspaceId,
       window,
@@ -71,6 +84,10 @@ export async function getDashboardSummary(
       recoveryRate,
       atRiskCount,
       activeSequences,
+      declineBreakdown: {
+        soft: { count: softDeclines._count, amountCents: softDeclines._sum.amountDueCents ?? 0 },
+        hard: { count: hardDeclines._count, amountCents: hardDeclines._sum.amountDueCents ?? 0 },
+      },
       generatedAt: new Date().toISOString(),
     };
   } catch (error) {

@@ -7,6 +7,8 @@ import { ProblemError } from "@/lib/problem";
 import { getDashboardSummary, getRecoveryAttempts } from "@/lib/services/dashboard";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { RecoveryTable } from "@/components/dashboard/recovery-table";
+import { DeclineBreakdown } from "@/components/dashboard/decline-breakdown";
+import { DashboardControls } from "@/components/dashboard/dashboard-controls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -44,6 +46,8 @@ export default async function AppDashboardPage() {
           </Link>
         </div>
       </div>
+
+      <DashboardControls />
 
       <SummaryCards
         failedRevenueCents={summary.failedRevenueCents}
@@ -83,6 +87,13 @@ export default async function AppDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {summary.declineBreakdown && (
+        <DeclineBreakdown
+          soft={summary.declineBreakdown.soft}
+          hard={summary.declineBreakdown.hard}
+        />
+      )}
 
       <RecoveryTable
         items={recoveries.map((item) => ({

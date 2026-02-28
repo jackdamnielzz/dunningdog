@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -9,107 +9,100 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-const sequenceSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  step1Subject: z.string().min(3),
-  step1Body: z.string().min(10),
-  step2Subject: z.string().min(3),
-  step2Body: z.string().min(10),
-  step3Subject: z.string().min(3),
-  step3Body: z.string().min(10),
+const stepSchema = z.object({
+  delayHours: z.number().int().min(0).max(720),
+  subjectTemplate: z.string().min(3, "Subject is required"),
+  bodyTemplate: z.string().min(10, "Body must be at least 10 characters"),
 });
 
-type SequenceFormValues = z.infer<typeof sequenceSchema>;
+const sequenceFormSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  steps: z.array(stepSchema).min(1, "At least one step required").max(20, "Maximum 20 steps"),
+});
+
+type SequenceFormValues = z.infer<typeof sequenceFormSchema>;
+
+export interface SequenceStep {
+  delayHours: number;
+  subjectTemplate: string;
+  bodyTemplate: string;
+}
 
 interface SequenceFormProps {
   workspaceId: string;
   existingSequenceId?: string;
-  initialValues?: Partial<SequenceFormValues>;
+  initialName?: string;
+  initialSteps?: SequenceStep[];
+}
+
+const DEFAULT_STEPS: SequenceStep[] = [
+  {
+    delayHours: 0,
+    subjectTemplate: "Action needed: update your payment details",
+    bodyTemplate:
+      "We could not process your recent payment. Please update your payment method to avoid subscription interruption.",
+  },
+  {
+    delayHours: 72,
+    subjectTemplate: "Reminder: your payment is still pending",
+    bodyTemplate:
+      "Your subscription is still at risk because payment details were not updated. Please review and update now.",
+  },
+  {
+    delayHours: 168,
+    subjectTemplate: "Final reminder before access is affected",
+    bodyTemplate:
+      "Please update your payment method now to keep your subscription active.",
+  },
+];
+
+function formatDelay(hours: number): string {
+  if (hours === 0) return "Immediately";
+  const days = Math.floor(hours / 24);
+  const remaining = hours % 24;
+  if (days > 0 && remaining > 0) return `${days}d ${remaining}h`;
+  if (days > 0) return `${days} day${days > 1 ? "s" : ""}`;
+  return `${hours}h`;
 }
 
 export function SequenceForm({
   workspaceId,
   existingSequenceId,
-  initialValues,
+  initialName,
+  initialSteps,
 }: SequenceFormProps) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const defaults = useMemo<SequenceFormValues>(
-    () => ({
-      name: initialValues?.name ?? "Default Recovery Sequence",
-      step1Subject:
-        initialValues?.step1Subject ??
-        "Action needed: update your payment details",
-      step1Body:
-        initialValues?.step1Body ??
-        "We could not process your recent payment. Please update your payment method to avoid subscription interruption.",
-      step2Subject:
-        initialValues?.step2Subject ??
-        "Reminder: your payment is still pending",
-      step2Body:
-        initialValues?.step2Body ??
-        "Your subscription is still at risk because payment details were not updated. Please review and update now.",
-      step3Subject:
-        initialValues?.step3Subject ??
-        "Final reminder before access is affected",
-      step3Body:
-        initialValues?.step3Body ??
-        "Please update your payment method now to keep your subscription active.",
-    }),
-    [initialValues],
-  );
-
   const form = useForm<SequenceFormValues>({
-    resolver: zodResolver(sequenceSchema),
-    defaultValues: defaults,
+    resolver: zodResolver(sequenceFormSchema),
+    defaultValues: {
+      name: initialName ?? "Default Recovery Sequence",
+      steps: initialSteps ?? DEFAULT_STEPS,
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "steps",
   });
 
   async function onSubmit(values: SequenceFormValues) {
     setSaving(true);
     setMessage(null);
     try {
-      const payload = {
-        workspaceId,
-        name: values.name,
-        isEnabled: true,
-        steps: [
-          {
-            delayHours: 0,
-            subjectTemplate: values.step1Subject,
-            bodyTemplate: values.step1Body,
-          },
-          {
-            delayHours: 72,
-            subjectTemplate: values.step2Subject,
-            bodyTemplate: values.step2Body,
-          },
-          {
-            delayHours: 168,
-            subjectTemplate: values.step3Subject,
-            bodyTemplate: values.step3Body,
-          },
-        ],
-      };
-
       const endpoint = existingSequenceId
         ? `/api/dunning/sequences/${existingSequenceId}`
         : "/api/dunning/sequences";
       const method = existingSequenceId ? "PATCH" : "POST";
-      const body = existingSequenceId
-        ? JSON.stringify({
-            name: payload.name,
-            isEnabled: payload.isEnabled,
-            steps: payload.steps,
-          })
-        : JSON.stringify(payload);
+      const payload = existingSequenceId
+        ? { name: values.name, isEnabled: true, steps: values.steps }
+        : { workspaceId, name: values.name, isEnabled: true, steps: values.steps };
 
       const response = await fetch(endpoint, {
         method,
-        headers: {
-          "content-type": "application/json",
-        },
-        body,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -134,30 +127,97 @@ export function SequenceForm({
       <div className="space-y-2">
         <Label htmlFor="name">Sequence Name</Label>
         <Input id="name" {...form.register("name")} />
+        {form.formState.errors.name && (
+          <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>
+        )}
       </div>
 
-      <fieldset className="space-y-2 rounded-lg border border-zinc-200 p-4">
-        <legend className="px-2 text-sm font-medium text-zinc-700">Step 1 (Day 0)</legend>
-        <Input {...form.register("step1Subject")} placeholder="Subject" />
-        <Textarea {...form.register("step1Body")} placeholder="Email body" />
-      </fieldset>
+      <div className="space-y-4">
+        {fields.map((field, index) => {
+          const delayValue = form.watch(`steps.${index}.delayHours`);
+          return (
+            <fieldset
+              key={field.id}
+              className="space-y-3 rounded-lg border border-zinc-200 p-4"
+            >
+              <div className="flex items-center justify-between">
+                <legend className="text-sm font-medium text-zinc-700">
+                  Step {index + 1}{" "}
+                  <span className="text-zinc-400">
+                    ({formatDelay(Number(delayValue) || 0)} after failure)
+                  </span>
+                </legend>
+                {fields.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-500 hover:text-red-700"
+                    onClick={() => remove(index)}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
 
-      <fieldset className="space-y-2 rounded-lg border border-zinc-200 p-4">
-        <legend className="px-2 text-sm font-medium text-zinc-700">Step 2 (Day 3)</legend>
-        <Input {...form.register("step2Subject")} placeholder="Subject" />
-        <Textarea {...form.register("step2Body")} placeholder="Email body" />
-      </fieldset>
+              <div className="space-y-1">
+                <Label htmlFor={`steps.${index}.delayHours`}>
+                  Delay (hours after payment failure)
+                </Label>
+                <Input
+                  id={`steps.${index}.delayHours`}
+                  type="number"
+                  min={0}
+                  max={720}
+                  {...form.register(`steps.${index}.delayHours`, { valueAsNumber: true })}
+                />
+              </div>
 
-      <fieldset className="space-y-2 rounded-lg border border-zinc-200 p-4">
-        <legend className="px-2 text-sm font-medium text-zinc-700">Step 3 (Day 7)</legend>
-        <Input {...form.register("step3Subject")} placeholder="Subject" />
-        <Textarea {...form.register("step3Body")} placeholder="Email body" />
-      </fieldset>
+              <div className="space-y-1">
+                <Label htmlFor={`steps.${index}.subjectTemplate`}>Subject</Label>
+                <Input
+                  id={`steps.${index}.subjectTemplate`}
+                  {...form.register(`steps.${index}.subjectTemplate`)}
+                  placeholder="Email subject line"
+                />
+              </div>
 
-      <Button type="submit" disabled={saving}>
-        {saving ? "Saving..." : "Save sequence"}
-      </Button>
-      {message ? <p className="text-sm text-zinc-600">{message}</p> : null}
+              <div className="space-y-1">
+                <Label htmlFor={`steps.${index}.bodyTemplate`}>Body</Label>
+                <Textarea
+                  id={`steps.${index}.bodyTemplate`}
+                  {...form.register(`steps.${index}.bodyTemplate`)}
+                  placeholder="Email body text"
+                  rows={3}
+                />
+              </div>
+            </fieldset>
+          );
+        })}
+      </div>
+
+      {fields.length < 20 && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() =>
+            append({
+              delayHours: (fields.length) * 48,
+              subjectTemplate: "",
+              bodyTemplate: "",
+            })
+          }
+        >
+          + Add step
+        </Button>
+      )}
+
+      <div className="flex items-center gap-3">
+        <Button type="submit" disabled={saving}>
+          {saving ? "Saving..." : "Save sequence"}
+        </Button>
+        {message && <p className="text-sm text-zinc-600">{message}</p>}
+      </div>
     </form>
   );
 }

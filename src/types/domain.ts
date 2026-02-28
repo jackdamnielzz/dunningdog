@@ -31,6 +31,11 @@ export interface ConnectedStripeAccountDTO {
   disconnectedAt?: string;
 }
 
+export interface DeclineBreakdownDTO {
+  soft: { count: number; amountCents: number };
+  hard: { count: number; amountCents: number };
+}
+
 export interface DashboardSummaryDTO {
   workspaceId: string;
   window: "7d" | "30d" | "90d" | "month" | "lifetime";
@@ -39,5 +44,19 @@ export interface DashboardSummaryDTO {
   recoveryRate: number;
   atRiskCount: number;
   activeSequences: number;
+  declineBreakdown?: DeclineBreakdownDTO;
   generatedAt: string;
+}
+
+export interface ApiKeyDTO {
+  id: string;
+  prefix: string;
+  label: string;
+  scopes: string[];
+  lastUsedAt: string | null;
+  createdAt: string;
+}
+
+export interface ApiKeyCreateResponseDTO extends ApiKeyDTO {
+  key: string;
 }

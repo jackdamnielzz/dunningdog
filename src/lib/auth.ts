@@ -11,7 +11,7 @@ export interface WorkspaceContext {
   workspaceId: string;
   workspaceName: string;
   userId: string | null;
-  source: "authenticated" | "fallback";
+  source: "authenticated" | "fallback" | "api_key";
 }
 
 const isSupabaseAuthConfigured = Boolean(env.SUPABASE_URL && env.SUPABASE_ANON_KEY);
@@ -340,6 +340,30 @@ export async function resolveWorkspaceContextFromRequest(
   request: Request,
   explicitWorkspaceId?: string | null,
 ) {
+  // Check for API key authentication first
+  const apiKey = request.headers.get("x-api-key");
+  if (apiKey) {
+    const { validateApiKey } = await import("@/lib/services/api-keys");
+    const result = await validateApiKey(apiKey);
+    if (result) {
+      const workspace = await db.workspace.findUnique({
+        where: { id: result.workspaceId },
+      });
+      return {
+        workspaceId: result.workspaceId,
+        workspaceName: workspace?.name ?? "API Access",
+        userId: null,
+        source: "api_key" as const,
+      };
+    }
+    throw new ProblemError({
+      title: "Invalid API key",
+      status: 401,
+      code: "AUTH_UNAUTHORIZED",
+      detail: "The provided API key is invalid or has been revoked.",
+    });
+  }
+
   const preferredWorkspaceId = explicitWorkspaceId ?? readWorkspaceIdFromRequest(request);
   return resolveWorkspaceContextFromHeaders(request.headers, preferredWorkspaceId);
 }

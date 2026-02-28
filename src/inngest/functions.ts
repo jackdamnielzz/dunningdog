@@ -2,6 +2,8 @@ import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db";
 import { sendDunningEmail } from "@/lib/services/email";
 import { resolveCustomerEmail } from "@/lib/services/customerEmail";
+import { generatePaymentUpdateToken } from "@/lib/services/payment-tokens";
+import { sendNotification } from "@/lib/services/notifications";
 
 export const recoveryStartedFunction = inngest.createFunction(
   { id: "recovery-started-sequence" },
@@ -85,6 +87,15 @@ export const recoveryStartedFunction = inngest.createFunction(
         continue;
       }
 
+      const paymentToken = await step.run(
+        `gen-token-${sequenceStep.stepOrder}`,
+        async () =>
+          generatePaymentUpdateToken({
+            workspaceId,
+            recoveryAttemptId,
+          }),
+      );
+
       await step.run(`send-step-${sequenceStep.stepOrder}`, async () =>
         sendDunningEmail({
           workspaceId,
@@ -92,6 +103,7 @@ export const recoveryStartedFunction = inngest.createFunction(
           toEmail,
           subject: sequenceStep.subjectTemplate,
           body: sequenceStep.bodyTemplate,
+          paymentUpdateUrl: paymentToken.url,
           templateKey: `sequence_${sequence.id}_step_${sequenceStep.stepOrder}`,
           metadata: {
             sequenceId: sequence.id,
@@ -101,6 +113,19 @@ export const recoveryStartedFunction = inngest.createFunction(
         }),
       );
     }
+
+    await step.run("notify-recovery-started", async () =>
+      sendNotification({
+        workspaceId,
+        event: "recovery_started",
+        data: {
+          stripeCustomerId,
+          stripeInvoiceId: attempt.stripeInvoiceId,
+          amountDueCents: attempt.amountDueCents,
+          declineType: attempt.declineType,
+        },
+      }),
+    );
 
     return {
       deliveredSteps: sequence.steps.length,
@@ -113,7 +138,7 @@ export const recoverySucceededFunction = inngest.createFunction(
   { event: "recovery/succeeded" },
   async ({ event, step }) => {
     const { workspaceId, stripeInvoiceId } = event.data;
-    await step.run("close-recovery", async () => {
+    const closedAttempt = await step.run("close-recovery", async () => {
       const attempt = await db.recoveryAttempt.findUnique({
         where: {
           workspaceId_stripeInvoiceId: {
@@ -132,6 +157,20 @@ export const recoverySucceededFunction = inngest.createFunction(
         },
       });
     });
+
+    if (closedAttempt) {
+      await step.run("notify-recovery-succeeded", async () =>
+        sendNotification({
+          workspaceId,
+          event: "recovery_succeeded",
+          data: {
+            stripeInvoiceId,
+            recoveredAmountCents: closedAttempt.recoveredAmountCents ?? closedAttempt.amountDueCents,
+          },
+        }),
+      );
+    }
+
     return { done: true };
   },
 );
@@ -184,6 +223,15 @@ export const preDunningCandidateFunction = inngest.createFunction(
         },
       }),
     );
+
+    await step.run("notify-predunning-sent", async () =>
+      sendNotification({
+        workspaceId,
+        event: "predunning_sent",
+        data: { stripeCustomerId, stripeSubscriptionId, expirationDate },
+      }),
+    );
+
     return { sent: true, skipped: false };
   },
 );

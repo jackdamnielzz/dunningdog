@@ -7,9 +7,13 @@ import { isStripeConfigured } from "@/lib/stripe/client";
 import { isDatabaseUnavailableError, describeFailure } from "@/lib/runtime-fallback";
 import { getDemoConnectedStripeAccount } from "@/lib/demo-data";
 import { log } from "@/lib/logger";
+import { getBranding } from "@/lib/services/branding";
 import { ConnectStripeButton } from "@/components/forms/connect-stripe-button";
 import { ManageSubscriptionButton } from "@/components/forms/manage-subscription-button";
 import { UpgradePlanButton } from "@/components/forms/upgrade-plan-button";
+import { BrandingForm } from "@/components/forms/branding-form";
+import { NotificationChannelsForm } from "@/components/forms/notification-channels-form";
+import { ApiKeysForm } from "@/components/forms/api-keys-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -81,6 +85,8 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       return getDemoConnectedStripeAccount(workspace.workspaceId);
     }
   })();
+
+  const branding = await getBranding(workspace.workspaceId).catch(() => null);
 
   return (
     <div className="space-y-6">
@@ -192,6 +198,48 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <ManageSubscriptionButton />
             </div>
           ) : null}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Notifications</CardTitle>
+          <CardDescription>
+            Get alerts in Slack or Discord when payments are recovered, fail, or need attention.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <NotificationChannelsForm />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Email Branding</CardTitle>
+          <CardDescription>
+            Customize the look and feel of recovery emails sent to your customers.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BrandingForm
+            initialValues={{
+              companyName: branding?.companyName ?? null,
+              logoUrl: branding?.logoUrl ?? null,
+              accentColor: branding?.accentColor ?? "#10b981",
+              footerText: branding?.footerText ?? null,
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>API Keys</CardTitle>
+          <CardDescription>
+            Create API keys for programmatic access to your workspace data. Keys are shown once at creation.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ApiKeysForm />
         </CardContent>
       </Card>
     </div>
