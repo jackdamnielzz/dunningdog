@@ -32,9 +32,10 @@
 
 **Full details:** See [`memory-bank/activeContext.md`](activeContext.md)
 
-### 2026-02-27: OAuth `bad_oauth_state` (Completed)
+### 2026-02-27: OAuth callback still failing (In Progress)
 
-**Fixed:** Google OAuth from `https://dunningdog.vercel.app` was redirecting to `http://localhost:3000/?error=bad_oauth_state`
+**Status:** After fixes, callback UI shows **"Too small: expected string to have >=20 characters"**.
+Likely receiving a **PKCE auth code** instead of an `access_token`.
 
 | Item | Status |
 |------|--------|
@@ -45,6 +46,8 @@
 | Fixed `uri_allow_list` → added production callback URL via Management API | ✅ Complete |
 | Fixed Supabase state conflict by moving app state to `app_state` in `redirect_to` | ✅ Complete |
 | Verified OAuth start route returns correct `redirect_to` | ✅ Complete |
+| **Pending:** Confirm callback URL contains `code` vs `access_token` | ⏳ Pending |
+| **Pending:** Implement code exchange or switch flow to implicit | ⏳ Pending |
 
 ### 2026-02-27: OAuth Post-Login Redirect Bug Fix (Completed)
 

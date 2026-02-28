@@ -22,13 +22,15 @@ async function parseJsonSafe(response: Response) {
 async function run() {
   const appBaseUrl = process.env.APP_BASE_URL ?? "http://localhost:3000";
   const cronSecret = requiredEnv("CRON_SECRET");
-  const db = new PrismaClient();
+  const skipDb = process.env.SKIP_DB === "true" || !process.env.DATABASE_URL;
   const results: StepResult[] = [];
 
+  let db: PrismaClient | null = null;
   try {
     let attemptId = process.env.RECOVERY_ATTEMPT_ID;
 
-    if (!attemptId) {
+    if (!attemptId && !skipDb) {
+      db = new PrismaClient();
       const latest = await db.recoveryAttempt.findFirst({
         orderBy: { createdAt: "desc" },
         select: { id: true },
@@ -36,7 +38,13 @@ async function run() {
       attemptId = latest?.id;
     }
 
-    if (!attemptId) {
+    if (!attemptId && skipDb) {
+      results.push({
+        step: "step10",
+        ok: true,
+        detail: "Skipped (no DB access and no RECOVERY_ATTEMPT_ID set).",
+      });
+    } else if (!attemptId) {
       results.push({
         step: "step10",
         ok: false,
@@ -116,7 +124,7 @@ async function run() {
         : `Unexpected response: ${metricPayload?.detail ?? "n/a"}.`,
     });
   } finally {
-    await db.$disconnect();
+    if (db) await db.$disconnect();
   }
 
   const failed = results.filter((result) => !result.ok);

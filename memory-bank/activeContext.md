@@ -1,14 +1,14 @@
 # Active Context — Google OAuth Login Flow
 
-**Last updated:** 2026-02-27T18:20:00Z
-**Status:** OAuth fixed — Supabase state conflict resolved, production redeploy required
+**Last updated:** 2026-02-27T18:33:00Z
+**Status:** OAuth still failing — callback receives short token (likely PKCE code)
 **Runbook reference:** [`docs/operations/runbooks.md`](../docs/operations/runbooks.md) -> Runbook 6
 
 ---
 
-## Current Focus: OAuth State Conflict Fix (2026-02-27)
+## Current Focus: OAuth Callback Token Shape (2026-02-27)
 
-**Problem (still occurring after dashboard fix):** After Google OAuth login on `https://dunningdog.vercel.app`, the browser redirected to `https://dunningdog.vercel.app/?error=invalid_request&error_code=bad_oauth_state`. This was caused by a **Supabase OAuth state conflict** in our authorize URL.
+**Problem (current):** OAuth callback shows error **"Too small: expected string to have >=20 characters"**. This is thrown by [`POST /api/auth/session`](../src/app/api/auth/session/route.ts:8), meaning the `accessToken` being posted is too short.
 
 ### Fix 1: Supabase Dashboard URL configuration (2026-02-27T14:05Z)
 **Root cause:** Supabase project had `site_url=http://localhost:3000` and `uri_allow_list` only contained `http://localhost:3000/auth/callback`.
@@ -23,13 +23,19 @@
 
 **Fix:** Replaced with `window.location.assign()` to force full page load.
 
-### Fix 3: Supabase state conflict (2026-02-27T18:18Z)
-**Root cause:** We passed our own `state` param to Supabase `/auth/v1/authorize`. Supabase expects to manage its own state parameter; overriding it triggers `bad_oauth_state` on return.
+### Fixes already deployed
+1. Supabase Dashboard config (site_url + redirect URLs) ✅
+2. Supabase state conflict fix (`app_state` in redirect_to) ✅
+3. Production redeploy ✅
 
-**Fix applied:**
-- Keep Supabase `state` untouched (remove `authorizeUrl.searchParams.set("state", state)`).
-- Embed our app state in the callback URL as `app_state`.
-- In [`OAuthCallbackClient()`](../src/components/forms/oauth-callback-client.tsx:35) read `app_state` if `state` is missing.
+### Hypothesis
+Supabase is returning an **auth code** (PKCE flow) instead of an `access_token` in the callback URL. Our client expects `access_token`, causing Zod to reject the short string.
+
+### Next steps
+1. Capture the full callback URL (query + hash) after Google login.
+2. If it contains `code` and not `access_token`, either:
+   - Switch Supabase Auth Flow Type to **Implicit** in Dashboard, or
+   - Implement code exchange (`/auth/v1/token`) before calling `/api/auth/session`.
 
 ### All fixes in place:
 1. **Full page navigation** — `window.location.assign()` in [`OAuthCallbackClient()`](../src/components/forms/oauth-callback-client.tsx:36) ensures cookies are committed before SSR auth guard runs.

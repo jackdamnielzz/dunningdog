@@ -1,30 +1,56 @@
-# Handoff — OAuth `bad_oauth_state` ✅ RESOLVED
+# Handoff — OAuth still failing after deploy (`access_token` too short)
 
 ## Goal
 Fix the production issue where Google OAuth login from `https://dunningdog.vercel.app` redirects to `http://localhost:3000/?error=invalid_request&error_code=bad_oauth_state` instead of completing sign-in.
 
-## Resolution (2026-02-27)
+## Current Status (2026-02-27)
 
-**Root causes:**
-1. Supabase Dashboard had `site_url` set to `http://localhost:3000` and `uri_allow_list` only contained `http://localhost:3000/auth/callback`.
-2. App passed a custom `state` param to Supabase `/auth/v1/authorize`, which conflicts with Supabase's own `state` management and triggers `bad_oauth_state`.
+**Production still failing after deploy.** New error shown on callback UI:
+```
+Too small: expected string to have >=20 characters
+```
+This appears on the **Signing you in** screen. The URL ends at:
+`https://dunningdog.vercel.app/auth/callback?...`
 
-**Fixes applied:**
+### What is fixed already
 1. **Supabase Dashboard config via Management API:**
-- `site_url`: `http://localhost:3000` → `https://dunningdog.vercel.app` ✅
-- `uri_allow_list`: Added `https://dunningdog.vercel.app/auth/callback` (kept `http://localhost:3000/auth/callback` for local dev) ✅
-- `external_google_enabled`: `true` ✅ (already configured)
+   - `site_url`: `http://localhost:3000` → `https://dunningdog.vercel.app` ✅
+   - `uri_allow_list`: Added `https://dunningdog.vercel.app/auth/callback` (kept `http://localhost:3000/auth/callback`) ✅
+   - `external_google_enabled`: `true` ✅
 
 2. **Supabase state conflict fix in app:**
-   - Stop sending `state` to Supabase authorize.
-   - Include app state in callback URL as `app_state`.
-   - Read `app_state` in [`OAuthCallbackClient()`](src/components/forms/oauth-callback-client.tsx:35).
+   - Stop sending `state` to Supabase authorize
+   - Include app state in callback URL as `app_state`
+   - Read `app_state` in [`OAuthCallbackClient()`](src/components/forms/oauth-callback-client.tsx:35)
 
-**No code changes were needed.** All application code and Vercel env vars were already correct.
+3. **Production redeploy** completed and aliased to `https://dunningdog.vercel.app` ✅
 
-**Verified post-fix:**
-- OAuth start route returns `redirect_to=https://dunningdog.vercel.app/auth/callback?next=/app&app_state=...` ✅
-- Production deployment is healthy (`https://dunningdog.vercel.app`) ✅
+### What is still wrong
+The error comes from Zod validation in [`POST /api/auth/session`](src/app/api/auth/session/route.ts:8):
+`accessToken` is present but too short (< 20 chars). That suggests **the callback does not contain a real access token**.
+
+**Most likely cause:** Supabase is returning an **auth code** (PKCE flow) instead of `access_token`. Our client expects an `access_token` in the URL hash/query.
+
+### Critical next steps
+1. **Capture the full callback URL** (query + hash) after Google login and confirm if it contains:
+   - `access_token` (implicit flow) **or**
+   - `code` (PKCE flow)
+
+2. **If `code` is present and no access_token:**
+   - Either switch Supabase Auth **Flow Type** to *Implicit* in Dashboard (quick fix), **or**
+   - Implement code exchange: use Supabase `/auth/v1/token` to exchange `code` for tokens, then call `/api/auth/session` with the real access token.
+
+3. **Fix callback state precedence:**
+   The callback currently prioritizes `state` over `app_state`. It should prefer `app_state` so the cookie state matches.
+
+### Relevant files
+- [`GET /api/auth/oauth/start`](src/app/api/auth/oauth/start/route.ts:41)
+- [`OAuthCallbackClient()`](src/components/forms/oauth-callback-client.tsx:35)
+- [`POST /api/auth/session`](src/app/api/auth/session/route.ts:8)
+
+### Deployment info
+Latest prod deployment:
+`https://dunningdog-2zyau29mg-tunuxs-projects.vercel.app` (aliased to `https://dunningdog.vercel.app`)
 
 ## Files Reviewed (no changes needed)
 - [`SocialAuthButtons`](src/components/forms/social-auth-buttons.tsx:58) — builds `/api/auth/oauth/start` URL

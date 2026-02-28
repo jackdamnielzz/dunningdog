@@ -7,6 +7,7 @@ const REQUIRED_KEYS = [
   "SUPABASE_SERVICE_ROLE_KEY",
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
+  "STRIPE_BILLING_WEBHOOK_SECRET",
   "STRIPE_CONNECT_CLIENT_ID",
   "STRIPE_CONNECT_CLIENT_SECRET",
   "STRIPE_PRICE_STARTER_ID",
@@ -17,6 +18,8 @@ const REQUIRED_KEYS = [
   "INNGEST_SIGNING_KEY",
   "CRON_SECRET",
   "ENCRYPTION_KEY",
+  "SENTRY_DSN",
+  "POSTHOG_KEY",
 ] as const;
 
 const PLACEHOLDER_PATTERN =
@@ -69,6 +72,14 @@ function main() {
 
   if ((env.ENCRYPTION_KEY ?? "").length < 32) {
     issues.push("ENCRYPTION_KEY must be at least 32 characters.");
+  }
+
+  if ((env.CRON_SECRET ?? "").length < 32) {
+    issues.push("CRON_SECRET must be at least 32 characters.");
+  }
+
+  if (env.STRIPE_SECRET_KEY && !env.STRIPE_SECRET_KEY.startsWith("sk_live_")) {
+    issues.push("STRIPE_SECRET_KEY must use a live key (sk_live_) in production.");
   }
 
   if (issues.length > 0) {
