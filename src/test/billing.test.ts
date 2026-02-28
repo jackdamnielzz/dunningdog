@@ -21,6 +21,10 @@ async function loadBilling(options: BillingMocksOptions = {}) {
     }),
   );
 
+  const workspaceFindUnique = vi.fn().mockResolvedValue(null);
+
+  const workspaceUpdateMany = vi.fn().mockResolvedValue({ count: 1 });
+
   const createSession = vi.fn().mockResolvedValue({
     id: "cs_123",
     url: "https://checkout.stripe.test/session",
@@ -38,6 +42,10 @@ async function loadBilling(options: BillingMocksOptions = {}) {
     line_items: {
       data: [],
     },
+  });
+
+  const createPortalSession = vi.fn().mockResolvedValue({
+    url: "https://billing.stripe.test/portal",
   });
 
   vi.doMock("@/lib/env", () => ({
@@ -58,6 +66,8 @@ async function loadBilling(options: BillingMocksOptions = {}) {
     db: {
       workspace: {
         update: workspaceUpdate,
+        findUnique: workspaceFindUnique,
+        updateMany: workspaceUpdateMany,
       },
     },
   }));
@@ -70,6 +80,11 @@ async function loadBilling(options: BillingMocksOptions = {}) {
               sessions: {
                 create: createSession,
                 retrieve: retrieveSession,
+              },
+            },
+            billingPortal: {
+              sessions: {
+                create: createPortalSession,
               },
             },
           }
@@ -86,8 +101,11 @@ async function loadBilling(options: BillingMocksOptions = {}) {
   return {
     billing,
     workspaceUpdate,
+    workspaceFindUnique,
+    workspaceUpdateMany,
     createSession,
     retrieveSession,
+    createPortalSession,
     analyticsMock,
   };
 }
@@ -280,5 +298,142 @@ describe("billing service", () => {
 
     expect(result).toBeNull();
     expect(workspaceUpdate).not.toHaveBeenCalled();
+  });
+
+  it("returns returnUrl for billing portal in demo mode", async () => {
+    const { billing } = await loadBilling({ stripeEnabled: false });
+
+    const result = await billing.createBillingPortalSession({
+      workspaceId: "ws_1",
+      returnUrl: "http://localhost:3000/app/settings",
+    });
+
+    expect(result.portalUrl).toBe("http://localhost:3000/app/settings");
+  });
+
+  it("creates a Stripe billing portal session when customer exists", async () => {
+    const { billing, workspaceFindUnique, createPortalSession } = await loadBilling({
+      stripeEnabled: true,
+    });
+
+    workspaceFindUnique.mockResolvedValueOnce({ stripeCustomerId: "cus_123" });
+
+    const result = await billing.createBillingPortalSession({
+      workspaceId: "ws_1",
+      returnUrl: "http://localhost:3000/app/settings",
+    });
+
+    expect(result.portalUrl).toBe("https://billing.stripe.test/portal");
+    expect(createPortalSession).toHaveBeenCalledWith({
+      customer: "cus_123",
+      return_url: "http://localhost:3000/app/settings",
+    });
+  });
+
+  it("throws when workspace has no Stripe customer for billing portal", async () => {
+    const { billing, workspaceFindUnique } = await loadBilling({
+      stripeEnabled: true,
+    });
+
+    workspaceFindUnique.mockResolvedValueOnce(null);
+
+    await expect(
+      billing.createBillingPortalSession({
+        workspaceId: "ws_1",
+        returnUrl: "http://localhost:3000/app/settings",
+      }),
+    ).rejects.toMatchObject({
+      code: "BILLING_CUSTOMER_NOT_FOUND",
+      status: 404,
+    });
+  });
+
+  it("handles checkout.session.completed webhook event", async () => {
+    const { billing, workspaceUpdate, analyticsMock } = await loadBilling({
+      stripeEnabled: true,
+    });
+
+    await billing.handleBillingWebhookEvent({
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          metadata: { workspaceId: "ws_1", billingPlan: "pro" },
+          client_reference_id: "ws_1",
+          customer: "cus_456",
+          subscription: "sub_789",
+        },
+      },
+    } as never);
+
+    expect(workspaceUpdate).toHaveBeenCalledWith({
+      where: { id: "ws_1" },
+      data: {
+        stripeCustomerId: "cus_456",
+        billingSubscriptionId: "sub_789",
+        billingStatus: "active",
+        billingPlan: "pro",
+      },
+    });
+    expect(analyticsMock).toHaveBeenCalledWith(
+      expect.objectContaining({ event: "billing_plan_updated" }),
+    );
+  });
+
+  it("handles customer.subscription.updated webhook event", async () => {
+    const { billing, workspaceUpdateMany } = await loadBilling({
+      stripeEnabled: true,
+    });
+
+    await billing.handleBillingWebhookEvent({
+      type: "customer.subscription.updated",
+      data: {
+        object: {
+          customer: "cus_456",
+          status: "past_due",
+        },
+      },
+    } as never);
+
+    expect(workspaceUpdateMany).toHaveBeenCalledWith({
+      where: { stripeCustomerId: "cus_456" },
+      data: { billingStatus: "past_due" },
+    });
+  });
+
+  it("handles customer.subscription.deleted webhook event", async () => {
+    const { billing, workspaceUpdateMany } = await loadBilling({
+      stripeEnabled: true,
+    });
+
+    await billing.handleBillingWebhookEvent({
+      type: "customer.subscription.deleted",
+      data: {
+        object: {
+          customer: "cus_456",
+        },
+      },
+    } as never);
+
+    expect(workspaceUpdateMany).toHaveBeenCalledWith({
+      where: { stripeCustomerId: "cus_456" },
+      data: { billingStatus: "canceled", billingSubscriptionId: null },
+    });
+  });
+
+  it("passes existing stripeCustomerId to Stripe checkout when available", async () => {
+    const { billing, workspaceFindUnique, createSession } = await loadBilling({
+      stripeEnabled: true,
+    });
+
+    workspaceFindUnique.mockResolvedValueOnce({ stripeCustomerId: "cus_existing" });
+
+    await billing.createBillingCheckoutSession({
+      workspaceId: "ws_1",
+      plan: "pro",
+    });
+
+    expect(createSession).toHaveBeenCalledWith(
+      expect.objectContaining({ customer: "cus_existing" }),
+    );
   });
 });
