@@ -120,7 +120,7 @@ export default async function PricingPage() {
               and API access for high-volume teams.
             </p>
             <a
-              href="mailto:hello@dunningdog.com"
+              href="mailto:info@dunningdog.com"
               className="mt-4 inline-block text-sm font-semibold text-emerald-600 hover:text-emerald-700"
             >
               Contact us for a custom quote &rarr;

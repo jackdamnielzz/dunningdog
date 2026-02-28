@@ -55,6 +55,12 @@ async function loadFunctions(deps: {
       dunningSequence: {
         findFirst: deps.dunningSequenceFindFirst ?? vi.fn(),
       },
+      notificationChannel: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      paymentUpdateToken: {
+        create: vi.fn().mockResolvedValue({ id: "pt_mock" }),
+      },
     },
   }));
 
@@ -64,6 +70,21 @@ async function loadFunctions(deps: {
 
   vi.doMock("@/lib/services/customerEmail", () => ({
     resolveCustomerEmail: deps.resolveCustomerEmail ?? vi.fn(),
+  }));
+
+  vi.doMock("@/lib/services/payment-tokens", () => ({
+    generatePaymentUpdateToken: vi.fn().mockResolvedValue({
+      token: "mock_token",
+      url: "https://app.test/update-payment/mock_token",
+    }),
+  }));
+
+  vi.doMock("@/lib/services/notifications", () => ({
+    sendNotification: vi.fn().mockResolvedValue(undefined),
+  }));
+
+  vi.doMock("@/lib/logger", () => ({
+    log: vi.fn(),
   }));
 
   // Importing the module triggers `createFunction` for each export.

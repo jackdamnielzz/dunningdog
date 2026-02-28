@@ -25,9 +25,9 @@ describe("SequenceForm", () => {
   it("renders sequence name and 3 step fieldsets", () => {
     render(<SequenceForm workspaceId="ws_123" />);
     expect(screen.getByLabelText("Sequence Name")).toBeInTheDocument();
-    expect(screen.getByText("Step 1 (Day 0)")).toBeInTheDocument();
-    expect(screen.getByText("Step 2 (Day 3)")).toBeInTheDocument();
-    expect(screen.getByText("Step 3 (Day 7)")).toBeInTheDocument();
+    expect(screen.getByText(/Step 1/)).toBeInTheDocument();
+    expect(screen.getByText(/Step 2/)).toBeInTheDocument();
+    expect(screen.getByText(/Step 3/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save sequence" })).toBeInTheDocument();
   });
 

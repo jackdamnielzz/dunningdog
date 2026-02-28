@@ -89,6 +89,16 @@ describe("dashboard service", () => {
       })
       .mockResolvedValueOnce({
         _sum: { recoveredAmountCents: 6200 },
+      })
+      // decline breakdown: soft declines
+      .mockResolvedValueOnce({
+        _count: 5,
+        _sum: { amountDueCents: 7000 },
+      })
+      // decline breakdown: hard declines
+      .mockResolvedValueOnce({
+        _count: 2,
+        _sum: { amountDueCents: 3000 },
       });
     atRiskCount.mockResolvedValueOnce(3);
     pendingCount.mockResolvedValueOnce(4);
@@ -100,6 +110,10 @@ describe("dashboard service", () => {
     expect(summary.recoveryRate).toBe(62);
     expect(summary.atRiskCount).toBe(3);
     expect(summary.activeSequences).toBe(4);
+    expect(summary.declineBreakdown).toEqual({
+      soft: { count: 5, amountCents: 7000 },
+      hard: { count: 2, amountCents: 3000 },
+    });
   });
 
   it("uses correct date boundaries for each summary window", async () => {
