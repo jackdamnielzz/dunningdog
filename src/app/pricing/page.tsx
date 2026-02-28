@@ -3,83 +3,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/marketing/site-footer";
+import { PricingCards } from "@/components/marketing/pricing-cards";
 import { getAuthenticatedUserIdFromHeaders } from "@/lib/auth";
-
-type FeatureStatus = "included" | "coming" | "excluded";
-
-interface Feature {
-  text: string;
-  status: FeatureStatus;
-}
-
-const tiers = [
-  {
-    id: "starter",
-    name: "Starter",
-    earlyPrice: 29,
-    fullPrice: 49,
-    earlyAnnual: 23,
-    fullAnnual: 39,
-    period: "mo",
-    cap: "Up to $10k MRR",
-    description: "For early-stage SaaS teams recovering their first failed payments.",
-    highlight: false,
-    features: [
-      { text: "Automated payment recovery", status: "included" },
-      { text: "Pre-dunning alerts (expiring cards)", status: "included" },
-      { text: "3-step email sequence", status: "included" },
-      { text: "Recovery dashboard & metrics", status: "included" },
-      { text: "Stripe integration", status: "included" },
-      { text: "Custom email branding", status: "excluded" },
-      { text: "Slack & Discord alerts", status: "excluded" },
-      { text: "White-label payment page", status: "excluded" },
-    ] satisfies Feature[],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    earlyPrice: 99,
-    fullPrice: 149,
-    earlyAnnual: 79,
-    fullAnnual: 124,
-    period: "mo",
-    cap: "Up to $50k MRR",
-    description: "For growing teams that need full control over their dunning strategy.",
-    highlight: true,
-    features: [
-      { text: "Automated payment recovery", status: "included" },
-      { text: "Pre-dunning alerts (expiring cards)", status: "included" },
-      { text: "Unlimited sequence steps", status: "coming" },
-      { text: "Recovery dashboard & metrics", status: "included" },
-      { text: "Stripe integration", status: "included" },
-      { text: "Custom email branding", status: "coming" },
-      { text: "Slack & Discord alerts", status: "coming" },
-      { text: "White-label payment page", status: "excluded" },
-    ] satisfies Feature[],
-  },
-  {
-    id: "growth",
-    name: "Scale",
-    earlyPrice: 199,
-    fullPrice: 299,
-    earlyAnnual: 159,
-    fullAnnual: 249,
-    period: "mo",
-    cap: "Up to $200k MRR",
-    description: "For established SaaS businesses maximizing every dollar of revenue.",
-    highlight: false,
-    features: [
-      { text: "Automated payment recovery", status: "included" },
-      { text: "Pre-dunning alerts (expiring cards)", status: "included" },
-      { text: "Unlimited sequence steps", status: "coming" },
-      { text: "Recovery dashboard & metrics", status: "included" },
-      { text: "Stripe integration", status: "included" },
-      { text: "Custom email branding", status: "coming" },
-      { text: "Slack & Discord alerts", status: "coming" },
-      { text: "White-label payment page", status: "coming" },
-    ] satisfies Feature[],
-  },
-];
 
 const stats = [
   { value: "$118B+", label: "Lost to failed payments yearly" },
@@ -117,50 +42,6 @@ const faqs = [
     a: "Features marked 'Coming Q2' are actively in development and expected to ship by the end of Q2 2026. You'll get them automatically when they launch — no action needed.",
   },
 ];
-
-function FeatureIcon({ status }: { status: FeatureStatus }) {
-  if (status === "included") {
-    return (
-      <svg
-        className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={2.5}
-        stroke="currentColor"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-      </svg>
-    );
-  }
-  if (status === "coming") {
-    return (
-      <svg
-        className="mt-0.5 h-4 w-4 shrink-0 text-amber-500"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={2}
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    );
-  }
-  return (
-    <svg
-      className="mt-0.5 h-4 w-4 shrink-0 text-zinc-300"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={2}
-      stroke="currentColor"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-    </svg>
-  );
-}
 
 export default async function PricingPage() {
   const requestHeaders = await headers();
@@ -225,98 +106,9 @@ export default async function PricingPage() {
           </div>
         </section>
 
-        {/* Pricing cards */}
+        {/* Pricing cards with monthly/annual toggle */}
         <section className="px-6 py-12">
-          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-3">
-            {tiers.map((tier) => (
-              <div
-                key={tier.id}
-                className={`relative flex flex-col rounded-2xl border-2 p-8 transition-shadow hover:shadow-lg ${
-                  tier.highlight
-                    ? "border-emerald-500 bg-white shadow-md shadow-emerald-100"
-                    : "border-zinc-200 bg-white"
-                }`}
-              >
-                {tier.highlight && (
-                  <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-emerald-500 px-4 py-1 text-xs font-semibold text-white">
-                    Most popular
-                  </span>
-                )}
-
-                {/* Plan header */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-zinc-900">{tier.name}</h3>
-                  <p className="mt-1 text-sm text-zinc-500">{tier.description}</p>
-                </div>
-
-                {/* Price */}
-                <div className="mb-2">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold text-zinc-900">
-                      ${tier.earlyPrice}
-                    </span>
-                    <span className="text-zinc-500">/{tier.period}</span>
-                    <span className="text-lg text-zinc-400 line-through">
-                      ${tier.fullPrice}
-                    </span>
-                  </div>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700">
-                      Save {Math.round((1 - tier.earlyPrice / tier.fullPrice) * 100)}%
-                    </span>
-                    <span className="text-xs text-zinc-400">
-                      ${tier.earlyAnnual}/mo billed annually
-                    </span>
-                  </div>
-                </div>
-
-                {/* MRR cap */}
-                <div className="mb-6 rounded-lg bg-zinc-50 px-3 py-2">
-                  <p className="text-sm font-medium text-zinc-700">{tier.cap}</p>
-                </div>
-
-                {/* CTA */}
-                <Link href="/register" className="mb-8 block">
-                  <Button
-                    className={`w-full ${
-                      tier.highlight ? "" : "bg-zinc-900 hover:bg-zinc-800"
-                    }`}
-                    size="lg"
-                  >
-                    Start free trial
-                  </Button>
-                </Link>
-
-                {/* Features */}
-                <div className="flex-1">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                    What&apos;s included
-                  </p>
-                  <ul className="space-y-3">
-                    {tier.features.map((feature) => (
-                      <li key={feature.text} className="flex items-start gap-2.5">
-                        <FeatureIcon status={feature.status} />
-                        <span
-                          className={`text-sm ${
-                            feature.status === "excluded"
-                              ? "text-zinc-400"
-                              : "text-zinc-700"
-                          }`}
-                        >
-                          {feature.text}
-                        </span>
-                        {feature.status === "coming" && (
-                          <span className="ml-auto shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                            Coming Q2
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
+          <PricingCards />
         </section>
 
         {/* Enterprise CTA */}
