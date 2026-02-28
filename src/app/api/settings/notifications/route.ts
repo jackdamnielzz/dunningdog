@@ -2,6 +2,7 @@ import { z } from "zod";
 import { resolveWorkspaceContextFromRequest } from "@/lib/auth";
 import { parseJsonBody, ok, routeError } from "@/lib/api";
 import { db } from "@/lib/db";
+import { requireFeature } from "@/lib/plan-features";
 
 const instance = "/api/settings/notifications";
 
@@ -30,6 +31,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    await requireFeature(workspace.workspaceId, "notifications");
     const input = await parseJsonBody(request, createSchema);
 
     const channel = await db.notificationChannel.create({

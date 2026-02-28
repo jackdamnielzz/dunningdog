@@ -8,6 +8,7 @@ import { isDatabaseUnavailableError, describeFailure } from "@/lib/runtime-fallb
 import { getDemoConnectedStripeAccount } from "@/lib/demo-data";
 import { log } from "@/lib/logger";
 import { getBranding } from "@/lib/services/branding";
+import { planHasFeature } from "@/lib/plan-features";
 import { ConnectStripeButton } from "@/components/forms/connect-stripe-button";
 import { ManageSubscriptionButton } from "@/components/forms/manage-subscription-button";
 import { UpgradePlanButton } from "@/components/forms/upgrade-plan-button";
@@ -87,6 +88,11 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   })();
 
   const branding = await getBranding(workspace.workspaceId).catch(() => null);
+
+  const plan = workspaceRecord.billingPlan;
+  const hasBranding = planHasFeature(plan, "email_branding");
+  const hasNotifications = planHasFeature(plan, "notifications");
+  const hasApiAccess = planHasFeature(plan, "api_access");
 
   return (
     <div className="space-y-6">
@@ -200,26 +206,36 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           ) : null}
         </CardContent>
       </Card>
-      <Card>
+      <Card className={hasNotifications ? "" : "relative"}>
         <CardHeader>
-          <CardTitle>Notifications</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle>Notifications</CardTitle>
+            {!hasNotifications && (
+              <Badge variant="warning">Pro plan required</Badge>
+            )}
+          </div>
           <CardDescription>
             Get alerts in Slack or Discord when payments are recovered, fail, or need attention.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className={hasNotifications ? "" : "pointer-events-none opacity-50"}>
           <NotificationChannelsForm />
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={hasBranding ? "" : "relative"}>
         <CardHeader>
-          <CardTitle>Email Branding</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle>Email Branding</CardTitle>
+            {!hasBranding && (
+              <Badge variant="warning">Pro plan required</Badge>
+            )}
+          </div>
           <CardDescription>
             Customize the look and feel of recovery emails sent to your customers.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className={hasBranding ? "" : "pointer-events-none opacity-50"}>
           <BrandingForm
             initialValues={{
               companyName: branding?.companyName ?? null,
@@ -231,14 +247,19 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={hasApiAccess ? "" : "relative"}>
         <CardHeader>
-          <CardTitle>API Keys</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle>API Keys</CardTitle>
+            {!hasApiAccess && (
+              <Badge variant="warning">Scale plan required</Badge>
+            )}
+          </div>
           <CardDescription>
             Create API keys for programmatic access to your workspace data. Keys are shown once at creation.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className={hasApiAccess ? "" : "pointer-events-none opacity-50"}>
           <ApiKeysForm />
         </CardContent>
       </Card>

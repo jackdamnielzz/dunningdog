@@ -48,6 +48,7 @@ const envSchema = z.object({
     .string()
     .min(16)
     .default("development-only-encryption-key"),
+  ADMIN_EMAILS: z.string().optional(),
   DEMO_MODE: booleanFromEnv.default(false),
 });
 

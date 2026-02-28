@@ -33,6 +33,7 @@ interface SequenceFormProps {
   existingSequenceId?: string;
   initialName?: string;
   initialSteps?: SequenceStep[];
+  maxSteps?: number;
 }
 
 const DEFAULT_STEPS: SequenceStep[] = [
@@ -70,6 +71,7 @@ export function SequenceForm({
   existingSequenceId,
   initialName,
   initialSteps,
+  maxSteps = 20,
 }: SequenceFormProps) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -196,7 +198,7 @@ export function SequenceForm({
         })}
       </div>
 
-      {fields.length < 20 && (
+      {fields.length < maxSteps ? (
         <Button
           type="button"
           variant="outline"
@@ -210,7 +212,11 @@ export function SequenceForm({
         >
           + Add step
         </Button>
-      )}
+      ) : fields.length < 20 ? (
+        <p className="text-xs text-zinc-500">
+          Upgrade your plan to add more steps (max {maxSteps} on current plan).
+        </p>
+      ) : null}
 
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={saving}>

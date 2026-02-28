@@ -1,6 +1,7 @@
 import { resolveWorkspaceContextFromRequest } from "@/lib/auth";
 import { parseJsonBody, ok, routeError } from "@/lib/api";
 import { getBranding, upsertBranding, brandingSchema } from "@/lib/services/branding";
+import { requireFeature } from "@/lib/plan-features";
 
 const instance = "/api/settings/branding";
 
@@ -17,6 +18,7 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   try {
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    await requireFeature(workspace.workspaceId, "email_branding");
     const input = await parseJsonBody(request, brandingSchema);
     const branding = await upsertBranding(workspace.workspaceId, input);
     return ok(branding);

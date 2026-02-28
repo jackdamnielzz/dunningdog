@@ -15,12 +15,17 @@ const navItems = [
 
 interface AppShellProps {
   children: React.ReactNode;
+  isAdmin?: boolean;
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, isAdmin: isAdminUser }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const allNavItems = isAdminUser
+    ? [...navItems, { href: "/app/admin", label: "Admin" }]
+    : navItems;
 
   async function handleLogout() {
     setIsLoggingOut(true);
@@ -44,7 +49,7 @@ export function AppShell({ children }: AppShellProps) {
           </Link>
           <div className="flex w-full items-center justify-between gap-3 md:w-auto">
             <nav className="flex items-center gap-1 rounded-lg bg-zinc-100 p-1">
-            {navItems.map((item) => (
+            {allNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

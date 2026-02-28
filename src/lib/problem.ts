@@ -7,6 +7,8 @@ type ProblemCode =
   | `DUNNING_${string}`
   | `VALIDATION_${string}`
   | `RATE_LIMIT_${string}`
+  | `FEATURE_${string}`
+  | `WORKSPACE_${string}`
   | `INTERNAL_${string}`;
 
 export class ProblemError extends Error {

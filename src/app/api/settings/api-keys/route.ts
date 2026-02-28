@@ -3,6 +3,7 @@ import { resolveWorkspaceContextFromRequest } from "@/lib/auth";
 import { parseJsonBody, ok, routeError } from "@/lib/api";
 import { ProblemError } from "@/lib/problem";
 import { generateApiKey, listApiKeys, API_KEY_SCOPES } from "@/lib/services/api-keys";
+import { requireFeature } from "@/lib/plan-features";
 
 const instance = "/api/settings/api-keys";
 
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
         detail: "API key creation requires session authentication.",
       });
     }
+    await requireFeature(workspace.workspaceId, "api_access");
     const input = await parseJsonBody(request, createSchema);
     const result = await generateApiKey({
       workspaceId: workspace.workspaceId,

@@ -200,6 +200,41 @@ export async function getAuthenticatedUserIdFromHeaders(headers: Pick<Headers, "
   return getAuthenticatedUserId(headers);
 }
 
+export async function getAuthenticatedUser(
+  headers: Pick<Headers, "get">,
+): Promise<{ id: string; email: string } | null> {
+  if (!isSupabaseAuthConfigured) {
+    return null;
+  }
+
+  const supabase = createSupabaseClient();
+  if (!supabase) {
+    return null;
+  }
+
+  const authorization = headers.get("authorization");
+  const bearerToken =
+    authorization && authorization.toLowerCase().startsWith("bearer ")
+      ? authorization.slice(7).trim()
+      : null;
+
+  const cookieToken = extractAccessTokenFromCookies(headers.get("cookie"));
+  const accessToken = bearerToken ?? cookieToken;
+  if (!accessToken) {
+    return null;
+  }
+
+  const { data, error } = await supabase.auth.getUser(accessToken);
+  if (error || !data.user) {
+    return null;
+  }
+
+  return {
+    id: data.user.id,
+    email: data.user.email ?? "",
+  };
+}
+
 async function resolveWorkspaceForAuthenticatedUser(
   userId: string,
   requestedWorkspaceId?: string,
