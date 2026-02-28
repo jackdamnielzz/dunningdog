@@ -31,9 +31,9 @@ function readParam(
 }
 
 const plans = [
-  { id: "starter", name: "Starter", price: "$49/mo", cap: "Up to $10k MRR" },
-  { id: "pro", name: "Pro", price: "$149/mo", cap: "Up to $50k MRR" },
-  { id: "growth", name: "Scale", price: "$299/mo", cap: "Up to $200k MRR" },
+  { id: "starter", name: "Starter", earlyPrice: "$29/mo", fullPrice: "$49/mo", cap: "Up to $10k MRR" },
+  { id: "pro", name: "Pro", earlyPrice: "$99/mo", fullPrice: "$149/mo", cap: "Up to $50k MRR" },
+  { id: "growth", name: "Scale", earlyPrice: "$199/mo", fullPrice: "$299/mo", cap: "Up to $200k MRR" },
 ] as const;
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
@@ -126,9 +126,14 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
       <Card>
         <CardHeader>
-          <CardTitle>DunningDog Billing</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle>DunningDog Billing</CardTitle>
+            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+              Early access
+            </span>
+          </div>
           <CardDescription>
-            Choose the subscription plan for this workspace.
+            Choose the subscription plan for this workspace. Early access pricing is locked until all features ship.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -167,7 +172,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                         <Badge variant="success">Current</Badge>
                       )}
                     </div>
-                    <p className="mt-1 text-lg font-bold text-zinc-900">{plan.price}</p>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <p className="text-lg font-bold text-zinc-900">{plan.earlyPrice}</p>
+                      <p className="text-sm text-zinc-400 line-through">{plan.fullPrice}</p>
+                    </div>
                     <p className="text-xs text-zinc-500">{plan.cap}</p>
                   </div>
                   <UpgradePlanButton
