@@ -5,8 +5,7 @@ import { env, isDemoMode } from "@/lib/env";
 import { getStripeClient } from "@/lib/stripe/client";
 import { ProblemError } from "@/lib/problem";
 import { reportAnalyticsEvent } from "@/lib/observability";
-import { isDatabaseUnavailableError, describeFailure } from "@/lib/runtime-fallback";
-import { getDemoWorkspace } from "@/lib/demo-data";
+
 import { log } from "@/lib/logger";
 
 const priceByPlan: Record<BillingPlan, string | undefined> = {
@@ -25,27 +24,10 @@ const planByPriceId = Object.entries(priceByPlan).reduce<
 }, {});
 
 export async function setWorkspaceBillingPlan(workspaceId: string, plan: BillingPlan) {
-  try {
-    return await db.workspace.update({
-      where: { id: workspaceId },
-      data: { billingPlan: plan },
-    });
-  } catch (error) {
-    if (!isDatabaseUnavailableError(error)) {
-      throw error;
-    }
-
-    log("warn", "Using demo workspace for billing plan update due to database issue", {
-      workspaceId,
-      plan,
-      reason: describeFailure(error),
-    });
-
-    return {
-      ...getDemoWorkspace(workspaceId),
-      billingPlan: plan,
-    };
-  }
+  return await db.workspace.update({
+    where: { id: workspaceId },
+    data: { billingPlan: plan },
+  });
 }
 
 export async function createBillingCheckoutSession(params: {
