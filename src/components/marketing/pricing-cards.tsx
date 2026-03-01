@@ -139,10 +139,9 @@ export function PricingCards() {
       {/* Cards */}
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-3">
         {tiers.map((tier) => {
-          const earlyPrice = annual ? tier.earlyAnnualPerMonth : tier.earlyMonthly;
-          const fullPrice = annual ? tier.fullAnnualPerMonth : tier.fullMonthly;
-          const savePct = Math.round((1 - earlyPrice / fullPrice) * 100);
-          const yearlyTotal = annual ? earlyPrice * 12 : null;
+          const price = annual ? tier.annualPerMonth : tier.monthly;
+          const savePct = Math.round((1 - tier.annualPerMonth / tier.monthly) * 100);
+          const yearlyTotal = annual ? tier.annualPerMonth * 12 : null;
 
           return (
             <div
@@ -168,18 +167,19 @@ export function PricingCards() {
               {/* Price */}
               <div className="mb-2">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-zinc-900">${earlyPrice}</span>
+                  <span className="text-4xl font-bold text-zinc-900">${price}</span>
                   <span className="text-zinc-500">/mo</span>
-                  <span className="text-lg text-zinc-400 line-through">${fullPrice}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <span className="inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700">
-                    Save {savePct}%
-                  </span>
-                  {annual && yearlyTotal ? (
-                    <span className="text-xs text-zinc-400">
-                      ${yearlyTotal}/yr billed annually
-                    </span>
+                  {annual ? (
+                    <>
+                      <span className="inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700">
+                        Save {savePct}%
+                      </span>
+                      <span className="text-xs text-zinc-400">
+                        ${yearlyTotal}/yr billed annually
+                      </span>
+                    </>
                   ) : (
                     <span className="text-xs text-zinc-400">billed monthly</span>
                   )}

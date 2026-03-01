@@ -117,14 +117,9 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle>DunningDog Billing</CardTitle>
-            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-              Early access
-            </span>
-          </div>
+          <CardTitle>DunningDog Billing</CardTitle>
           <CardDescription>
-            Choose the subscription plan for this workspace. Early access pricing is locked until all features ship.
+            Choose the subscription plan for this workspace.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -164,8 +159,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                       )}
                     </div>
                     <div className="mt-1 flex items-baseline gap-2">
-                      <p className="text-lg font-bold text-zinc-900">${plan.earlyMonthly}/mo</p>
-                      <p className="text-sm text-zinc-400 line-through">${plan.fullMonthly}/mo</p>
+                      <p className="text-lg font-bold text-zinc-900">${plan.monthly}/mo</p>
                     </div>
                     <p className="text-xs text-zinc-500">{plan.cap}</p>
                   </div>
