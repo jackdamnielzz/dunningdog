@@ -38,7 +38,7 @@ async function loadCustomerEmail(options?: {
     log,
   }));
 
-  const customerEmail = await import("@/lib/services/customerEmail");
+  const customerEmail = await import("@/lib/services/customer-email");
 
   return {
     customerEmail,

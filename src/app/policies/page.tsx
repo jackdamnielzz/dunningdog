@@ -14,7 +14,7 @@ export default function PoliciesPage() {
     <div className="min-h-screen bg-zinc-50">
       <main className="mx-auto max-w-5xl px-6 py-14">
         <div className="space-y-3">
-          <p className="text-sm font-medium text-emerald-700">Legal</p>
+          <p className="text-sm font-medium text-accent-700">Legal</p>
           <h1 className="text-4xl font-semibold tracking-tight text-zinc-900">Policy Center</h1>
           <p className="max-w-2xl text-zinc-600">
             Review the official policies that govern data handling, account usage,
@@ -32,7 +32,7 @@ export default function PoliciesPage() {
                 <p className="text-sm text-zinc-600">{policy.description}</p>
                 <Link
                   href={policy.href}
-                  className="text-sm font-medium text-emerald-700 hover:text-emerald-600"
+                  className="text-sm font-medium text-accent-700 hover:text-accent-600"
                 >
                   Read
                 </Link>

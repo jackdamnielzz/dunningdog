@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert } from "@/components/ui/alert";
 
 const stepSchema = z.object({
   delayHours: z.number().int().min(0).max(720),
@@ -74,7 +75,7 @@ export function SequenceForm({
   maxSteps = 20,
 }: SequenceFormProps) {
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const form = useForm<SequenceFormValues>({
     resolver: zodResolver(sequenceFormSchema),
@@ -112,9 +113,9 @@ export function SequenceForm({
         throw new Error(errorBody.detail ?? "Unable to save sequence.");
       }
 
-      setMessage("Sequence saved successfully.");
+      setMessage({ type: "success", text: "Sequence saved successfully." });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unexpected error.");
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "Unexpected error." });
     } finally {
       setSaving(false);
     }
@@ -222,7 +223,7 @@ export function SequenceForm({
         <Button type="submit" disabled={saving}>
           {saving ? "Saving..." : "Save sequence"}
         </Button>
-        {message && <p className="text-sm text-zinc-600">{message}</p>}
+        {message && <Alert variant={message.type === "success" ? "success" : "error"}>{message.text}</Alert>}
       </div>
     </form>
   );

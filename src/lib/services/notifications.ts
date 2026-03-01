@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { log } from "@/lib/logger";
+import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
 import type { NotificationEventKind } from "@prisma/client";
 
 interface NotificationPayload {
@@ -40,7 +41,7 @@ function formatDiscordPayload(payload: NotificationPayload) {
         description: payload.description,
         color: payload.color
           ? parseInt(payload.color.replace("#", ""), 16)
-          : 0x10b981,
+          : parseInt(DEFAULT_ACCENT_COLOR.replace("#", ""), 16),
         fields: payload.fields?.map((f) => ({
           name: f.label,
           value: f.value,

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
 
 export const brandingSchema = z.object({
   companyName: z.string().max(100).optional(),
@@ -37,7 +38,7 @@ export async function upsertBranding(workspaceId: string, input: BrandingInput) 
       workspaceId,
       companyName: input.companyName,
       logoUrl: input.logoUrl || null,
-      accentColor: input.accentColor ?? "#10b981",
+      accentColor: input.accentColor ?? DEFAULT_ACCENT_COLOR,
       footerText: input.footerText,
     },
   });

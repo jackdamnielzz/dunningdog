@@ -9,6 +9,8 @@ type ProblemCode =
   | `RATE_LIMIT_${string}`
   | `FEATURE_${string}`
   | `WORKSPACE_${string}`
+  | `NOTIFICATION_${string}`
+  | `SERVICE_${string}`
   | `INTERNAL_${string}`;
 
 export class ProblemError extends Error {

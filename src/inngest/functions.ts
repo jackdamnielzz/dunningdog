@@ -1,7 +1,7 @@
 import { inngest } from "@/lib/inngest/client";
 import { db } from "@/lib/db";
 import { sendDunningEmail } from "@/lib/services/email";
-import { resolveCustomerEmail } from "@/lib/services/customerEmail";
+import { resolveCustomerEmail } from "@/lib/services/customer-email";
 import { generatePaymentUpdateToken } from "@/lib/services/payment-tokens";
 import { sendNotification } from "@/lib/services/notifications";
 

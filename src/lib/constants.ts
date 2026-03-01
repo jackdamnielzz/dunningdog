@@ -1,6 +1,8 @@
 export const DEFAULT_WORKSPACE_ID = "ws_demo_default";
 export const DEFAULT_WORKSPACE_NAME = "DunningDog Demo Workspace";
 export const APP_NAME = "DunningDog";
+export const DEFAULT_ACCENT_COLOR = "#10b981";
+export const DEFAULT_POST_AUTH_PATH = "/app";
 
 export const SUPPORTED_STRIPE_WEBHOOK_EVENTS = new Set([
   "invoice.payment_failed",

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 
 interface PaymentUpdateFormProps {
   token: string;
@@ -42,8 +44,8 @@ export function PaymentUpdateForm({ token, accentColor }: PaymentUpdateFormProps
   if (status === "success") {
     return (
       <div className="text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-          <svg className="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent-100">
+          <svg className="h-6 w-6 text-accent-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
         </div>
@@ -60,17 +62,17 @@ export function PaymentUpdateForm({ token, accentColor }: PaymentUpdateFormProps
       <p className="text-sm text-zinc-600">
         Click below to securely update your payment method via Stripe.
       </p>
-      <button
+      <Button
         type="button"
         onClick={handleSubmit}
         disabled={status === "loading"}
-        className="w-full rounded-lg px-4 py-3 text-sm font-semibold text-white transition-opacity disabled:opacity-50"
+        className="w-full"
         style={{ backgroundColor: accentColor }}
       >
         {status === "loading" ? "Redirecting..." : "Update payment method"}
-      </button>
+      </Button>
       {status === "error" && errorMessage && (
-        <p className="text-center text-sm text-red-600">{errorMessage}</p>
+        <Alert variant="error">{errorMessage}</Alert>
       )}
     </div>
   );

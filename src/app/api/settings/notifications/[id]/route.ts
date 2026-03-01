@@ -29,7 +29,7 @@ async function verifyOwnership(channelId: string, workspaceId: string) {
     throw new ProblemError({
       title: "Notification channel not found",
       status: 404,
-      code: "DUNNING_SEQUENCE_NOT_FOUND",
+      code: "NOTIFICATION_CHANNEL_NOT_FOUND",
       detail: `Channel ${channelId} not found for this workspace.`,
     });
   }

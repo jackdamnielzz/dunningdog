@@ -1,3 +1,5 @@
+import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
+
 interface EmailBranding {
   companyName?: string | null;
   logoUrl?: string | null;
@@ -12,7 +14,7 @@ interface RenderParams {
   paymentUpdateUrl?: string;
 }
 
-function escapeHtml(text: string): string {
+export function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -21,7 +23,7 @@ function escapeHtml(text: string): string {
 }
 
 export function renderDunningEmailHtml(params: RenderParams): string {
-  const accent = params.branding?.accentColor ?? "#10b981";
+  const accent = params.branding?.accentColor ?? DEFAULT_ACCENT_COLOR;
   const companyName = params.branding?.companyName ?? "DunningDog";
   const logoUrl = params.branding?.logoUrl;
   const footerText = params.branding?.footerText ?? "";

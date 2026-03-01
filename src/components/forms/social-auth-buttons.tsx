@@ -1,12 +1,7 @@
+import { normalizeNextPath } from "@/lib/safe-redirect";
+
 interface SocialAuthButtonsProps {
   nextPath: string;
-}
-
-function normalizeNextPath(path: string) {
-  if (!path || !path.startsWith("/") || path.startsWith("//")) {
-    return "/app";
-  }
-  return path;
 }
 
 function buildStartUrl(provider: "google" | "microsoft", nextPath: string) {

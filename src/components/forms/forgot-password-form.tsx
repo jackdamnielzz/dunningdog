@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert } from "@/components/ui/alert";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -60,17 +61,9 @@ export function ForgotPasswordForm() {
         />
       </div>
 
-      {errorMessage ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {errorMessage}
-        </p>
-      ) : null}
+      {errorMessage ? <Alert variant="error">{errorMessage}</Alert> : null}
 
-      {successMessage ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-          {successMessage}
-        </p>
-      ) : null}
+      {successMessage ? <Alert variant="success">{successMessage}</Alert> : null}
 
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Sending link..." : "Send reset link"}
@@ -78,7 +71,7 @@ export function ForgotPasswordForm() {
 
       <p className="text-sm text-zinc-600">
         Back to{" "}
-        <Link href="/login" className="font-medium text-emerald-700 hover:text-emerald-600">
+        <Link href="/login" className="font-medium text-accent-700 hover:text-accent-600">
           sign in
         </Link>
         .

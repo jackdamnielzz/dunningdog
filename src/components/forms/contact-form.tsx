@@ -52,9 +52,9 @@ export function ContactForm() {
 
   if (status === "sent") {
     return (
-      <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-6 text-center">
-        <p className="text-lg font-semibold text-emerald-800">Message sent!</p>
-        <p className="mt-1 text-sm text-emerald-700">
+      <div className="rounded-lg border border-accent-200 bg-accent-50 p-6 text-center">
+        <p className="text-lg font-semibold text-accent-800">Message sent!</p>
+        <p className="mt-1 text-sm text-accent-700">
           Thanks for reaching out. We&apos;ll get back to you as soon as possible.
         </p>
         <Button

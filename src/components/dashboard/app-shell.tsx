@@ -16,9 +16,10 @@ const navItems = [
 interface AppShellProps {
   children: React.ReactNode;
   isAdmin?: boolean;
+  accentColor?: string | null;
 }
 
-export function AppShell({ children, isAdmin: isAdminUser }: AppShellProps) {
+export function AppShell({ children, isAdmin: isAdminUser, accentColor }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -38,9 +39,11 @@ export function AppShell({ children, isAdmin: isAdminUser }: AppShellProps) {
     }
   }
 
+  const shellStyle = accentColor ? { "--accent": accentColor } as React.CSSProperties : undefined;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-cyan-50">
-      <header className="border-b border-emerald-100 bg-white/90 backdrop-blur">
+    <div className="min-h-screen bg-gradient-to-br from-accent-50 via-white to-accent-100" style={shellStyle}>
+      <header className="border-b border-accent-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-4 md:flex-row md:items-center md:justify-between">
           <Link href="/" className="flex items-center">
             <span className="text-2xl font-semibold tracking-tight text-zinc-900">
@@ -55,7 +58,7 @@ export function AppShell({ children, isAdmin: isAdminUser }: AppShellProps) {
                 href={item.href}
                 className={cn(
                   "rounded-md px-3 py-2 text-center text-sm font-medium text-zinc-600 transition-colors",
-                  pathname === item.href
+                  (item.href === "/app" ? pathname === "/app" : pathname.startsWith(item.href))
                     ? "bg-white text-zinc-900 shadow-sm"
                     : "hover:text-zinc-900",
                 )}

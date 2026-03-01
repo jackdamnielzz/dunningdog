@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert } from "@/components/ui/alert";
 
 function readAccessTokenFromUrl() {
   if (typeof window === "undefined") {
@@ -117,16 +118,12 @@ export function ResetPasswordForm() {
       </div>
 
       {!hasValidToken ? (
-        <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <Alert variant="warning">
           No valid reset token found. Request a new reset link first.
-        </p>
+        </Alert>
       ) : null}
 
-      {errorMessage ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {errorMessage}
-        </p>
-      ) : null}
+      {errorMessage ? <Alert variant="error">{errorMessage}</Alert> : null}
 
       <Button type="submit" className="w-full" disabled={pending || !hasValidToken}>
         {pending ? "Updating password..." : "Update password"}
@@ -136,7 +133,7 @@ export function ResetPasswordForm() {
         Need a new link?{" "}
         <Link
           href="/forgot-password"
-          className="font-medium text-emerald-700 hover:text-emerald-600"
+          className="font-medium text-accent-700 hover:text-accent-600"
         >
           Request reset email
         </Link>

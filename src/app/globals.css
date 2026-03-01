@@ -10,11 +10,19 @@
   --brand-strong: #0a7b66;
   --brand-soft: #d9f5ee;
   --danger: #c43d3d;
+  --accent: #10b981;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent-50: color-mix(in srgb, var(--accent) 6%, white);
+  --color-accent-100: color-mix(in srgb, var(--accent) 14%, white);
+  --color-accent-200: color-mix(in srgb, var(--accent) 28%, white);
+  --color-accent-500: color-mix(in srgb, var(--accent), white 20%);
+  --color-accent-600: var(--accent);
+  --color-accent-700: color-mix(in srgb, var(--accent), black 15%);
+  --color-accent-800: color-mix(in srgb, var(--accent), black 30%);
   --font-sans: var(--font-sora);
   --font-mono: var(--font-plex-mono);
 }

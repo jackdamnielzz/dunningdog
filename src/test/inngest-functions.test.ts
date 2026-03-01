@@ -68,7 +68,7 @@ async function loadFunctions(deps: {
     sendDunningEmail: deps.sendDunningEmail ?? vi.fn(),
   }));
 
-  vi.doMock("@/lib/services/customerEmail", () => ({
+  vi.doMock("@/lib/services/customer-email", () => ({
     resolveCustomerEmail: deps.resolveCustomerEmail ?? vi.fn(),
   }));
 

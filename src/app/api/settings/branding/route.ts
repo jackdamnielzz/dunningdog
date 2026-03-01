@@ -2,6 +2,7 @@ import { resolveWorkspaceContextFromRequest } from "@/lib/auth";
 import { parseJsonBody, ok, routeError } from "@/lib/api";
 import { getBranding, upsertBranding, brandingSchema } from "@/lib/services/branding";
 import { requireFeature } from "@/lib/plan-features";
+import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
 
 const instance = "/api/settings/branding";
 
@@ -9,7 +10,7 @@ export async function GET(request: Request) {
   try {
     const workspace = await resolveWorkspaceContextFromRequest(request);
     const branding = await getBranding(workspace.workspaceId);
-    return ok(branding ?? { companyName: null, logoUrl: null, accentColor: "#10b981", footerText: null });
+    return ok(branding ?? { companyName: null, logoUrl: null, accentColor: DEFAULT_ACCENT_COLOR, footerText: null });
   } catch (error) {
     return routeError(error, instance);
   }

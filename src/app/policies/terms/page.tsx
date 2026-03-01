@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SiteFooter } from "@/components/marketing/site-footer";
+import { PolicyPageLayout } from "@/components/layouts/policy-page-layout";
 
 export const metadata: Metadata = {
   title: "Terms of Service | DunningDog",
@@ -8,10 +8,8 @@ export const metadata: Metadata = {
 
 export default function TermsPolicyPage() {
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <main className="mx-auto max-w-4xl px-6 py-14">
-        <article className="rounded-xl border border-zinc-200 bg-white p-8">
-          <p className="text-sm font-medium text-emerald-700">Last updated: February 28, 2026</p>
+    <PolicyPageLayout>
+          <p className="text-sm font-medium text-accent-700">Last updated: February 28, 2026</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-900">
             Terms of Service
           </h1>
@@ -70,9 +68,6 @@ export default function TermsPolicyPage() {
               <p>Questions about these terms can be sent to support@dunningdog.com.</p>
             </section>
           </div>
-        </article>
-      </main>
-      <SiteFooter />
-    </div>
+    </PolicyPageLayout>
   );
 }

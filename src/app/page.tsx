@@ -45,7 +45,7 @@ export default async function Home() {
 
         <section className="grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-center">
           <div className="space-y-6">
-            <p className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <p className="inline-flex items-center rounded-full bg-accent-100 px-3 py-1 text-xs font-semibold text-accent-700">
               Revenue recovery for Stripe subscriptions
             </p>
             <h1 className="max-w-2xl text-5xl font-semibold leading-tight tracking-tight text-zinc-900">
@@ -71,15 +71,15 @@ export default async function Home() {
               </Link>
             </div>
           </div>
-          <Card className="border-emerald-200 bg-white/90">
+          <Card className="border-accent-200 bg-white/90">
             <CardHeader>
               <CardTitle>This month</CardTitle>
               <CardDescription>Example ROI snapshot</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="rounded-lg bg-emerald-50 p-4">
+              <div className="rounded-lg bg-accent-50 p-4">
                 <p className="text-sm text-zinc-600">Recovered revenue</p>
-                <p className="text-3xl font-semibold text-emerald-700">
+                <p className="text-3xl font-semibold text-accent-700">
                   $412.00
                 </p>
               </div>
@@ -90,7 +90,7 @@ export default async function Home() {
                   "11 subscriptions flagged before failure",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    <CheckCircle2 className="h-4 w-4 text-accent-600" />
                     {item}
                   </li>
                 ))}

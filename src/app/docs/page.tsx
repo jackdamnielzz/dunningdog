@@ -29,7 +29,7 @@ export default function DocsPage() {
                 <p className="text-sm text-zinc-600">{item.desc}</p>
                 <Link
                   href={item.href}
-                  className="text-sm font-medium text-emerald-700 hover:text-emerald-600"
+                  className="text-sm font-medium text-accent-700 hover:text-accent-600"
                 >
                   Open
                 </Link>

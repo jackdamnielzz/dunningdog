@@ -4,6 +4,7 @@ import { env } from "@/lib/env";
 import { log } from "@/lib/logger";
 import { ProblemError } from "@/lib/problem";
 import { createSupabaseClient } from "@/lib/supabase";
+import { normalizeNextPath } from "@/lib/safe-redirect";
 
 const implicitSchema = z.object({
   accessToken: z.string().min(20),
@@ -34,13 +35,6 @@ function buildSessionCookieValue(accessToken: string, refreshToken?: string) {
   });
   const base64 = Buffer.from(tokenPayload, "utf8").toString("base64");
   return `base64-${base64}`;
-}
-
-function normalizeNextPath(path: string | undefined) {
-  if (!path || !path.startsWith("/") || path.startsWith("//")) {
-    return "/app";
-  }
-  return path;
 }
 
 function readCookieValue(cookieHeader: string | null, cookieName: string) {

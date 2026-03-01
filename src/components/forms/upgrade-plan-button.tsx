@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 
 type BillingPlan = "starter" | "pro" | "growth";
 
@@ -27,6 +28,7 @@ export function UpgradePlanButton({
   currentPlan,
 }: UpgradePlanButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function startCheckout() {
     if (plan === currentPlan) {
@@ -34,6 +36,7 @@ export function UpgradePlanButton({
     }
 
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch("/api/billing/checkout", {
         method: "POST",
@@ -52,20 +55,24 @@ export function UpgradePlanButton({
 
       const data = (await response.json()) as { checkoutUrl: string };
       window.location.href = data.checkoutUrl;
-    } catch {
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected error.");
       setLoading(false);
     }
   }
 
   return (
-    <Button
-      type="button"
-      variant={plan === currentPlan ? "outline" : "default"}
-      disabled={loading || plan === currentPlan}
-      onClick={startCheckout}
-      className="capitalize"
-    >
-      {getButtonLabel(plan, currentPlan, loading)}
-    </Button>
+    <div className="space-y-2">
+      <Button
+        type="button"
+        variant={plan === currentPlan ? "outline" : "default"}
+        disabled={loading || plan === currentPlan}
+        onClick={startCheckout}
+        className="capitalize"
+      >
+        {getButtonLabel(plan, currentPlan, loading)}
+      </Button>
+      {error && <Alert variant="error">{error}</Alert>}
+    </div>
   );
 }

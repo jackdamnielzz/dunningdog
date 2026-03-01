@@ -163,7 +163,7 @@ function extractAccessTokenFromCookies(cookieHeader: string | null) {
   return null;
 }
 
-async function getAuthenticatedUserId(headers: Pick<Headers, "get">) {
+async function getSupabaseUser(headers: Pick<Headers, "get">) {
   if (!isSupabaseAuthConfigured) {
     return null;
   }
@@ -193,7 +193,12 @@ async function getAuthenticatedUserId(headers: Pick<Headers, "get">) {
     return null;
   }
 
-  return data.user.id;
+  return data.user;
+}
+
+async function getAuthenticatedUserId(headers: Pick<Headers, "get">) {
+  const user = await getSupabaseUser(headers);
+  return user?.id ?? null;
 }
 
 export async function getAuthenticatedUserIdFromHeaders(headers: Pick<Headers, "get">) {
@@ -203,36 +208,9 @@ export async function getAuthenticatedUserIdFromHeaders(headers: Pick<Headers, "
 export async function getAuthenticatedUser(
   headers: Pick<Headers, "get">,
 ): Promise<{ id: string; email: string } | null> {
-  if (!isSupabaseAuthConfigured) {
-    return null;
-  }
-
-  const supabase = createSupabaseClient();
-  if (!supabase) {
-    return null;
-  }
-
-  const authorization = headers.get("authorization");
-  const bearerToken =
-    authorization && authorization.toLowerCase().startsWith("bearer ")
-      ? authorization.slice(7).trim()
-      : null;
-
-  const cookieToken = extractAccessTokenFromCookies(headers.get("cookie"));
-  const accessToken = bearerToken ?? cookieToken;
-  if (!accessToken) {
-    return null;
-  }
-
-  const { data, error } = await supabase.auth.getUser(accessToken);
-  if (error || !data.user) {
-    return null;
-  }
-
-  return {
-    id: data.user.id,
-    email: data.user.email ?? "",
-  };
+  const user = await getSupabaseUser(headers);
+  if (!user) return null;
+  return { id: user.id, email: user.email ?? "" };
 }
 
 async function resolveWorkspaceForAuthenticatedUser(
@@ -401,6 +379,23 @@ export async function resolveWorkspaceContextFromRequest(
 
   const preferredWorkspaceId = explicitWorkspaceId ?? readWorkspaceIdFromRequest(request);
   return resolveWorkspaceContextFromHeaders(request.headers, preferredWorkspaceId);
+}
+
+export async function requireWorkspaceContext(currentPath: string): Promise<WorkspaceContext> {
+  const { headers } = await import("next/headers");
+  const { redirect } = await import("next/navigation");
+
+  const requestHeaders = await headers();
+  const workspace = await resolveWorkspaceContextFromHeaders(requestHeaders).catch(
+    (error) => {
+      if (error instanceof ProblemError && error.code === "AUTH_UNAUTHORIZED") {
+        redirect(`/login?next=${currentPath}`);
+      }
+      throw error;
+    },
+  );
+  await ensureWorkspaceExists(workspace.workspaceId);
+  return workspace;
 }
 
 export async function ensureWorkspaceExists(workspaceId: string) {

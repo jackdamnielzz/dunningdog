@@ -1,7 +1,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { getAuthenticatedUserIdFromHeaders } from "@/lib/auth";
+import { getAuthenticatedUserIdFromHeaders, resolveWorkspaceContextFromHeaders } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
+import { getBranding } from "@/lib/services/branding";
 import { AppShell } from "@/components/dashboard/app-shell";
 
 export default async function InternalAppLayout({
@@ -13,7 +14,13 @@ export default async function InternalAppLayout({
     redirect("/login?next=/app");
   }
 
-  const adminFlag = await isAdmin(requestHeaders);
+  const [adminFlag, accentColor] = await Promise.all([
+    isAdmin(requestHeaders),
+    resolveWorkspaceContextFromHeaders(requestHeaders)
+      .then((ws) => getBranding(ws.workspaceId))
+      .then((b) => b?.accentColor ?? null)
+      .catch(() => null),
+  ]);
 
-  return <AppShell isAdmin={adminFlag}>{children}</AppShell>;
+  return <AppShell isAdmin={adminFlag} accentColor={accentColor}>{children}</AppShell>;
 }

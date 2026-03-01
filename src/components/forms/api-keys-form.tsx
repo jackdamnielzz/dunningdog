@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
+import { ChipToggleGroup } from "@/components/ui/chip-toggle";
 
 interface ApiKey {
   id: string;
@@ -32,7 +34,7 @@ export function ApiKeysForm() {
   const [saving, setSaving] = useState(false);
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   async function loadKeys() {
     try {
@@ -74,7 +76,7 @@ export function ApiKeysForm() {
       setShowForm(false);
       await loadKeys();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unexpected error.");
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "Unexpected error." });
     } finally {
       setSaving(false);
     }
@@ -101,8 +103,8 @@ export function ApiKeysForm() {
     <div className="space-y-4">
       {/* Created key alert */}
       {createdKey && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-          <p className="mb-2 text-sm font-semibold text-emerald-800">
+        <div className="rounded-lg border border-accent-200 bg-accent-50 p-4">
+          <p className="mb-2 text-sm font-semibold text-accent-800">
             API key created — copy it now, it won&apos;t be shown again
           </p>
           <div className="flex items-center gap-2">
@@ -171,22 +173,11 @@ export function ApiKeysForm() {
           </div>
           <div className="space-y-1.5">
             <Label>Permissions</Label>
-            <div className="flex flex-wrap gap-2">
-              {SCOPE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => toggleScope(opt.value)}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                    newScopes.includes(opt.value)
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                      : "border-zinc-200 text-zinc-500 hover:border-zinc-300"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+            <ChipToggleGroup
+              options={SCOPE_OPTIONS}
+              selected={newScopes}
+              onToggle={toggleScope}
+            />
           </div>
           <div className="flex gap-2">
             <Button onClick={handleCreate} disabled={saving || !newLabel || newScopes.length === 0}>
@@ -203,7 +194,7 @@ export function ApiKeysForm() {
         </Button>
       )}
 
-      {message && <p className="text-sm text-zinc-600">{message}</p>}
+      {message && <Alert variant={message.type === "success" ? "success" : "error"}>{message.text}</Alert>}
     </div>
   );
 }

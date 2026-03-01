@@ -1,7 +1,5 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { ensureWorkspaceExists, resolveWorkspaceContextFromHeaders } from "@/lib/auth";
-import { ProblemError } from "@/lib/problem";
+import { requireWorkspaceContext, ensureWorkspaceExists } from "@/lib/auth";
+import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
 import { confirmBillingCheckoutSession } from "@/lib/services/billing";
 import { isStripeConfigured } from "@/lib/stripe/client";
 import { isDatabaseUnavailableError, describeFailure } from "@/lib/runtime-fallback";
@@ -17,6 +15,9 @@ import { NotificationChannelsForm } from "@/components/forms/notification-channe
 import { ApiKeysForm } from "@/components/forms/api-keys-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { FeatureGatedCard } from "@/components/dashboard/feature-gated-card";
+import { readParam } from "@/lib/params";
+import { PLAN_TIERS } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
 
@@ -24,32 +25,10 @@ interface SettingsPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-function readParam(
-  params: Record<string, string | string[] | undefined>,
-  key: string,
-) {
-  const value = params[key];
-  if (Array.isArray(value)) {
-    return value[0] ?? null;
-  }
-  return value ?? null;
-}
-
-const plans = [
-  { id: "starter", name: "Starter", earlyPrice: "$29/mo", fullPrice: "$49/mo", cap: "Up to $10k MRR" },
-  { id: "pro", name: "Pro", earlyPrice: "$99/mo", fullPrice: "$149/mo", cap: "Up to $50k MRR" },
-  { id: "growth", name: "Scale", earlyPrice: "$199/mo", fullPrice: "$299/mo", cap: "Up to $200k MRR" },
-] as const;
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const query = await searchParams;
-  const requestHeaders = await headers();
-  const workspace = await resolveWorkspaceContextFromHeaders(requestHeaders).catch((error) => {
-    if (error instanceof ProblemError && error.code === "AUTH_UNAUTHORIZED") {
-      redirect("/login?next=/app/settings");
-    }
-    throw error;
-  });
+  const workspace = await requireWorkspaceContext("/app/settings");
   let workspaceRecord = await ensureWorkspaceExists(workspace.workspaceId);
 
   const billingStatus = readParam(query, "billing");
@@ -166,14 +145,14 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             ) : null}
           </div>
           <div className="grid gap-3 md:grid-cols-3">
-            {plans.map((plan) => {
+            {PLAN_TIERS.map((plan) => {
               const isCurrent = workspaceRecord.billingPlan === plan.id;
               return (
                 <div
                   key={plan.id}
                   className={`space-y-3 rounded-lg border-2 bg-white p-4 ${
                     isCurrent
-                      ? "border-emerald-500 ring-1 ring-emerald-200"
+                      ? "border-accent-500 ring-1 ring-accent-200"
                       : "border-zinc-200"
                   }`}
                 >
@@ -185,8 +164,8 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                       )}
                     </div>
                     <div className="mt-1 flex items-baseline gap-2">
-                      <p className="text-lg font-bold text-zinc-900">{plan.earlyPrice}</p>
-                      <p className="text-sm text-zinc-400 line-through">{plan.fullPrice}</p>
+                      <p className="text-lg font-bold text-zinc-900">${plan.earlyMonthly}/mo</p>
+                      <p className="text-sm text-zinc-400 line-through">${plan.fullMonthly}/mo</p>
                     </div>
                     <p className="text-xs text-zinc-500">{plan.cap}</p>
                   </div>
@@ -206,63 +185,39 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           ) : null}
         </CardContent>
       </Card>
-      <Card className={hasNotifications ? "" : "relative"}>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle>Notifications</CardTitle>
-            {!hasNotifications && (
-              <Badge variant="warning">Pro plan required</Badge>
-            )}
-          </div>
-          <CardDescription>
-            Get alerts in Slack or Discord when payments are recovered, fail, or need attention.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className={hasNotifications ? "" : "pointer-events-none opacity-50"}>
-          <NotificationChannelsForm />
-        </CardContent>
-      </Card>
+      <FeatureGatedCard
+        title="Notifications"
+        description="Get alerts in Slack or Discord when payments are recovered, fail, or need attention."
+        requiredPlanLabel="Pro plan required"
+        hasFeature={hasNotifications}
+      >
+        <NotificationChannelsForm />
+      </FeatureGatedCard>
 
-      <Card className={hasBranding ? "" : "relative"}>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle>Email Branding</CardTitle>
-            {!hasBranding && (
-              <Badge variant="warning">Pro plan required</Badge>
-            )}
-          </div>
-          <CardDescription>
-            Customize the look and feel of recovery emails sent to your customers.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className={hasBranding ? "" : "pointer-events-none opacity-50"}>
-          <BrandingForm
-            initialValues={{
-              companyName: branding?.companyName ?? null,
-              logoUrl: branding?.logoUrl ?? null,
-              accentColor: branding?.accentColor ?? "#10b981",
-              footerText: branding?.footerText ?? null,
-            }}
-          />
-        </CardContent>
-      </Card>
+      <FeatureGatedCard
+        title="Email Branding"
+        description="Customize the look and feel of recovery emails sent to your customers."
+        requiredPlanLabel="Pro plan required"
+        hasFeature={hasBranding}
+      >
+        <BrandingForm
+          initialValues={{
+            companyName: branding?.companyName ?? null,
+            logoUrl: branding?.logoUrl ?? null,
+            accentColor: branding?.accentColor ?? DEFAULT_ACCENT_COLOR,
+            footerText: branding?.footerText ?? null,
+          }}
+        />
+      </FeatureGatedCard>
 
-      <Card className={hasApiAccess ? "" : "relative"}>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle>API Keys</CardTitle>
-            {!hasApiAccess && (
-              <Badge variant="warning">Scale plan required</Badge>
-            )}
-          </div>
-          <CardDescription>
-            Create API keys for programmatic access to your workspace data. Keys are shown once at creation.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className={hasApiAccess ? "" : "pointer-events-none opacity-50"}>
-          <ApiKeysForm />
-        </CardContent>
-      </Card>
+      <FeatureGatedCard
+        title="API Keys"
+        description="Create API keys for programmatic access to your workspace data. Keys are shown once at creation."
+        requiredPlanLabel="Scale plan required"
+        hasFeature={hasApiAccess}
+      >
+        <ApiKeysForm />
+      </FeatureGatedCard>
     </div>
   );
 }

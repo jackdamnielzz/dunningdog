@@ -1,6 +1,7 @@
 import { validatePaymentUpdateToken } from "@/lib/services/payment-tokens";
 import { getBranding } from "@/lib/services/branding";
 import { db } from "@/lib/db";
+import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
 import { PaymentUpdateForm } from "./payment-form";
 
 interface PageProps {
@@ -41,7 +42,7 @@ export default async function PaymentUpdatePage({ params }: PageProps) {
     }),
   ]);
 
-  const accentColor = branding?.accentColor ?? "#10b981";
+  const accentColor = branding?.accentColor ?? DEFAULT_ACCENT_COLOR;
   const companyName = branding?.companyName ?? "DunningDog";
   const logoUrl = branding?.logoUrl;
   const amountDue = attempt ? `$${(attempt.amountDueCents / 100).toFixed(2)}` : null;

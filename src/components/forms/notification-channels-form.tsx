@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
+import { Select } from "@/components/ui/select";
+import { ChipToggleGroup } from "@/components/ui/chip-toggle";
 
 interface Channel {
   id: string;
@@ -26,7 +29,7 @@ export function NotificationChannelsForm() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // New channel form state
   const [newType, setNewType] = useState<"slack" | "discord">("slack");
@@ -76,10 +79,10 @@ export function NotificationChannelsForm() {
       setNewUrl("");
       setNewEvents(["recovery_succeeded"]);
       setShowForm(false);
-      setMessage("Channel added successfully.");
+      setMessage({ type: "success", text: "Channel added successfully." });
       await loadChannels();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unexpected error.");
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "Unexpected error." });
     } finally {
       setSaving(false);
     }
@@ -94,7 +97,9 @@ export function NotificationChannelsForm() {
     setMessage(null);
     const response = await fetch(`/api/settings/notifications/${id}`, { method: "POST" });
     const result = await response.json();
-    setMessage(result.success ? "Test notification sent!" : "Test failed — check your webhook URL.");
+    setMessage(result.success
+      ? { type: "success", text: "Test notification sent!" }
+      : { type: "error", text: "Test failed — check your webhook URL." });
   }
 
   async function handleToggle(id: string, isEnabled: boolean) {
@@ -167,14 +172,13 @@ export function NotificationChannelsForm() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Type</Label>
-              <select
+              <Select
                 value={newType}
                 onChange={(e) => setNewType(e.target.value as "slack" | "discord")}
-                className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm"
               >
                 <option value="slack">Slack</option>
                 <option value="discord">Discord</option>
-              </select>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Label</Label>
@@ -199,22 +203,11 @@ export function NotificationChannelsForm() {
           </div>
           <div className="space-y-1.5">
             <Label>Events</Label>
-            <div className="flex flex-wrap gap-2">
-              {EVENT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => toggleEvent(opt.value)}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                    newEvents.includes(opt.value)
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                      : "border-zinc-200 text-zinc-500 hover:border-zinc-300"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+            <ChipToggleGroup
+              options={EVENT_OPTIONS}
+              selected={newEvents}
+              onToggle={toggleEvent}
+            />
           </div>
           <div className="flex gap-2">
             <Button onClick={handleCreate} disabled={saving || !newUrl || newEvents.length === 0}>
@@ -231,7 +224,7 @@ export function NotificationChannelsForm() {
         </Button>
       )}
 
-      {message && <p className="text-sm text-zinc-600">{message}</p>}
+      {message && <Alert variant={message.type === "success" ? "success" : "error"}>{message.text}</Alert>}
     </div>
   );
 }

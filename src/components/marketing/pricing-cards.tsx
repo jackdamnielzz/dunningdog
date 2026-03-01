@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { PLAN_TIERS, type PlanTier } from "@/lib/plans";
 
 type FeatureStatus = "included" | "excluded";
 
@@ -11,29 +12,13 @@ interface Feature {
   status: FeatureStatus;
 }
 
-interface Tier {
-  id: string;
-  name: string;
-  earlyMonthly: number;
-  fullMonthly: number;
-  earlyAnnualPerMonth: number;
-  fullAnnualPerMonth: number;
-  cap: string;
-  description: string;
+interface TierDisplay extends PlanTier {
   highlight: boolean;
   features: Feature[];
 }
 
-const tiers: Tier[] = [
-  {
-    id: "starter",
-    name: "Starter",
-    earlyMonthly: 29,
-    fullMonthly: 49,
-    earlyAnnualPerMonth: 23,
-    fullAnnualPerMonth: 39,
-    cap: "Up to $10k MRR",
-    description: "For early-stage SaaS teams recovering their first failed payments.",
+const TIER_DISPLAY: Record<string, { highlight: boolean; features: Feature[] }> = {
+  starter: {
     highlight: false,
     features: [
       { text: "Automated payment recovery", status: "included" },
@@ -48,15 +33,7 @@ const tiers: Tier[] = [
       { text: "API access", status: "excluded" },
     ],
   },
-  {
-    id: "pro",
-    name: "Pro",
-    earlyMonthly: 99,
-    fullMonthly: 149,
-    earlyAnnualPerMonth: 79,
-    fullAnnualPerMonth: 124,
-    cap: "Up to $50k MRR",
-    description: "For growing teams that need full control over their dunning strategy.",
+  pro: {
     highlight: true,
     features: [
       { text: "Automated payment recovery", status: "included" },
@@ -71,15 +48,7 @@ const tiers: Tier[] = [
       { text: "API access", status: "excluded" },
     ],
   },
-  {
-    id: "growth",
-    name: "Scale",
-    earlyMonthly: 199,
-    fullMonthly: 299,
-    earlyAnnualPerMonth: 159,
-    fullAnnualPerMonth: 249,
-    cap: "Up to $200k MRR",
-    description: "For established SaaS businesses maximizing every dollar of revenue.",
+  growth: {
     highlight: false,
     features: [
       { text: "Automated payment recovery", status: "included" },
@@ -94,13 +63,18 @@ const tiers: Tier[] = [
       { text: "API access", status: "included" },
     ],
   },
-];
+};
+
+const tiers: TierDisplay[] = PLAN_TIERS.map((tier) => ({
+  ...tier,
+  ...TIER_DISPLAY[tier.id],
+}));
 
 function FeatureIcon({ status }: { status: FeatureStatus }) {
   if (status === "included") {
     return (
       <svg
-        className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500"
+        className="mt-0.5 h-4 w-4 shrink-0 text-accent-500"
         fill="none"
         viewBox="0 0 24 24"
         strokeWidth={2.5}
@@ -141,7 +115,7 @@ export function PricingCards() {
           aria-checked={annual}
           onClick={() => setAnnual(!annual)}
           className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-            annual ? "bg-emerald-500" : "bg-zinc-300"
+            annual ? "bg-accent-500" : "bg-zinc-300"
           }`}
         >
           <span
@@ -156,7 +130,7 @@ export function PricingCards() {
           Annual
         </span>
         {annual && (
-          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+          <span className="rounded-full bg-accent-100 px-2.5 py-0.5 text-xs font-semibold text-accent-700">
             Save extra
           </span>
         )}
@@ -175,12 +149,12 @@ export function PricingCards() {
               key={tier.id}
               className={`relative flex flex-col rounded-2xl border-2 p-8 transition-shadow hover:shadow-lg ${
                 tier.highlight
-                  ? "border-emerald-500 bg-white shadow-md shadow-emerald-100"
+                  ? "border-accent-500 bg-white shadow-md shadow-accent-100"
                   : "border-zinc-200 bg-white"
               }`}
             >
               {tier.highlight && (
-                <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-emerald-500 px-4 py-1 text-xs font-semibold text-white">
+                <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-accent-500 px-4 py-1 text-xs font-semibold text-white">
                   Most popular
                 </span>
               )}

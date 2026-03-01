@@ -1,6 +1,6 @@
 import { ok, routeError } from "@/lib/api";
 import { db } from "@/lib/db";
-import { runPreDunningScan } from "@/lib/services/preDunning";
+import { runPreDunningScan } from "@/lib/services/pre-dunning";
 import { inngest } from "@/lib/inngest/client";
 import { assertCronAuthorized } from "@/lib/cron-auth";
 

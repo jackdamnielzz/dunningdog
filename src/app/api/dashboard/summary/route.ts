@@ -1,4 +1,3 @@
-import { ProblemError } from "@/lib/problem";
 import { ok, routeError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { getWorkspaceIdFromRequest, ensureWorkspaceExists } from "@/lib/auth";
@@ -52,9 +51,6 @@ export async function GET(request: Request) {
       })),
     });
   } catch (error) {
-    if (error instanceof ProblemError) {
-      return routeError(error, "/api/dashboard/summary");
-    }
     return routeError(error, "/api/dashboard/summary");
   }
 }

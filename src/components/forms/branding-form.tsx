@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert } from "@/components/ui/alert";
+import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
 
 interface BrandingFormProps {
   initialValues: {
@@ -20,7 +22,7 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
   const [accentColor, setAccentColor] = useState(initialValues.accentColor);
   const [footerText, setFooterText] = useState(initialValues.footerText ?? "");
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,9 +38,9 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
         const body = await response.json().catch(() => ({}));
         throw new Error(body.detail ?? "Failed to save branding.");
       }
-      setMessage("Branding saved successfully.");
+      setMessage({ type: "success", text: "Branding saved successfully." });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unexpected error.");
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "Unexpected error." });
     } finally {
       setSaving(false);
     }
@@ -79,7 +81,7 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
               value={accentColor}
               onChange={(e) => setAccentColor(e.target.value)}
               className="w-28"
-              placeholder="#10b981"
+              placeholder={DEFAULT_ACCENT_COLOR}
             />
           </div>
         </div>
@@ -137,7 +139,7 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
         <Button type="submit" disabled={saving}>
           {saving ? "Saving..." : "Save branding"}
         </Button>
-        {message && <p className="text-sm text-zinc-600">{message}</p>}
+        {message && <Alert variant={message.type === "success" ? "success" : "error"}>{message.text}</Alert>}
       </div>
     </form>
   );

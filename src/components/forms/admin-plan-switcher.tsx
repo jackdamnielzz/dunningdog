@@ -3,12 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-
-const plans = [
-  { id: "starter", label: "Starter" },
-  { id: "pro", label: "Pro" },
-  { id: "growth", label: "Scale (Growth)" },
-] as const;
+import { PLAN_TIERS } from "@/lib/plans";
 
 interface AdminPlanSwitcherProps {
   workspaceId: string;
@@ -31,7 +26,7 @@ export function AdminPlanSwitcher({ workspaceId, currentPlan }: AdminPlanSwitche
     try {
       const res = await fetch("/api/admin/set-plan", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ workspaceId, plan: selectedPlan }),
       });
 
@@ -51,12 +46,12 @@ export function AdminPlanSwitcher({ workspaceId, currentPlan }: AdminPlanSwitche
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex flex-wrap gap-3">
-        {plans.map((plan) => (
+        {PLAN_TIERS.map((plan) => (
           <label
             key={plan.id}
             className={`flex cursor-pointer items-center gap-2 rounded-lg border-2 px-4 py-3 transition-colors ${
               selectedPlan === plan.id
-                ? "border-emerald-500 bg-emerald-50"
+                ? "border-accent-500 bg-accent-50"
                 : "border-zinc-200 hover:border-zinc-300"
             }`}
           >
@@ -69,9 +64,9 @@ export function AdminPlanSwitcher({ workspaceId, currentPlan }: AdminPlanSwitche
                 setSelectedPlan(plan.id);
                 setStatus("idle");
               }}
-              className="accent-emerald-500"
+              className="accent-accent-500"
             />
-            <span className="text-sm font-medium text-zinc-900">{plan.label}</span>
+            <span className="text-sm font-medium text-zinc-900">{plan.name}</span>
             {currentPlan === plan.id && (
               <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-500">
                 Current
@@ -90,7 +85,7 @@ export function AdminPlanSwitcher({ workspaceId, currentPlan }: AdminPlanSwitche
         </Button>
 
         {status === "success" && (
-          <span className="text-sm font-medium text-emerald-600">
+          <span className="text-sm font-medium text-accent-600">
             Plan updated successfully.
           </span>
         )}

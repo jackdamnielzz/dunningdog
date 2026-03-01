@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createHash, randomBytes } from "crypto";
 import { env } from "@/lib/env";
 import { ProblemError, problemResponse } from "@/lib/problem";
+import { normalizeNextPath } from "@/lib/safe-redirect";
 
 type SupportedProvider = "google" | "microsoft";
 const OAUTH_STATE_COOKIE = "sb-oauth-state";
@@ -18,13 +19,6 @@ function createPkceVerifier() {
 
 function computeCodeChallenge(verifier: string) {
   return createHash("sha256").update(verifier).digest("base64url");
-}
-
-function normalizeNextPath(path: string | null) {
-  if (!path || !path.startsWith("/") || path.startsWith("//")) {
-    return "/app";
-  }
-  return path;
 }
 
 function parseProvider(value: string | null): SupportedProvider {

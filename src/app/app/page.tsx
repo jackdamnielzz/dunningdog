@@ -1,9 +1,6 @@
 import Link from "next/link";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { BarChart3, Clock3 } from "lucide-react";
-import { ensureWorkspaceExists, resolveWorkspaceContextFromHeaders } from "@/lib/auth";
-import { ProblemError } from "@/lib/problem";
+import { requireWorkspaceContext } from "@/lib/auth";
 import { getDashboardSummary, getRecoveryAttempts } from "@/lib/services/dashboard";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { RecoveryTable } from "@/components/dashboard/recovery-table";
@@ -15,14 +12,7 @@ import { Button } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 
 export default async function AppDashboardPage() {
-  const requestHeaders = await headers();
-  const workspace = await resolveWorkspaceContextFromHeaders(requestHeaders).catch((error) => {
-    if (error instanceof ProblemError && error.code === "AUTH_UNAUTHORIZED") {
-      redirect("/login?next=/app");
-    }
-    throw error;
-  });
-  await ensureWorkspaceExists(workspace.workspaceId);
+  const workspace = await requireWorkspaceContext("/app");
   const [summary, recoveries] = await Promise.all([
     getDashboardSummary(workspace.workspaceId, "month"),
     getRecoveryAttempts(workspace.workspaceId, 8),
@@ -61,7 +51,7 @@ export default async function AppDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-emerald-600" />
+              <BarChart3 className="h-4 w-4 text-accent-600" />
               Golden Metric
             </CardTitle>
           </CardHeader>
@@ -75,7 +65,7 @@ export default async function AppDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock3 className="h-4 w-4 text-emerald-600" />
+              <Clock3 className="h-4 w-4 text-accent-600" />
               Suggested cadence
             </CardTitle>
           </CardHeader>

@@ -2,15 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { normalizeNextPath } from "@/lib/safe-redirect";
 
 type CallbackState = "loading" | "error";
-
-function normalizeNextPath(path: string | null) {
-  if (!path || !path.startsWith("/") || path.startsWith("//")) {
-    return "/app";
-  }
-  return path;
-}
 
 function readHashParams() {
   const hash = window.location.hash.startsWith("#")
@@ -130,7 +124,7 @@ export function OAuthCallbackClient() {
 
   if (state === "loading") {
     return (
-      <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+      <p className="rounded-md border border-accent-200 bg-accent-50 px-3 py-2 text-sm text-accent-800">
         Finishing sign-in...
       </p>
     );
@@ -143,7 +137,7 @@ export function OAuthCallbackClient() {
       </p>
       <p className="text-sm text-zinc-600">
         Return to{" "}
-        <Link href="/login" className="font-medium text-emerald-700 hover:text-emerald-600">
+        <Link href="/login" className="font-medium text-accent-700 hover:text-accent-600">
           sign in
         </Link>
         .

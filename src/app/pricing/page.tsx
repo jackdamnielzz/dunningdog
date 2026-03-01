@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/marketing/site-footer";
+import { MarketingHeader } from "@/components/marketing/marketing-header";
 import { PricingCards } from "@/components/marketing/pricing-cards";
 import { getAuthenticatedUserIdFromHeaders } from "@/lib/auth";
 
@@ -52,22 +53,7 @@ export default async function PricingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <header className="border-b border-zinc-100 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-2xl font-bold tracking-tight text-zinc-900">
-            DunningDog
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/login">
-              <Button size="sm" variant="ghost">Sign in</Button>
-            </Link>
-            <Link href="/register">
-              <Button size="sm">Get started</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <MarketingHeader variant="full" />
 
       <main>
         {/* Early access banner */}
@@ -81,7 +67,7 @@ export default async function PricingPage() {
         {/* Hero */}
         <section className="px-6 pb-4 pt-16 text-center">
           <div className="mx-auto max-w-3xl">
-            <span className="inline-block rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <span className="inline-block rounded-full border border-accent-200 bg-accent-50 px-3 py-1 text-xs font-semibold text-accent-700">
               Early access
             </span>
             <h1 className="mt-4 text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl">
@@ -99,7 +85,7 @@ export default async function PricingPage() {
           <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-3">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
-                <p className="text-3xl font-bold text-emerald-600">{stat.value}</p>
+                <p className="text-3xl font-bold text-accent-600">{stat.value}</p>
                 <p className="mt-1 text-sm text-zinc-500">{stat.label}</p>
               </div>
             ))}
@@ -121,7 +107,7 @@ export default async function PricingPage() {
             </p>
             <a
               href="mailto:info@dunningdog.com"
-              className="mt-4 inline-block text-sm font-semibold text-emerald-600 hover:text-emerald-700"
+              className="mt-4 inline-block text-sm font-semibold text-accent-600 hover:text-accent-700"
             >
               Contact us for a custom quote &rarr;
             </a>
@@ -175,9 +161,9 @@ export default async function PricingPage() {
 
         {/* ROI callout */}
         <section className="px-6 py-12">
-          <div className="mx-auto max-w-4xl rounded-2xl bg-emerald-600 p-10 text-center text-white">
+          <div className="mx-auto max-w-4xl rounded-2xl bg-accent-600 p-10 text-center text-white">
             <h2 className="text-2xl font-bold sm:text-3xl">The math is simple</h2>
-            <p className="mx-auto mt-3 max-w-xl text-emerald-100">
+            <p className="mx-auto mt-3 max-w-xl text-accent-100">
               A SaaS with $50k MRR typically loses $2,500-5,000/mo to failed payments.
               DunningDog recovers 50-70% of that —{" "}
               <strong>$1,250-3,500/mo back in your pocket</strong> for just $99/mo during
@@ -187,9 +173,9 @@ export default async function PricingPage() {
               That&apos;s up to 35x return on investment.
             </p>
             <Link href="/register" className="mt-6 inline-block">
-              <button className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-50">
+              <Button variant="outline" size="lg" className="bg-white text-accent-700 hover:bg-accent-50">
                 Start your free 14-day trial
-              </button>
+              </Button>
             </Link>
           </div>
         </section>

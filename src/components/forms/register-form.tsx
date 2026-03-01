@@ -1,12 +1,15 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert } from "@/components/ui/alert";
+import { Divider } from "@/components/ui/divider";
 import { SocialAuthButtons } from "@/components/forms/social-auth-buttons";
+import { normalizeNextPath } from "@/lib/safe-redirect";
 
 interface RegisterFormProps {
   nextPath: string;
@@ -21,12 +24,7 @@ export function RegisterForm({ nextPath }: RegisterFormProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [confirmationNotice, setConfirmationNotice] = useState<string | null>(null);
 
-  const nextTarget = useMemo(() => {
-    if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//")) {
-      return "/app";
-    }
-    return nextPath;
-  }, [nextPath]);
+  const nextTarget = normalizeNextPath(nextPath);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -120,32 +118,23 @@ export function RegisterForm({ nextPath }: RegisterFormProps) {
         />
       </div>
 
-      {errorMessage ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {errorMessage}
-        </p>
-      ) : null}
+      {errorMessage ? <Alert variant="error">{errorMessage}</Alert> : null}
 
       {confirmationNotice ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+        <Alert variant="success">
           {confirmationNotice}{" "}
           <Link href={`/login?next=${encodeURIComponent(nextTarget)}`} className="font-semibold underline">
             Go to sign in
           </Link>
           .
-        </p>
+        </Alert>
       ) : null}
 
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Creating account..." : "Create account"}
       </Button>
 
-      <div className="relative py-2">
-        <div className="h-px w-full bg-zinc-200" />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-sm text-zinc-500">
-          Or continue with
-        </span>
-      </div>
+      <Divider />
 
       <SocialAuthButtons nextPath={nextTarget} />
     </form>

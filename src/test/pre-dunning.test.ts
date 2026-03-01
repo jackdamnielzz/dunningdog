@@ -70,7 +70,7 @@ async function loadPreDunning(isDemoMode: boolean) {
     }),
   }));
 
-  const preDunning = await import("@/lib/services/preDunning");
+  const preDunning = await import("@/lib/services/pre-dunning");
   return {
     preDunning,
     findManyMock,

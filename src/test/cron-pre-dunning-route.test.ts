@@ -52,7 +52,7 @@ async function loadRoute(opts?: {
     },
   }));
 
-  vi.doMock("@/lib/services/preDunning", () => ({
+  vi.doMock("@/lib/services/pre-dunning", () => ({
     runPreDunningScan,
   }));
 
