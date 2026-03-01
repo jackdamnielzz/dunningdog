@@ -17,19 +17,6 @@ export async function POST(request: Request) {
     const workspace = await setWorkspaceBillingPlan(input.workspaceId, input.plan);
     return ok(workspace);
   } catch (error) {
-    console.error("[admin/set-plan]", error);
-    // Temporary: surface actual error for debugging
-    if (!(error instanceof Error && "status" in error)) {
-      const { NextResponse } = await import("next/server");
-      return NextResponse.json(
-        {
-          title: "Debug: unexpected error",
-          detail: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
-        },
-        { status: 500 },
-      );
-    }
     return routeError(error, instance);
   }
 }
