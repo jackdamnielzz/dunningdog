@@ -33,8 +33,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${sora.variable} ${plexMono.variable} ${roboto.variable} antialiased`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${sora.variable} ${plexMono.variable} ${roboto.variable} antialiased`} suppressHydrationWarning>
         <DevServiceWorkerReset />
         <PostHogProvider>{children}</PostHogProvider>
       </body>
