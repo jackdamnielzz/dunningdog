@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     const workspace = await setWorkspaceBillingPlan(input.workspaceId, input.plan);
     return ok(workspace);
   } catch (error) {
+    console.error("[admin/set-plan]", error);
     return routeError(error, instance);
   }
 }
