@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { db } from "@/lib/db";
 import { env, isDemoMode } from "@/lib/env";
 import { DEFAULT_WORKSPACE_ID, DEFAULT_WORKSPACE_NAME } from "@/lib/constants";
@@ -163,7 +164,7 @@ function extractAccessTokenFromCookies(cookieHeader: string | null) {
   return null;
 }
 
-async function getSupabaseUser(headers: Pick<Headers, "get">) {
+const getSupabaseUser = cache(async function getSupabaseUser(headers: Pick<Headers, "get">) {
   if (!isSupabaseAuthConfigured) {
     return null;
   }
@@ -194,7 +195,7 @@ async function getSupabaseUser(headers: Pick<Headers, "get">) {
   }
 
   return data.user;
-}
+});
 
 async function getAuthenticatedUserId(headers: Pick<Headers, "get">) {
   const user = await getSupabaseUser(headers);
@@ -289,7 +290,7 @@ function readWorkspaceIdFromRequest(request: Request) {
   return DEFAULT_WORKSPACE_ID;
 }
 
-export async function resolveWorkspaceContextFromHeaders(
+export const resolveWorkspaceContextFromHeaders = cache(async function resolveWorkspaceContextFromHeaders(
   headers: Pick<Headers, "get">,
   requestedWorkspaceId?: string | null,
 ): Promise<WorkspaceContext> {
@@ -347,7 +348,7 @@ export async function resolveWorkspaceContextFromHeaders(
     userId,
     source: "fallback",
   };
-}
+});
 
 export async function resolveWorkspaceContextFromRequest(
   request: Request,

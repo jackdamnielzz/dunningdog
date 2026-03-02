@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
@@ -19,11 +20,11 @@ export const brandingSchema = z.object({
 
 export type BrandingInput = z.infer<typeof brandingSchema>;
 
-export async function getBranding(workspaceId: string) {
+export const getBranding = cache(async function getBranding(workspaceId: string) {
   return db.emailBranding.findUnique({
     where: { workspaceId },
   });
-}
+});
 
 export async function upsertBranding(workspaceId: string, input: BrandingInput) {
   return db.emailBranding.upsert({
