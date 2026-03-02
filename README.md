@@ -59,64 +59,57 @@ To make `Continue with Google` work end-to-end:
    - `SUPABASE_ANON_KEY`
    - `APP_BASE_URL`
 
-## Stripe Test Connection Checklist
-This section is the fastest way to validate Stripe connection end-to-end in test mode.
+## Stripe Configuration
 
-1. Prepare environment variables (local `.env.local` or Vercel envs):
+### Live Mode (Production)
+DunningDog's Stripe live mode is fully configured:
+- **Products**: Starter ($49/mo), Pro ($149/mo), Scale ($199/mo) — all USD, monthly recurring
+- **Webhooks**: 2 endpoints (payment recovery + billing subscriptions)
+- **Connect OAuth**: Enabled, Standard accounts, sellers collect payments directly
+- **Tax**: Netherlands, small seller regime
 
+### Environment Variables (Stripe)
 ```bash
-DEMO_MODE=false
-DATABASE_URL=postgresql://...
-APP_BASE_URL=http://localhost:3000 # or https://dunningdog.vercel.app on production
-NEXT_PUBLIC_APP_BASE_URL=http://localhost:3000 # or https://dunningdog.vercel.app on production
-ENCRYPTION_KEY=32-byte-or-longer-key
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_CONNECT_CLIENT_ID=ca_...
-STRIPE_CONNECT_CLIENT_SECRET=sk_live_or_test_secret_for_oauth
+# Live mode (production — set in Vercel)
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...          # Recovery webhook signing secret
+STRIPE_BILLING_WEBHOOK_SECRET=whsec_...  # Billing webhook signing secret
+STRIPE_CONNECT_CLIENT_ID=ca_...          # Connect OAuth client ID
+STRIPE_CONNECT_CLIENT_SECRET=sk_live_... # Same as STRIPE_SECRET_KEY
 STRIPE_PRICE_STARTER_ID=price_...
 STRIPE_PRICE_PRO_ID=price_...
 STRIPE_PRICE_GROWTH_ID=price_...
-CRON_SECRET=long-random-secret-used-for-cron-auth
+
+# Test mode (local development — set in .env.local)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...          # From `stripe listen`
+STRIPE_CONNECT_CLIENT_ID=ca_...          # Test client ID
+STRIPE_CONNECT_CLIENT_SECRET=sk_test_... # Same as test secret key
+STRIPE_PRICE_STARTER_ID=price_...        # Test price IDs (EUR)
+STRIPE_PRICE_PRO_ID=price_...
+STRIPE_PRICE_GROWTH_ID=price_...
 ```
 
-2. Configure your Stripe Connect app:
-- Set OAuth redirect URI to:
-  - `https://dunningdog.vercel.app/api/stripe/connect/callback` (production)
-  - `http://localhost:3000/api/stripe/connect/callback` (local)
-- Keep the app in test mode for initial validation.
+### Webhook Endpoints
+| Webhook | URL | Events |
+|---------|-----|--------|
+| Payment Recovery | `/api/webhooks/stripe` | invoice.payment_failed, invoice.payment_succeeded, customer.subscription.updated, customer.subscription.deleted, charge.failed, charge.refunded |
+| Billing | `/api/webhooks/stripe-billing` | customer.subscription.created, customer.subscription.updated, customer.subscription.deleted |
 
-3. Configure Stripe webhook endpoint:
-- Endpoint URL:
-  - `https://dunningdog.vercel.app/api/webhooks/stripe` (production)
-  - `http://localhost:3000/api/webhooks/stripe` (local with `stripe login` + `stripe listen`)
-- Subscribe to:
-  - `invoice.payment_failed`
-  - `invoice.payment_succeeded`
-  - `customer.subscription.updated`
-  - `payment_method.automatically_updated`
-- Save the signing secret into `STRIPE_WEBHOOK_SECRET`.
+### Connect OAuth Flow
+- Type: Standard accounts via OAuth 2.0 Authorization Code Grant
+- Redirect URIs:
+  - Production: `https://dunningdog.com/api/stripe/connect/callback?mode=browser`
+  - Local: `http://localhost:3000/api/stripe/connect/callback?mode=browser`
+- Scope: `read_write`
 
-4. Start app and connect Stripe from Settings.
-- Open `/app/settings`.
-- Click **Connect Stripe**.
-- Complete OAuth in your Stripe test account.
-- Return to `/app/settings` and confirm connection status is **Connected**.
-
-5. Trigger a real test event:
-- In Stripe test environment, create or edit a test subscription so a payment failure event is emitted.
-- You can use test cards that fail (e.g. 4000 0000 0000 0002).
-- Open `/app/recoveries` and confirm a recovery attempt appears.
-
-6. Validate webhook health:
-- In Stripe Dashboard → Developers → Webhooks, verify deliveries return `200`.
-- In app logs, confirm callbacks for `invoice.payment_failed` and `invoice.payment_succeeded`.
-
-Expected outcome:
-- `/app/settings` shows a connected account (`Connected`, `Demo connect mode` should become false in real mode).
-- `/api/webhooks/stripe` should return:
-  - `{ "received": true }` for supported events.
-- Recoveries table should contain real events and attempts instead of demo rows.
+### Testing Stripe Locally
+1. Install Stripe CLI and login: `stripe login`
+2. Forward webhooks: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
+3. Copy the signing secret from `stripe listen` output → `STRIPE_WEBHOOK_SECRET`
+4. Trigger test events: `stripe trigger invoice.payment_failed`
+5. Connect Stripe from `/app/settings` → Click **Connect Stripe**
+6. Use test cards (e.g. `4000 0000 0000 0002` for decline) to simulate failures
 
 ## Key Routes
 - Marketing: `/`

@@ -83,8 +83,8 @@ Pricing Tiers:
 
 
 🐶 Starter	🐕 Pro	🦮 Scale
-Price	$49/mo	$149/mo	$299/mo
-Annual Price	$39/mo	$124/mo	$249/mo
+Price	$49/mo	$149/mo	$199/mo
+Annual Price	$41/mo	$125/mo	$169/mo
 MRR Tracked	Up to $10K	Up to $50K	Up to $200K
 Pre-Dunning Alerts	✅	✅	✅
 Email Sequences	3-step	Unlimited	Unlimited
