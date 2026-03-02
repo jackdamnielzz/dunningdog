@@ -74,7 +74,7 @@ Churn Buster	Dedicated dunning tool, proven recovery rates, good email sequences
 Baremetrics Recover	Part of broader analytics suite; easy Stripe integration	Dunning is a secondary feature, not the core product; basic email templates; recovery rates lag behind specialists	Starts ~$108/mo (includes full Baremetrics)
 Butter Payments	Advanced ML retry optimization; high recovery rates	Enterprise-focused; B2C subscription focus; expensive; no indie/creator tier	Custom pricing, $200+/mo
 Stripe Smart Retries	Free, built-in, ML-optimized, recovers ~57% of failures	No pre-dunning; basic/ugly email templates; no hosted payment update page; no recovery dashboard; can't customize	Free (included with Stripe)
-🐕 DunningDog	Affordable, indie-focused, 5-min setup, pre-dunning, custom emails, hosted update page, recovery dashboard	New entrant; needs to prove recovery rates	$49–$299/mo
+🐕 DunningDog	Affordable, indie-focused, 5-min setup, pre-dunning, custom emails, hosted update page, recovery dashboard	New entrant; needs to prove recovery rates	$49–$199/mo
 Your Competitive Edge:
 DunningDog is not competing with Churnkey or Butter — you're competing with "doing nothing" or "using Stripe's basics." Your real competition is the founder who thinks "Stripe handles it well enough" — your job is to show them how much revenue they're leaving on the table. Position DunningDog as the upgrade from Stripe's built-in dunning, not as the budget version of Churnkey.
 

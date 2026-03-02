@@ -11,7 +11,7 @@ This repository contains:
 - PostgreSQL (Supabase-ready) + Prisma ORM
 - Stripe (OAuth, Billing, Webhooks)
 - Inngest (background workflows) + cron endpoints
-- Resend (transactional email)
+- Nodemailer (SMTP via Namecheap Private Email)
 
 ## Quick Start
 1. Install dependencies:
@@ -146,4 +146,4 @@ pnpm prod:check
 
 ## Notes
 - By default, the app supports a demo-friendly mode (`DEMO_MODE=true`) for local development.
-- For production behavior, set real Stripe, Supabase, Resend, and Inngest credentials in environment variables.
+- For production behavior, set real Stripe, Supabase, SMTP, and Inngest credentials in environment variables.
