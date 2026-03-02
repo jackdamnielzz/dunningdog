@@ -35,10 +35,7 @@ export default async function Home() {
               Pricing
             </Link>
             <Link href="/login">
-              <Button size="sm" variant="outline">Sign in</Button>
-            </Link>
-            <Link href="/register">
-              <Button size="sm">Create account</Button>
+              <Button size="sm">Sign in</Button>
             </Link>
           </div>
         </header>
@@ -56,17 +53,12 @@ export default async function Home() {
               pre-dunning, run smart retry sequences, and track every recovered
               dollar from one dashboard.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Link href="/register">
-                <Button className="gap-2">
-                  Create Account
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button variant="outline">Sign in</Button>
-              </Link>
-            </div>
+            <Link href="/login">
+              <Button className="gap-2">
+                Get Started
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
           <Card className="border-accent-200 bg-white/90">
             <CardHeader>
