@@ -52,10 +52,10 @@ export default async function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex min-h-screen flex-col bg-white">
       <MarketingHeader variant="full" />
 
-      <main>
+      <main className="flex-1">
         {/* Early access banner */}
         <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-center">
           <p className="text-sm font-medium text-amber-800">

@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 
 export default function PoliciesPage() {
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <main className="mx-auto max-w-5xl px-6 py-14">
+    <div className="flex min-h-screen flex-col bg-zinc-50">
+      <main className="mx-auto flex-1 max-w-5xl px-6 py-14">
         <div className="space-y-3">
           <p className="text-sm font-medium text-accent-700">Legal</p>
           <h1 className="text-4xl font-semibold tracking-tight text-zinc-900">Policy Center</h1>

@@ -21,8 +21,8 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_20%,#d9f5ee_0%,transparent_30%),radial-gradient(circle_at_90%_10%,#e2f4ff_0%,transparent_25%),linear-gradient(180deg,#f8fdfb_0%,#f6f8fb_100%)]">
-      <main className="mx-auto max-w-6xl px-6 py-14">
+    <div className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_20%_20%,#d9f5ee_0%,transparent_30%),radial-gradient(circle_at_90%_10%,#e2f4ff_0%,transparent_25%),linear-gradient(180deg,#f8fdfb_0%,#f6f8fb_100%)]">
+      <main className="mx-auto max-w-6xl flex-1 px-6 py-14">
         <header className="mb-16 flex items-center justify-between">
           <Link href="/" className="text-3xl font-semibold tracking-tight text-zinc-900">
             DunningDog
