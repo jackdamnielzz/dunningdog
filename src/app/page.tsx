@@ -66,9 +66,6 @@ export default async function Home() {
               <Link href="/login">
                 <Button variant="outline">Sign in</Button>
               </Link>
-              <Link href="/docs">
-                <Button variant="ghost">Read Product Docs</Button>
-              </Link>
             </div>
           </div>
           <Card className="border-accent-200 bg-white/90">
