@@ -1,5 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+/**
+ * Compute Stripe-style exp_month / exp_year that always falls within
+ * the 14-day pre-dunning threshold, regardless of the current date.
+ */
+function soonExpiringCard() {
+  const now = new Date();
+  const threshold = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const endOfMonth = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
+  );
+
+  if (endOfMonth.getTime() <= threshold.getTime()) {
+    // Current month ends within 14 days — use it
+    return { exp_month: now.getUTCMonth() + 1, exp_year: now.getUTCFullYear() };
+  }
+  // Otherwise fall back to previous month (already expired, still before threshold)
+  const lastDayPrev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0));
+  return { exp_month: lastDayPrev.getUTCMonth() + 1, exp_year: lastDayPrev.getUTCFullYear() };
+}
+
 async function loadPreDunning(isDemoMode: boolean) {
   vi.resetModules();
 
@@ -162,10 +182,7 @@ describe("pre-dunning service", () => {
     stripePaymentMethodsRetrieve.mockResolvedValueOnce({
       id: "pm_1",
       type: "card",
-      card: {
-        exp_month: new Date().getUTCMonth() + 1,
-        exp_year: new Date().getUTCFullYear(),
-      },
+      card: soonExpiringCard(),
     });
 
     const results = await preDunning.runPreDunningScan("ws_1");
@@ -246,10 +263,7 @@ describe("pre-dunning service", () => {
     stripePaymentMethodsRetrieve.mockResolvedValueOnce({
       id: "pm_ok",
       type: "card",
-      card: {
-        exp_month: new Date().getUTCMonth() + 1,
-        exp_year: new Date().getUTCFullYear(),
-      },
+      card: soonExpiringCard(),
     });
 
     findManyMock.mockResolvedValueOnce([

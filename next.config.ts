@@ -40,12 +40,12 @@ const nextConfig: NextConfig = {
             value: "off",
           },
           {
-            key: "Content-Security-Policy-Report-Only",
+            key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://eu.i.posthog.com",
               "connect-src 'self' https://*.supabase.co https://api.stripe.com https://eu.i.posthog.com https://ingest.sentry.io",
-              "img-src 'self' data: blob:",
+              "img-src 'self' data: blob: https:",
               "font-src 'self' https://fonts.gstatic.com",
               "frame-src https://js.stripe.com https://hooks.stripe.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",

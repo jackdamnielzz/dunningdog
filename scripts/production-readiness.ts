@@ -72,8 +72,14 @@ function main() {
     assertHttps(env.NEXT_PUBLIC_APP_BASE_URL, "NEXT_PUBLIC_APP_BASE_URL", issues);
   }
 
-  if ((env.ENCRYPTION_KEY ?? "").length < 32) {
+  const encKey = env.ENCRYPTION_KEY ?? "";
+  if (encKey.length < 32) {
     issues.push("ENCRYPTION_KEY must be at least 32 characters.");
+  }
+  if (encKey === "development-only-encryption-key") {
+    issues.push(
+      "ENCRYPTION_KEY is still the default dev value. Generate a new one: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
+    );
   }
 
   if ((env.CRON_SECRET ?? "").length < 32) {
@@ -84,16 +90,59 @@ function main() {
     issues.push("STRIPE_SECRET_KEY must use a live key (sk_live_) in production.");
   }
 
-  if (issues.length > 0) {
-    console.error("Production readiness check failed:");
-    for (const issue of issues) {
-      console.error(`- ${issue}`);
-    }
-    process.exitCode = 1;
-    return;
+  if (env.SUPABASE_URL && !env.SUPABASE_URL.includes(".supabase.co")) {
+    issues.push("SUPABASE_URL should point to a hosted Supabase instance.");
   }
 
-  console.log("Production readiness check passed.");
+  if (env.DATABASE_URL && env.DATABASE_URL.includes("localhost")) {
+    issues.push("DATABASE_URL points to localhost — use a production database.");
+  }
+
+  if (!env.ADMIN_EMAILS || env.ADMIN_EMAILS.trim().length === 0) {
+    issues.push("ADMIN_EMAILS should be set so you can access the admin panel.");
+  }
+
+  if (env.STRIPE_WEBHOOK_SECRET && !env.STRIPE_WEBHOOK_SECRET.startsWith("whsec_")) {
+    issues.push("STRIPE_WEBHOOK_SECRET should start with whsec_ (register webhooks in Stripe dashboard).");
+  }
+
+  if (env.STRIPE_BILLING_WEBHOOK_SECRET && !env.STRIPE_BILLING_WEBHOOK_SECRET.startsWith("whsec_")) {
+    issues.push("STRIPE_BILLING_WEBHOOK_SECRET should start with whsec_.");
+  }
+
+  // Summary
+  const warnings: string[] = [];
+
+  if (!env.SENTRY_AUTH_TOKEN) {
+    warnings.push("SENTRY_AUTH_TOKEN not set — source maps will not be uploaded.");
+  }
+  if (!env.NEXT_PUBLIC_POSTHOG_KEY && !env.POSTHOG_KEY) {
+    warnings.push("PostHog key not set — analytics will be disabled.");
+  }
+
+  if (issues.length > 0) {
+    console.error(`\nProduction readiness check FAILED (${issues.length} issue${issues.length > 1 ? "s" : ""}):\n`);
+    for (const issue of issues) {
+      console.error(`  ✗ ${issue}`);
+    }
+  } else {
+    console.log("\n  ✓ Production readiness check PASSED.\n");
+  }
+
+  if (warnings.length > 0) {
+    console.warn(`\nWarnings (${warnings.length}):\n`);
+    for (const w of warnings) {
+      console.warn(`  ⚠ ${w}`);
+    }
+  }
+
+  if (issues.length > 0) {
+    console.log("\n--- Quick setup commands ---");
+    console.log('  Generate ENCRYPTION_KEY:  node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+    console.log('  Generate CRON_SECRET:     node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+    console.log("");
+    process.exitCode = 1;
+  }
 }
 
 main();
