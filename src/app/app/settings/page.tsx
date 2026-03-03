@@ -167,6 +167,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                     workspaceId={workspace.workspaceId}
                     plan={plan.id}
                     currentPlan={workspaceRecord.billingPlan}
+                    billingStatus={workspaceRecord.billingStatus}
                   />
                 </div>
               );

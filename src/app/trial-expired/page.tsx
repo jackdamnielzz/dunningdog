@@ -52,6 +52,7 @@ export default async function TrialExpiredPage() {
                   workspaceId={workspaceContext.workspaceId}
                   plan={tier.id}
                   currentPlan={workspace.billingPlan}
+                  billingStatus={workspace.billingStatus}
                 />
               </CardContent>
             </Card>

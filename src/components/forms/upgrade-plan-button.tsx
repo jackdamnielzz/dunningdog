@@ -10,14 +10,18 @@ interface UpgradePlanButtonProps {
   workspaceId: string;
   plan: BillingPlan;
   currentPlan: BillingPlan;
+  billingStatus: string | null;
 }
 
-function getButtonLabel(plan: BillingPlan, currentPlan: BillingPlan, loading: boolean) {
+function getButtonLabel(plan: BillingPlan, currentPlan: BillingPlan, billingStatus: string | null, loading: boolean) {
   if (loading) {
     return "Redirecting...";
   }
-  if (plan === currentPlan) {
+  if (plan === currentPlan && billingStatus === "active") {
     return "Current plan";
+  }
+  if (plan === currentPlan) {
+    return "Subscribe";
   }
   return `Choose ${plan}`;
 }
@@ -26,12 +30,15 @@ export function UpgradePlanButton({
   workspaceId,
   plan,
   currentPlan,
+  billingStatus,
 }: UpgradePlanButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isActiveCurrent = plan === currentPlan && billingStatus === "active";
+
   async function startCheckout() {
-    if (plan === currentPlan) {
+    if (isActiveCurrent) {
       return;
     }
 
@@ -65,12 +72,12 @@ export function UpgradePlanButton({
     <div className="space-y-2">
       <Button
         type="button"
-        variant={plan === currentPlan ? "outline" : "default"}
-        disabled={loading || plan === currentPlan}
+        variant={isActiveCurrent ? "outline" : "default"}
+        disabled={loading || isActiveCurrent}
         onClick={startCheckout}
         className="capitalize"
       >
-        {getButtonLabel(plan, currentPlan, loading)}
+        {getButtonLabel(plan, currentPlan, billingStatus, loading)}
       </Button>
       {error && <Alert variant="error">{error}</Alert>}
     </div>
