@@ -210,6 +210,7 @@ export async function handleBillingWebhookEvent(event: Stripe.Event) {
         stripeCustomerId: String(session.customer),
         billingSubscriptionId: session.subscription ? String(session.subscription) : undefined,
         billingStatus: "active",
+        trialEndsAt: null,
         ...(plan ? { billingPlan: plan } : {}),
       },
     });

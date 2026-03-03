@@ -11,6 +11,7 @@ type ProblemCode =
   | `WORKSPACE_${string}`
   | `NOTIFICATION_${string}`
   | `SERVICE_${string}`
+  | `TRIAL_${string}`
   | `INTERNAL_${string}`;
 
 export class ProblemError extends Error {

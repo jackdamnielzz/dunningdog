@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { env, isDemoMode } from "@/lib/env";
-import { DEFAULT_WORKSPACE_ID, DEFAULT_WORKSPACE_NAME } from "@/lib/constants";
+import { DEFAULT_WORKSPACE_ID, DEFAULT_WORKSPACE_NAME, TRIAL_DURATION_MS } from "@/lib/constants";
 import { ProblemError } from "@/lib/problem";
 import { isDatabaseUnavailableError, describeFailure } from "@/lib/runtime-fallback";
 import { getDemoWorkspace } from "@/lib/demo-data";
@@ -258,6 +258,7 @@ async function resolveWorkspaceForAuthenticatedUser(
       timezone: "UTC",
       billingPlan: "starter",
       isActive: true,
+      trialEndsAt: new Date(Date.now() + TRIAL_DURATION_MS),
       members: {
         create: {
           userId,
@@ -424,6 +425,7 @@ export async function ensureWorkspaceExists(workspaceId: string) {
         timezone: "UTC",
         billingPlan: "starter",
         isActive: true,
+        trialEndsAt: new Date(Date.now() + TRIAL_DURATION_MS),
         members: {
           create: {
             userId: "demo-owner",

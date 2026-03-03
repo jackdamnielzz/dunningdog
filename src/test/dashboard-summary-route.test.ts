@@ -83,6 +83,10 @@ async function loadRoute(options: LoadOptions = {}) {
     ensureWorkspaceExists,
   }));
 
+  vi.doMock("@/lib/trial", () => ({
+    requireActiveWorkspace: vi.fn().mockResolvedValue(undefined),
+  }));
+
   vi.doMock("@/lib/services/dashboard", () => ({
     getDashboardSummary,
   }));

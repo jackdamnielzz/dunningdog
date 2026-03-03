@@ -1,6 +1,7 @@
 import { resolveWorkspaceContextFromRequest } from "@/lib/auth";
 import { ok, routeError } from "@/lib/api";
 import { ProblemError } from "@/lib/problem";
+import { requireActiveWorkspace } from "@/lib/trial";
 import { revokeApiKey } from "@/lib/services/api-keys";
 
 const instance = "/api/settings/api-keys/[id]";
@@ -13,6 +14,7 @@ export async function DELETE(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    await requireActiveWorkspace(workspace.workspaceId);
     if (workspace.source === "api_key") {
       throw new ProblemError({
         title: "Session authentication required",

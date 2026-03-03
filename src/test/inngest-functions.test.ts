@@ -55,6 +55,9 @@ async function loadFunctions(deps: {
       dunningSequence: {
         findFirst: deps.dunningSequenceFindFirst ?? vi.fn(),
       },
+      workspace: {
+        findUnique: vi.fn().mockResolvedValue({ billingStatus: "active", trialEndsAt: null }),
+      },
       notificationChannel: {
         findMany: vi.fn().mockResolvedValue([]),
       },

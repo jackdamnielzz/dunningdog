@@ -4,6 +4,7 @@ import { sendDunningEmail } from "@/lib/services/email";
 import { resolveCustomerEmail } from "@/lib/services/customer-email";
 import { generatePaymentUpdateToken } from "@/lib/services/payment-tokens";
 import { sendNotification } from "@/lib/services/notifications";
+import { getTrialStatus, isWorkspaceAccessible } from "@/lib/trial";
 
 export const recoveryStartedFunction = inngest.createFunction(
   { id: "recovery-started-sequence" },
@@ -39,6 +40,25 @@ export const recoveryStartedFunction = inngest.createFunction(
     for (const sequenceStep of sequence.steps) {
       if (sequenceStep.delayHours > 0) {
         await step.sleep(`delay-step-${sequenceStep.stepOrder}`, `${sequenceStep.delayHours}h`);
+      }
+
+      const workspace = await step.run(
+        `check-trial-${sequenceStep.stepOrder}`,
+        async () => {
+          const ws = await db.workspace.findUnique({
+            where: { id: workspaceId },
+            select: { billingStatus: true, trialEndsAt: true },
+          });
+          return ws;
+        },
+      );
+
+      if (workspace && !isWorkspaceAccessible(getTrialStatus(workspace))) {
+        return {
+          stopped: true,
+          reason: "trial_expired",
+          atStep: sequenceStep.stepOrder,
+        };
       }
 
       const latestAttempt = await step.run(

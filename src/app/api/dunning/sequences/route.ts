@@ -5,12 +5,14 @@ import { reportAnalyticsEvent } from "@/lib/observability";
 import { maxSequenceSteps } from "@/lib/plan-features";
 import { db } from "@/lib/db";
 import { ProblemError } from "@/lib/problem";
+import { requireActiveWorkspace } from "@/lib/trial";
 
 export async function POST(request: Request) {
   try {
     const input = await parseJsonBody(request, createSequenceSchema);
     const workspace = await resolveWorkspaceContextFromRequest(request, input.workspaceId);
     await ensureWorkspaceExists(workspace.workspaceId);
+    await requireActiveWorkspace(workspace.workspaceId);
 
     const ws = await db.workspace.findUnique({
       where: { id: workspace.workspaceId },

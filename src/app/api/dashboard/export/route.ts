@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { resolveWorkspaceContextFromRequest } from "@/lib/auth";
 import { routeError } from "@/lib/api";
+import { requireActiveWorkspace } from "@/lib/trial";
 import { generateRecoveryCsv } from "@/lib/services/export";
 import type { RecoveryStatus } from "@prisma/client";
 
@@ -9,6 +10,7 @@ const instance = "/api/dashboard/export";
 export async function GET(request: Request) {
   try {
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    await requireActiveWorkspace(workspace.workspaceId);
     const url = new URL(request.url);
 
     const startDateParam = url.searchParams.get("startDate");

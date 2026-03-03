@@ -2,12 +2,14 @@ import { ok, routeError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { getWorkspaceIdFromRequest, ensureWorkspaceExists } from "@/lib/auth";
 import { getDashboardSummary } from "@/lib/services/dashboard";
+import { requireActiveWorkspace } from "@/lib/trial";
 import { parseWindow } from "@/lib/utils";
 
 export async function GET(request: Request) {
   try {
     const workspaceId = await getWorkspaceIdFromRequest(request);
     await ensureWorkspaceExists(workspaceId);
+    await requireActiveWorkspace(workspaceId);
     const { searchParams } = new URL(request.url);
     const windowParam = parseWindow(searchParams.get("window") ?? undefined);
     const summary = await getDashboardSummary(workspaceId, windowParam);

@@ -4,6 +4,7 @@ import { parseJsonBody, ok, routeError } from "@/lib/api";
 import { ProblemError } from "@/lib/problem";
 import { db } from "@/lib/db";
 import { sendTestNotification } from "@/lib/services/notifications";
+import { requireActiveWorkspace } from "@/lib/trial";
 
 const instance = "/api/settings/notifications/[id]";
 
@@ -40,6 +41,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    await requireActiveWorkspace(workspace.workspaceId);
     await verifyOwnership(id, workspace.workspaceId);
 
     const input = await parseJsonBody(request, patchSchema);
@@ -63,6 +65,7 @@ export async function DELETE(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    await requireActiveWorkspace(workspace.workspaceId);
     await verifyOwnership(id, workspace.workspaceId);
 
     await db.notificationChannel.delete({ where: { id } });
@@ -76,6 +79,7 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    await requireActiveWorkspace(workspace.workspaceId);
     const success = await sendTestNotification(id, workspace.workspaceId);
     return ok({ success });
   } catch (error) {

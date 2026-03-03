@@ -372,6 +372,7 @@ describe("billing service", () => {
         billingSubscriptionId: "sub_789",
         billingStatus: "active",
         billingPlan: "pro",
+        trialEndsAt: null,
       },
     });
     expect(analyticsMock).toHaveBeenCalledWith(

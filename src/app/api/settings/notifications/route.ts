@@ -3,6 +3,7 @@ import { resolveWorkspaceContextFromRequest } from "@/lib/auth";
 import { parseJsonBody, ok, routeError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { requireFeature } from "@/lib/plan-features";
+import { requireActiveWorkspace } from "@/lib/trial";
 
 const instance = "/api/settings/notifications";
 
@@ -18,6 +19,7 @@ const createSchema = z.object({
 export async function GET(request: Request) {
   try {
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    await requireActiveWorkspace(workspace.workspaceId);
     const channels = await db.notificationChannel.findMany({
       where: { workspaceId: workspace.workspaceId },
       orderBy: { createdAt: "desc" },
@@ -31,6 +33,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    await requireActiveWorkspace(workspace.workspaceId);
     await requireFeature(workspace.workspaceId, "notifications");
     const input = await parseJsonBody(request, createSchema);
 

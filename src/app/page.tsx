@@ -34,8 +34,11 @@ export default async function Home() {
             >
               Pricing
             </Link>
-            <Link href="/login">
-              <Button size="sm">Sign in</Button>
+            <Link href="/login" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
+              Sign in
+            </Link>
+            <Link href="/register">
+              <Button size="sm">Try for Free</Button>
             </Link>
           </div>
         </header>
@@ -53,12 +56,13 @@ export default async function Home() {
               pre-dunning, run smart retry sequences, and track every recovered
               dollar from one dashboard.
             </p>
-            <Link href="/login">
+            <Link href="/register">
               <Button className="gap-2">
-                Get Started
+                Try for Free
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
+            <p className="text-sm text-zinc-500">7-day free trial — no credit card required</p>
           </div>
           <Card className="border-accent-200 bg-white/90">
             <CardHeader>

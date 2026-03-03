@@ -16,6 +16,7 @@ export function getDemoWorkspace(
     stripeCustomerId: null,
     billingSubscriptionId: null,
     billingStatus: null,
+    trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

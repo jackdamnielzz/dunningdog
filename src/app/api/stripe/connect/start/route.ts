@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { ensureWorkspaceExists, resolveWorkspaceContextFromRequest } from "@/lib/auth";
 import { reportAnalyticsEvent } from "@/lib/observability";
+import { requireActiveWorkspace } from "@/lib/trial";
 
 const schema = z.object({
   workspaceId: z.string().min(2).optional(),
@@ -19,6 +20,7 @@ export async function POST(request: Request) {
       input.workspaceId ?? null,
     );
     await ensureWorkspaceExists(workspace.workspaceId);
+    await requireActiveWorkspace(workspace.workspaceId);
 
     const state = nanoid(32);
     await db.stripeOAuthState.create({

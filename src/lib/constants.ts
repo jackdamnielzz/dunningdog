@@ -4,6 +4,9 @@ export const APP_NAME = "DunningDog";
 export const DEFAULT_ACCENT_COLOR = "#10b981";
 export const DEFAULT_POST_AUTH_PATH = "/app";
 
+export const TRIAL_DURATION_DAYS = 7;
+export const TRIAL_DURATION_MS = TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000;
+
 export const SUPPORTED_STRIPE_WEBHOOK_EVENTS = new Set([
   "invoice.payment_failed",
   "invoice.payment_succeeded",

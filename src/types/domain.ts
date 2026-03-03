@@ -16,6 +16,7 @@ export interface WorkspaceDTO {
   stripeCustomerId: string | null;
   billingSubscriptionId: string | null;
   billingStatus: string | null;
+  trialEndsAt: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

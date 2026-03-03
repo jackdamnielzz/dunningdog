@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { TrialBanner } from "@/components/dashboard/trial-banner";
 
 const navItems = [
   { href: "/app", label: "Dashboard" },
@@ -17,9 +18,10 @@ interface AppShellProps {
   children: React.ReactNode;
   isAdmin?: boolean;
   accentColor?: string | null;
+  trialBanner?: { daysRemaining: number };
 }
 
-export function AppShell({ children, isAdmin: isAdminUser, accentColor }: AppShellProps) {
+export function AppShell({ children, isAdmin: isAdminUser, accentColor, trialBanner }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -73,6 +75,7 @@ export function AppShell({ children, isAdmin: isAdminUser, accentColor }: AppShe
           </div>
         </div>
       </header>
+      {trialBanner && <TrialBanner daysRemaining={trialBanner.daysRemaining} />}
       <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
     </div>
   );

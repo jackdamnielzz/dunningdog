@@ -5,6 +5,7 @@ import { reportAnalyticsEvent } from "@/lib/observability";
 import { maxSequenceSteps } from "@/lib/plan-features";
 import { db } from "@/lib/db";
 import { ProblemError } from "@/lib/problem";
+import { requireActiveWorkspace } from "@/lib/trial";
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -15,6 +16,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const { id } = await params;
     const input = await parseJsonBody(request, updateSequenceSchema);
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    await requireActiveWorkspace(workspace.workspaceId);
 
     if (input.steps && input.steps.length > 0) {
       const ws = await db.workspace.findUnique({

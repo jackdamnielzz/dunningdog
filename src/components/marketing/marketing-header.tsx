@@ -18,7 +18,7 @@ export function MarketingHeader({ variant = "full" }: MarketingHeaderProps) {
               <Button size="sm" variant="ghost">Sign in</Button>
             </Link>
             <Link href="/register">
-              <Button size="sm">Get started</Button>
+              <Button size="sm">Try for Free</Button>
             </Link>
           </div>
         ) : (

@@ -4,6 +4,7 @@ import { parseJsonBody, ok, routeError } from "@/lib/api";
 import { ProblemError } from "@/lib/problem";
 import { generateApiKey, listApiKeys, API_KEY_SCOPES } from "@/lib/services/api-keys";
 import { requireFeature } from "@/lib/plan-features";
+import { requireActiveWorkspace } from "@/lib/trial";
 
 const instance = "/api/settings/api-keys";
 
@@ -15,6 +16,7 @@ const createSchema = z.object({
 export async function GET(request: Request) {
   try {
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    await requireActiveWorkspace(workspace.workspaceId);
     if (workspace.source === "api_key") {
       throw new ProblemError({
         title: "Session authentication required",
@@ -33,6 +35,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    await requireActiveWorkspace(workspace.workspaceId);
     if (workspace.source === "api_key") {
       throw new ProblemError({
         title: "Session authentication required",

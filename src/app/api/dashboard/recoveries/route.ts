@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ok, routeError } from "@/lib/api";
 import { ensureWorkspaceExists, getWorkspaceIdFromRequest } from "@/lib/auth";
 import { getRecoveryAttempts } from "@/lib/services/dashboard";
+import { requireActiveWorkspace } from "@/lib/trial";
 
 const statusSchema = z
   .enum(["pending", "recovered", "failed", "abandoned"])
@@ -11,6 +12,7 @@ export async function GET(request: Request) {
   try {
     const workspaceId = await getWorkspaceIdFromRequest(request);
     await ensureWorkspaceExists(workspaceId);
+    await requireActiveWorkspace(workspaceId);
 
     const url = new URL(request.url);
     const status = statusSchema.parse(url.searchParams.get("status") ?? undefined);
