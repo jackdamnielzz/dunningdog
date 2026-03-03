@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Sora, IBM_Plex_Mono, Roboto } from "next/font/google";
 import { DevServiceWorkerReset } from "@/components/dev/dev-sw-reset";
 import { PostHogProvider } from "@/components/providers/posthog-provider";
+import { GoogleAnalytics } from "@/components/providers/google-analytics";
 import { RecoveryRedirect } from "@/components/forms/recovery-redirect";
 import "./globals.css";
 
@@ -66,6 +67,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${sora.variable} ${plexMono.variable} ${roboto.variable} antialiased`} suppressHydrationWarning>
+        <GoogleAnalytics />
         <DevServiceWorkerReset />
         <RecoveryRedirect />
         <PostHogProvider>{children}</PostHogProvider>
