@@ -42,6 +42,7 @@ export async function POST(request: Request) {
       url.searchParams.set("scope", "read_write");
       url.searchParams.set("state", state);
       url.searchParams.set("redirect_uri", browserCallbackUrl);
+      url.searchParams.set("stripe_landing", "login");
       redirectUrl = url.toString();
     }
 
