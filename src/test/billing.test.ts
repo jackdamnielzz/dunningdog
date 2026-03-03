@@ -34,6 +34,8 @@ async function loadBilling(options: BillingMocksOptions = {}) {
     id: "cs_123",
     status: "complete",
     payment_status: "paid",
+    customer: "cus_test123",
+    subscription: "sub_test123",
     metadata: {
       workspaceId: "ws_1",
       billingPlan: "growth",
@@ -186,7 +188,13 @@ describe("billing service", () => {
     });
     expect(workspaceUpdate).toHaveBeenCalledWith({
       where: { id: "ws_1" },
-      data: { billingPlan: "growth" },
+      data: {
+        billingPlan: "growth",
+        billingStatus: "active",
+        trialEndsAt: null,
+        stripeCustomerId: "cus_test123",
+        billingSubscriptionId: "sub_test123",
+      },
     });
   });
 
@@ -268,7 +276,11 @@ describe("billing service", () => {
     });
     expect(workspaceUpdate).toHaveBeenCalledWith({
       where: { id: "ws_1" },
-      data: { billingPlan: "pro" },
+      data: {
+        billingPlan: "pro",
+        billingStatus: "active",
+        trialEndsAt: null,
+      },
     });
   });
 

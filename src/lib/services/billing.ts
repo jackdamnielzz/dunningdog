@@ -140,7 +140,20 @@ export async function confirmBillingCheckoutSession(
     return null;
   }
 
-  const updated = await setWorkspaceBillingPlan(workspaceId, plan);
+  const customerId = session.customer ? String(session.customer) : undefined;
+  const subscriptionId = session.subscription ? String(session.subscription) : undefined;
+
+  const updated = await db.workspace.update({
+    where: { id: workspaceId },
+    data: {
+      billingPlan: plan,
+      billingStatus: "active",
+      trialEndsAt: null,
+      ...(customerId ? { stripeCustomerId: customerId } : {}),
+      ...(subscriptionId ? { billingSubscriptionId: subscriptionId } : {}),
+    },
+  });
+
   reportAnalyticsEvent({
     event: "billing_plan_updated",
     distinctId: workspaceId,
