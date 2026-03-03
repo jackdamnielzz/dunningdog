@@ -15,7 +15,7 @@ export default async function SequencesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-semibold text-zinc-900">Dunning Sequences</h1>
+        <h1 className="text-2xl font-semibold text-zinc-900 sm:text-3xl">Dunning Sequences</h1>
         <p className="mt-1 text-sm text-zinc-600">
           Configure the exact messaging your customers receive after a failed payment.
         </p>

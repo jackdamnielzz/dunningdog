@@ -22,7 +22,7 @@ export function MarketingHeader({ variant = "full" }: MarketingHeaderProps) {
             </Link>
           </div>
         ) : (
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-2 sm:gap-4">
             <Link href="/pricing" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
               Pricing
             </Link>

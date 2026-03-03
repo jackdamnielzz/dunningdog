@@ -89,7 +89,7 @@ export default async function PricingPage() {
 
         {/* ROI callout */}
         <section className="px-6 py-12">
-          <div className="mx-auto max-w-4xl rounded-2xl bg-accent-600 p-10 text-center text-white">
+          <div className="mx-auto max-w-4xl rounded-2xl bg-accent-600 p-6 text-center text-white sm:p-10">
             <h2 className="text-2xl font-bold sm:text-3xl">The math is simple</h2>
             <p className="mx-auto mt-3 max-w-xl text-accent-100">
               A SaaS with $50k MRR typically loses $2,500-5,000/mo to failed payments.

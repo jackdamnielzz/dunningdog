@@ -30,7 +30,7 @@ export default async function TrialExpiredPage() {
         </Link>
 
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900">Your free trial has ended</h1>
+          <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">Your free trial has ended</h1>
           <p className="mt-2 text-zinc-600">
             Choose a plan to continue recovering failed payments and protecting your revenue.
           </p>

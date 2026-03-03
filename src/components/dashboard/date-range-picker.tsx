@@ -45,31 +45,33 @@ export function DateRangePicker({ onChange }: DateRangePickerProps) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {presets.map((preset) => (
-        <Button
-          key={preset.days}
-          type="button"
-          variant={activePreset === preset.days ? "default" : "outline"}
-          size="sm"
-          onClick={() => applyPreset(preset.days)}
-        >
-          {preset.label}
-        </Button>
-      ))}
+    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="flex flex-wrap gap-2">
+        {presets.map((preset) => (
+          <Button
+            key={preset.days}
+            type="button"
+            variant={activePreset === preset.days ? "default" : "outline"}
+            size="sm"
+            onClick={() => applyPreset(preset.days)}
+          >
+            {preset.label}
+          </Button>
+        ))}
+      </div>
       <div className="flex items-center gap-1.5">
         <input
           type="date"
           value={startDate}
           onChange={(e) => handleCustomChange(e.target.value, endDate)}
-          className="rounded-md border border-zinc-200 px-2 py-1 text-sm text-zinc-700"
+          className="min-w-0 flex-1 rounded-md border border-zinc-200 px-2 py-1.5 text-sm text-zinc-700 sm:flex-none"
         />
         <span className="text-sm text-zinc-400">to</span>
         <input
           type="date"
           value={endDate}
           onChange={(e) => handleCustomChange(startDate, e.target.value)}
-          className="rounded-md border border-zinc-200 px-2 py-1 text-sm text-zinc-700"
+          className="min-w-0 flex-1 rounded-md border border-zinc-200 px-2 py-1.5 text-sm text-zinc-700 sm:flex-none"
         />
       </div>
     </div>

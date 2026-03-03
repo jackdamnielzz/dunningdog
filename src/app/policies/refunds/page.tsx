@@ -31,7 +31,7 @@ export default function RefundsPolicyPage() {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
           Contents
         </p>
-        <ol className="columns-2 gap-8 space-y-1 text-sm text-accent-700">
+        <ol className="gap-8 space-y-1 text-sm text-accent-700 sm:columns-2">
           <li><a href="#billing" className="hover:underline">1. Subscription Billing</a></li>
           <li><a href="#initial-refund" className="hover:underline">2. Initial Purchase Refund</a></li>
           <li><a href="#renewals" className="hover:underline">3. Renewal Charges</a></li>

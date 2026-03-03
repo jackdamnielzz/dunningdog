@@ -16,7 +16,7 @@ export function ChipToggleGroup<T extends string>({
           key={opt.value}
           type="button"
           onClick={() => onToggle(opt.value)}
-          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
             selected.includes(opt.value)
               ? "border-accent-500 bg-accent-50 text-accent-700"
               : "border-zinc-200 text-zinc-500 hover:border-zinc-300"

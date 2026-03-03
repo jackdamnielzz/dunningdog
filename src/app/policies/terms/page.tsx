@@ -29,7 +29,7 @@ export default function TermsPolicyPage() {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
           Contents
         </p>
-        <ol className="columns-2 gap-8 space-y-1 text-sm text-accent-700">
+        <ol className="gap-8 space-y-1 text-sm text-accent-700 sm:columns-2">
           <li><a href="#definitions" className="hover:underline">1. Definitions</a></li>
           <li><a href="#eligibility" className="hover:underline">2. Eligibility</a></li>
           <li><a href="#account" className="hover:underline">3. Account Registration</a></li>

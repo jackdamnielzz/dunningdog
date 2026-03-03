@@ -23,7 +23,7 @@ export default async function AdminPage() {
     <div className="space-y-6">
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-semibold text-zinc-900">Admin Panel</h1>
+          <h1 className="text-2xl font-semibold text-zinc-900 sm:text-3xl">Admin Panel</h1>
           <Badge variant="danger">Admin only</Badge>
         </div>
         <p className="mt-1 text-sm text-zinc-600">

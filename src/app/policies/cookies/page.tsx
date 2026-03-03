@@ -33,7 +33,7 @@ export default function CookiesPolicyPage() {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
           Contents
         </p>
-        <ol className="columns-2 gap-8 space-y-1 text-sm text-accent-700">
+        <ol className="gap-8 space-y-1 text-sm text-accent-700 sm:columns-2">
           <li><a href="#what-are-cookies" className="hover:underline">1. What Are Cookies</a></li>
           <li><a href="#cookies-we-use" className="hover:underline">2. Cookies We Use</a></li>
           <li><a href="#essential" className="hover:underline">3. Essential Cookies</a></li>

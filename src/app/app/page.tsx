@@ -20,19 +20,19 @@ export default async function AppDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-semibold text-zinc-900">Revenue Recovery Dashboard</h1>
-          <p className="mt-1 text-sm text-zinc-600">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold text-zinc-900 sm:text-3xl">Revenue Recovery Dashboard</h1>
+          <p className="mt-1 truncate text-sm text-zinc-600">
             Workspace: <span className="mono">{workspace.workspaceId}</span>
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/app/sequences">
-            <Button variant="outline">Edit sequences</Button>
+        <div className="flex w-full gap-2 sm:w-auto">
+          <Link href="/app/sequences" className="flex-1 sm:flex-none">
+            <Button variant="outline" className="w-full sm:w-auto">Edit sequences</Button>
           </Link>
-          <Link href="/app/settings">
-            <Button>Connect Stripe</Button>
+          <Link href="/app/settings" className="flex-1 sm:flex-none">
+            <Button className="w-full sm:w-auto">Connect Stripe</Button>
           </Link>
         </div>
       </div>

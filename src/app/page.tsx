@@ -22,15 +22,15 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_20%_20%,#d9f5ee_0%,transparent_30%),radial-gradient(circle_at_90%_10%,#e2f4ff_0%,transparent_25%),linear-gradient(180deg,#f8fdfb_0%,#f6f8fb_100%)]">
-      <main className="mx-auto max-w-6xl flex-1 px-6 py-14">
-        <header className="mb-16 flex items-center justify-between">
-          <Link href="/" className="text-3xl font-semibold tracking-tight text-zinc-900">
+      <main className="mx-auto max-w-6xl flex-1 px-6 py-8 sm:py-14">
+        <header className="mb-10 flex items-center justify-between sm:mb-16">
+          <Link href="/" className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl">
             DunningDog
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/pricing"
-              className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+              className="hidden text-sm font-medium text-zinc-600 hover:text-zinc-900 sm:inline"
             >
               Pricing
             </Link>
@@ -48,7 +48,7 @@ export default async function Home() {
             <p className="inline-flex items-center rounded-full bg-accent-100 px-3 py-1 text-xs font-semibold text-accent-700">
               Revenue recovery for Stripe subscriptions
             </p>
-            <h1 className="max-w-2xl text-5xl font-semibold leading-tight tracking-tight text-zinc-900">
+            <h1 className="max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl">
               Recover failed payments before they become churn.
             </h1>
             <p className="max-w-xl text-lg text-zinc-600">

@@ -27,7 +27,7 @@ export default function PrivacyPolicyPage() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
               Contents
             </p>
-            <ol className="columns-2 gap-8 space-y-1 text-sm text-accent-700">
+            <ol className="gap-8 space-y-1 text-sm text-accent-700 sm:columns-2">
               <li><a href="#controller" className="hover:underline">1. Data Controller</a></li>
               <li><a href="#data-collected" className="hover:underline">2. Data We Collect</a></li>
               <li><a href="#legal-basis" className="hover:underline">3. Legal Basis</a></li>

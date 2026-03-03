@@ -35,25 +35,27 @@ const sampleItems = [
 
 describe("RecoveryTable", () => {
   it("renders table headers", () => {
-    render(<RecoveryTable items={[]} />);
+    render(<RecoveryTable items={sampleItems} />);
     expect(screen.getByText("Invoice")).toBeInTheDocument();
-    expect(screen.getByText("Customer")).toBeInTheDocument();
-    expect(screen.getByText("Decline")).toBeInTheDocument();
+    expect(screen.getAllByText("Customer").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Decline").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Status")).toBeInTheDocument();
     expect(screen.getByText("Amount Due")).toBeInTheDocument();
-    expect(screen.getByText("Recovered")).toBeInTheDocument();
-    expect(screen.getByText("Started")).toBeInTheDocument();
+    expect(screen.getAllByText("Recovered").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Started").length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders recovery items with correct data", () => {
     render(<RecoveryTable items={sampleItems} />);
+    // Invoice IDs only in desktop table
     expect(screen.getByText("in_abc")).toBeInTheDocument();
-    expect(screen.getByText("cus_xyz")).toBeInTheDocument();
-    expect(screen.getByText("pending")).toBeInTheDocument();
-    expect(screen.getByText("recovered")).toBeInTheDocument();
-    expect(screen.getByText("$50.00")).toBeInTheDocument();
-    // $100.00 appears in both "Amount Due" and "Recovered" columns for ra_2
-    expect(screen.getAllByText("$100.00")).toHaveLength(2);
+    // Customer IDs appear in both mobile cards and desktop table
+    expect(screen.getAllByText("cus_xyz").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("pending").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("recovered").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("$50.00").length).toBeGreaterThanOrEqual(1);
+    // $100.00 appears in Amount Due and Recovered columns, in both mobile and desktop views
+    expect(screen.getAllByText("$100.00").length).toBeGreaterThanOrEqual(2);
   });
 
   it("shows empty state when items is empty", () => {

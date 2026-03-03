@@ -123,10 +123,10 @@ export function NotificationChannelsForm() {
           {channels.map((ch) => (
             <div
               key={ch.id}
-              className="flex items-center justify-between rounded-lg border border-zinc-200 p-3"
+              className="flex flex-col gap-3 rounded-lg border border-zinc-200 p-3 sm:flex-row sm:items-center sm:justify-between"
             >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
+              <div className="min-w-0 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={ch.type === "slack" ? "neutral" : "neutral"}>
                     {ch.type === "slack" ? "Slack" : "Discord"}
                   </Badge>

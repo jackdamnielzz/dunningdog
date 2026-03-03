@@ -12,7 +12,7 @@ export default async function RecoveriesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-semibold text-zinc-900">Recovery Attempts</h1>
+        <h1 className="text-2xl font-semibold text-zinc-900 sm:text-3xl">Recovery Attempts</h1>
         <p className="mt-1 text-sm text-zinc-600">
           Full event history for failed and recovered invoices.
         </p>
