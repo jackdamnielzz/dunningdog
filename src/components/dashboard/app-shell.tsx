@@ -44,7 +44,7 @@ export function AppShell({ children, isAdmin: isAdminUser, accentColor, trialBan
   const shellStyle = accentColor ? { "--accent": accentColor } as React.CSSProperties : undefined;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-50 via-white to-accent-100" style={shellStyle}>
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-accent-50 via-white to-accent-100" style={shellStyle}>
       <header className="border-b border-accent-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-4 md:flex-row md:items-center md:justify-between">
           <Link href="/" className="flex items-center">
@@ -76,7 +76,16 @@ export function AppShell({ children, isAdmin: isAdminUser, accentColor, trialBan
         </div>
       </header>
       {trialBanner && <TrialBanner daysRemaining={trialBanner.daysRemaining} />}
-      <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
+      <main className="mx-auto max-w-6xl flex-1 px-6 py-8">{children}</main>
+      <footer className="border-t border-accent-100 bg-white/60 py-6">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-6 text-sm text-zinc-500">
+          <Link href="/policies/privacy" className="hover:text-zinc-700">Privacy Policy</Link>
+          <Link href="/policies/terms" className="hover:text-zinc-700">Terms of Service</Link>
+          <Link href="/policies/cookies" className="hover:text-zinc-700">Cookie Policy</Link>
+          <Link href="/policies/refunds" className="hover:text-zinc-700">Refund Policy</Link>
+          <Link href="/contact" className="hover:text-zinc-700">Contact</Link>
+        </div>
+      </footer>
     </div>
   );
 }
