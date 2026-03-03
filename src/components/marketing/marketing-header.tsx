@@ -8,7 +8,7 @@ interface MarketingHeaderProps {
 export function MarketingHeader({ variant = "full" }: MarketingHeaderProps) {
   return (
     <header className="border-b border-zinc-200/80 bg-white/90 backdrop-blur-sm">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
         <Link href="/" className={`font-bold tracking-tight text-zinc-900 ${variant === "full" ? "text-2xl" : "text-lg"}`}>
           DunningDog
         </Link>

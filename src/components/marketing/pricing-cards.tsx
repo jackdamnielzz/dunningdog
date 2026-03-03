@@ -146,7 +146,7 @@ export function PricingCards() {
           return (
             <div
               key={tier.id}
-              className={`relative flex flex-col rounded-2xl border-2 p-8 transition-shadow hover:shadow-lg ${
+              className={`relative flex flex-col rounded-2xl border-2 p-5 transition-shadow hover:shadow-lg sm:p-6 lg:p-8 ${
                 tier.highlight
                   ? "border-accent-500 bg-white shadow-md shadow-accent-100"
                   : "border-zinc-200 bg-white"

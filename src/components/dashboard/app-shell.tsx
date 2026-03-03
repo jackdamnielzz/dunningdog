@@ -48,7 +48,7 @@ export function AppShell({ children, isAdmin: isAdminUser, accentColor, trialBan
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-accent-50 via-white to-accent-100" style={shellStyle}>
       <header className="border-b border-accent-100 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <Link href="/" className="flex items-center">
             <span className="text-2xl font-semibold tracking-tight text-zinc-900">
               DunningDog
@@ -91,7 +91,7 @@ export function AppShell({ children, isAdmin: isAdminUser, accentColor, trialBan
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <nav className="border-t border-accent-100 px-6 pb-4 pt-2 md:hidden">
+          <nav className="border-t border-accent-100 px-4 pb-4 pt-2 sm:px-6 md:hidden">
             <div className="flex flex-col gap-1">
               {allNavItems.map((item) => (
                 <Link
@@ -118,9 +118,9 @@ export function AppShell({ children, isAdmin: isAdminUser, accentColor, trialBan
         )}
       </header>
       {trialBanner && <TrialBanner daysRemaining={trialBanner.daysRemaining} />}
-      <main className="mx-auto max-w-6xl flex-1 px-6 py-8">{children}</main>
+      <main className="mx-auto max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
       <footer className="border-t border-accent-100 bg-white/60 py-6">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-6 text-sm text-zinc-500">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 text-sm text-zinc-500 sm:px-6">
           <Link href="/policies/privacy" className="hover:text-zinc-700">Privacy Policy</Link>
           <Link href="/policies/terms" className="hover:text-zinc-700">Terms of Service</Link>
           <Link href="/policies/cookies" className="hover:text-zinc-700">Cookie Policy</Link>

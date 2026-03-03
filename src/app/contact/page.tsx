@@ -13,7 +13,7 @@ export default function ContactPage() {
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-zinc-50">
       <MarketingHeader variant="minimal" />
 
-      <main className="flex flex-1 flex-col items-center px-6 py-16">
+      <main className="flex flex-1 flex-col items-center px-4 py-10 sm:px-6 sm:py-16">
         <div className="w-full max-w-lg space-y-8">
           <div className="text-center">
             <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">

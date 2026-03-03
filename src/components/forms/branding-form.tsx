@@ -69,7 +69,7 @@ export function BrandingForm({ initialValues }: BrandingFormProps) {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="accentColor">Accent color</Label>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               id="accentColor"
               type="color"

@@ -41,9 +41,9 @@ export default async function PricingPage() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="px-6 pb-4 pt-16 text-center">
+        <section className="px-4 sm:px-6 pb-4 pt-16 text-center">
           <div className="mx-auto max-w-3xl">
-            <h1 className="text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl">
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl">
               Stop losing revenue to failed payments
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-lg text-zinc-600">
@@ -54,7 +54,7 @@ export default async function PricingPage() {
         </section>
 
         {/* Stats bar */}
-        <section className="px-6 py-8">
+        <section className="px-4 sm:px-6 py-8">
           <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-3">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
@@ -66,13 +66,13 @@ export default async function PricingPage() {
         </section>
 
         {/* Pricing cards with monthly/annual toggle */}
-        <section className="px-6 py-12">
+        <section className="px-4 sm:px-6 py-12">
           <PricingCards />
         </section>
 
         {/* Enterprise CTA */}
-        <section className="px-6 py-8">
-          <div className="mx-auto max-w-3xl rounded-2xl border border-zinc-200 bg-zinc-50 p-8 text-center">
+        <section className="px-4 sm:px-6 py-8">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-zinc-200 bg-zinc-50 p-5 text-center sm:p-8">
             <h2 className="text-xl font-semibold text-zinc-900">Above $200k MRR?</h2>
             <p className="mt-2 text-zinc-600">
               We offer custom plans with dedicated onboarding, priority support, SLA guarantees,
@@ -88,7 +88,7 @@ export default async function PricingPage() {
         </section>
 
         {/* ROI callout */}
-        <section className="px-6 py-12">
+        <section className="px-4 sm:px-6 py-12">
           <div className="mx-auto max-w-4xl rounded-2xl bg-accent-600 p-6 text-center text-white sm:p-10">
             <h2 className="text-2xl font-bold sm:text-3xl">The math is simple</h2>
             <p className="mx-auto mt-3 max-w-xl text-accent-100">
@@ -108,7 +108,7 @@ export default async function PricingPage() {
         </section>
 
         {/* FAQ */}
-        <section className="px-6 py-16">
+        <section className="px-4 sm:px-6 py-16">
           <div className="mx-auto max-w-3xl">
             <h2 className="mb-8 text-center text-2xl font-bold text-zinc-900">
               Frequently asked questions

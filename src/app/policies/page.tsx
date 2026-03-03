@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 export default function PoliciesPage() {
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50">
-      <main className="mx-auto flex-1 max-w-5xl px-6 py-14">
+      <main className="mx-auto flex-1 max-w-5xl px-4 py-8 sm:px-6 sm:py-14">
         <div className="space-y-3">
           <p className="text-sm font-medium text-accent-700">Legal</p>
-          <h1 className="text-4xl font-semibold tracking-tight text-zinc-900">Policy Center</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">Policy Center</h1>
           <p className="max-w-2xl text-zinc-600">
             Review the official policies that govern data handling, account usage,
             billing, and refunds for DunningDog.
@@ -28,13 +28,13 @@ export default function PoliciesPage() {
               <CardHeader>
                 <CardTitle>{policy.label}</CardTitle>
               </CardHeader>
-              <CardContent className="flex items-center justify-between gap-4">
+              <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <p className="text-sm text-zinc-600">{policy.description}</p>
                 <Link
                   href={policy.href}
-                  className="text-sm font-medium text-accent-700 hover:text-accent-600"
+                  className="text-sm font-medium text-accent-700 hover:text-accent-600 whitespace-nowrap"
                 >
-                  Read
+                  Read &rarr;
                 </Link>
               </CardContent>
             </Card>

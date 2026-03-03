@@ -73,11 +73,11 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         />
       </div>
       <div className="space-y-2">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between">
           <Label htmlFor="password">Password</Label>
           <Link
             href="/forgot-password"
-            className="text-xs font-medium text-accent-700 hover:text-accent-600"
+            className="whitespace-nowrap text-xs font-medium text-accent-700 hover:text-accent-600"
           >
             Forgot password?
           </Link>

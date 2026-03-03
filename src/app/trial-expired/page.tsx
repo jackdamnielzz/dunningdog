@@ -23,7 +23,7 @@ export default async function TrialExpiredPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-accent-50 via-white to-accent-100 px-6">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-accent-50 via-white to-accent-100 px-4 sm:px-6">
       <div className="w-full max-w-4xl space-y-8 text-center">
         <Link href="/" className="text-2xl font-semibold tracking-tight text-zinc-900">
           DunningDog

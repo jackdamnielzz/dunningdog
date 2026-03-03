@@ -22,7 +22,7 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_20%_20%,#d9f5ee_0%,transparent_30%),radial-gradient(circle_at_90%_10%,#e2f4ff_0%,transparent_25%),linear-gradient(180deg,#f8fdfb_0%,#f6f8fb_100%)]">
-      <main className="mx-auto max-w-6xl flex-1 px-6 py-8 sm:py-14">
+      <main className="mx-auto max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-14">
         <header className="mb-10 flex items-center justify-between sm:mb-16">
           <Link href="/" className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl">
             DunningDog
