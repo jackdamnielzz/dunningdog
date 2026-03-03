@@ -111,7 +111,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               No Stripe account is linked yet. Connect now to start webhook ingestion and automated sequence execution.
             </p>
           )}
-          <ConnectStripeButton workspaceId={workspace.workspaceId} />
+          {!connected && <ConnectStripeButton workspaceId={workspace.workspaceId} />}
         </CardContent>
       </Card>
 
