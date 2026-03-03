@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Sora, IBM_Plex_Mono, Roboto } from "next/font/google";
 import { DevServiceWorkerReset } from "@/components/dev/dev-sw-reset";
 import { PostHogProvider } from "@/components/providers/posthog-provider";
@@ -21,6 +21,12 @@ const roboto = Roboto({
   weight: ["500"],
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 export const metadata: Metadata = {
   title: {
