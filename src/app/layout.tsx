@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Sora, IBM_Plex_Mono, Roboto } from "next/font/google";
 import { DevServiceWorkerReset } from "@/components/dev/dev-sw-reset";
 import { PostHogProvider } from "@/components/providers/posthog-provider";
+import { RecoveryRedirect } from "@/components/forms/recovery-redirect";
 import "./globals.css";
 
 const sora = Sora({
@@ -60,6 +61,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${sora.variable} ${plexMono.variable} ${roboto.variable} antialiased`} suppressHydrationWarning>
         <DevServiceWorkerReset />
+        <RecoveryRedirect />
         <PostHogProvider>{children}</PostHogProvider>
       </body>
     </html>
