@@ -175,7 +175,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           </div>
           {workspaceRecord.stripeCustomerId ? (
             <div className="pt-2">
-              <ManageSubscriptionButton />
+              <ManageSubscriptionButton workspaceId={workspace.workspaceId} />
             </div>
           ) : null}
         </CardContent>

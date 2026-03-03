@@ -4,7 +4,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 
-export function ManageSubscriptionButton() {
+interface ManageSubscriptionButtonProps {
+  workspaceId: string;
+}
+
+export function ManageSubscriptionButton({ workspaceId }: ManageSubscriptionButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,7 +18,10 @@ export function ManageSubscriptionButton() {
     try {
       const response = await fetch("/api/billing/portal", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "x-workspace-id": workspaceId,
+        },
         body: JSON.stringify({}),
       });
       const payload = (await response.json()) as { portalUrl?: string; detail?: string };
