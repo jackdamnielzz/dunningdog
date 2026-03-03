@@ -325,6 +325,193 @@ describe("recoveryStartedFunction", () => {
     expect(resolveEmail).toHaveBeenCalledTimes(1);
   });
 
+  it("stops when trial is expired", async () => {
+    vi.resetModules();
+
+    const inngestMock = createInngestMock();
+    vi.doMock("@/lib/inngest/client", () => ({ inngest: inngestMock }));
+    vi.doMock("@/lib/db", () => ({
+      db: {
+        recoveryAttempt: {
+          findUnique: vi.fn().mockResolvedValue({ id: "ra_1", status: "pending" }),
+        },
+        dunningSequence: {
+          findFirst: vi.fn().mockResolvedValue({
+            id: "seq_1",
+            steps: [{ id: "ss_1", stepOrder: 1, delayHours: 0, subjectTemplate: "S", bodyTemplate: "B" }],
+          }),
+        },
+        workspace: {
+          findUnique: vi.fn().mockResolvedValue({
+            billingStatus: "free",
+            trialEndsAt: new Date(Date.now() - 86_400_000), // expired yesterday
+          }),
+        },
+        notificationChannel: { findMany: vi.fn().mockResolvedValue([]) },
+        paymentUpdateToken: { create: vi.fn().mockResolvedValue({ id: "pt_mock" }) },
+      },
+    }));
+    vi.doMock("@/lib/services/email", () => ({ sendDunningEmail: vi.fn() }));
+    vi.doMock("@/lib/services/customer-email", () => ({ resolveCustomerEmail: vi.fn() }));
+    vi.doMock("@/lib/services/payment-tokens", () => ({
+      generatePaymentUpdateToken: vi.fn().mockResolvedValue({ token: "t", url: "u" }),
+    }));
+    vi.doMock("@/lib/services/notifications", () => ({ sendNotification: vi.fn() }));
+    vi.doMock("@/lib/logger", () => ({ log: vi.fn() }));
+
+    await import("@/inngest/functions");
+    const handler = capturedHandlers.get("recovery-started-sequence")!;
+    const step = createStepMock();
+
+    const result = await handler({ event: { data: baseEventData }, step });
+
+    expect(result).toEqual({ stopped: true, reason: "trial_expired", atStep: 1 });
+  });
+
+  it("continues when trial is still active", async () => {
+    vi.resetModules();
+
+    const inngestMock = createInngestMock();
+    const sendEmail = vi.fn().mockResolvedValue({ id: "log_1" });
+    vi.doMock("@/lib/inngest/client", () => ({ inngest: inngestMock }));
+    vi.doMock("@/lib/db", () => ({
+      db: {
+        recoveryAttempt: {
+          findUnique: vi.fn().mockResolvedValue({ id: "ra_1", status: "pending", stripeCustomerId: "cus_1" }),
+        },
+        dunningSequence: {
+          findFirst: vi.fn().mockResolvedValue({
+            id: "seq_1",
+            steps: [{ id: "ss_1", stepOrder: 1, delayHours: 0, subjectTemplate: "S", bodyTemplate: "B" }],
+          }),
+        },
+        workspace: {
+          findUnique: vi.fn().mockResolvedValue({
+            billingStatus: "free",
+            trialEndsAt: new Date(Date.now() + 5 * 86_400_000), // 5 days left
+          }),
+        },
+        notificationChannel: { findMany: vi.fn().mockResolvedValue([]) },
+        paymentUpdateToken: { create: vi.fn().mockResolvedValue({ id: "pt_mock" }) },
+      },
+    }));
+    vi.doMock("@/lib/services/email", () => ({ sendDunningEmail: sendEmail }));
+    vi.doMock("@/lib/services/customer-email", () => ({
+      resolveCustomerEmail: vi.fn().mockResolvedValue("user@test.com"),
+    }));
+    vi.doMock("@/lib/services/payment-tokens", () => ({
+      generatePaymentUpdateToken: vi.fn().mockResolvedValue({ token: "t", url: "https://app/update/t" }),
+    }));
+    vi.doMock("@/lib/services/notifications", () => ({ sendNotification: vi.fn() }));
+    vi.doMock("@/lib/logger", () => ({ log: vi.fn() }));
+
+    await import("@/inngest/functions");
+    const handler = capturedHandlers.get("recovery-started-sequence")!;
+    const step = createStepMock();
+
+    const result = await handler({ event: { data: baseEventData }, step });
+
+    expect(result).toEqual({ deliveredSteps: 1 });
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops when attempt is deleted mid-run (null from refresh)", async () => {
+    const sequenceSteps = [
+      { id: "ss_1", stepOrder: 1, delayHours: 0, subjectTemplate: "S1", bodyTemplate: "B1" },
+    ];
+
+    // First call: load-recovery-attempt (returns pending)
+    // Second call: refresh-attempt-1 (returns null = deleted)
+    const findUnique = vi
+      .fn()
+      .mockResolvedValueOnce({ id: "ra_1", status: "pending", stripeCustomerId: "cus_1" })
+      .mockResolvedValueOnce(null);
+
+    const findFirst = vi.fn().mockResolvedValue({ id: "seq_1", steps: sequenceSteps });
+    const sendEmail = vi.fn();
+
+    const { getHandler } = await loadFunctions({
+      recoveryAttemptFindUnique: findUnique,
+      dunningSequenceFindFirst: findFirst,
+      sendDunningEmail: sendEmail,
+    });
+
+    const handler = getHandler("recovery-started-sequence");
+    const step = createStepMock();
+
+    const result = await handler({ event: { data: baseEventData }, step });
+
+    expect(result).toEqual({ stopped: true, reason: "attempt_not_pending", atStep: 1 });
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("passes payment update URL to email send", async () => {
+    const sequenceSteps = [
+      { id: "ss_1", stepOrder: 1, delayHours: 0, subjectTemplate: "S", bodyTemplate: "B" },
+    ];
+
+    const findUnique = vi.fn().mockResolvedValue({
+      id: "ra_1", status: "pending", stripeCustomerId: "cus_1",
+    });
+    const findFirst = vi.fn().mockResolvedValue({ id: "seq_1", steps: sequenceSteps });
+    const resolveEmail = vi.fn().mockResolvedValue("user@test.com");
+    const sendEmail = vi.fn().mockResolvedValue({ id: "log_1" });
+
+    const { getHandler } = await loadFunctions({
+      recoveryAttemptFindUnique: findUnique,
+      dunningSequenceFindFirst: findFirst,
+      resolveCustomerEmail: resolveEmail,
+      sendDunningEmail: sendEmail,
+    });
+
+    const handler = getHandler("recovery-started-sequence");
+    const step = createStepMock();
+
+    await handler({ event: { data: baseEventData }, step });
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        paymentUpdateUrl: "https://app.test/update-payment/mock_token",
+      }),
+    );
+  });
+
+  it("calls sleep with correct duration format for multi-step delays", async () => {
+    const sequenceSteps = [
+      { id: "ss_1", stepOrder: 1, delayHours: 0, subjectTemplate: "S1", bodyTemplate: "B1" },
+      { id: "ss_2", stepOrder: 2, delayHours: 72, subjectTemplate: "S2", bodyTemplate: "B2" },
+      { id: "ss_3", stepOrder: 3, delayHours: 168, subjectTemplate: "S3", bodyTemplate: "B3" },
+    ];
+
+    const findUnique = vi.fn().mockResolvedValue({
+      id: "ra_1", status: "pending", stripeCustomerId: "cus_1",
+    });
+    const findFirst = vi.fn().mockResolvedValue({ id: "seq_1", steps: sequenceSteps });
+    const resolveEmail = vi.fn().mockResolvedValue("u@test.com");
+    const sendEmail = vi.fn().mockResolvedValue({ id: "log_1" });
+
+    const { getHandler } = await loadFunctions({
+      recoveryAttemptFindUnique: findUnique,
+      dunningSequenceFindFirst: findFirst,
+      resolveCustomerEmail: resolveEmail,
+      sendDunningEmail: sendEmail,
+    });
+
+    const handler = getHandler("recovery-started-sequence");
+    const step = createStepMock();
+
+    const result = await handler({ event: { data: baseEventData }, step });
+
+    expect(result).toEqual({ deliveredSteps: 3 });
+    // Step 1: no sleep (delayHours 0)
+    // Step 2: sleep 72h
+    // Step 3: sleep 168h
+    expect(step.sleep).toHaveBeenCalledTimes(2);
+    expect(step.sleep).toHaveBeenCalledWith("delay-step-2", "72h");
+    expect(step.sleep).toHaveBeenCalledWith("delay-step-3", "168h");
+    expect(sendEmail).toHaveBeenCalledTimes(3);
+  });
+
   it("handles missing customer email (logs skip, continues to next step)", async () => {
     const sequenceSteps = [
       {
@@ -522,6 +709,141 @@ describe("recoverySucceededFunction", () => {
     expect(result).toEqual({ done: true });
     expect(update).not.toHaveBeenCalled();
   });
+
+  it("sends notification after closing recovery", async () => {
+    vi.resetModules();
+
+    const inngestMock = createInngestMock();
+    const sendNotification = vi.fn().mockResolvedValue(undefined);
+    const closedAttempt = {
+      id: "ra_1",
+      status: "recovered",
+      amountDueCents: 4999,
+      recoveredAmountCents: 4999,
+      endedAt: new Date(),
+    };
+
+    vi.doMock("@/lib/inngest/client", () => ({ inngest: inngestMock }));
+    vi.doMock("@/lib/db", () => ({
+      db: {
+        recoveryAttempt: {
+          findUnique: vi.fn().mockResolvedValue({ id: "ra_1", status: "pending" }),
+          update: vi.fn().mockResolvedValue(closedAttempt),
+        },
+        dunningSequence: { findFirst: vi.fn() },
+        workspace: { findUnique: vi.fn() },
+        notificationChannel: { findMany: vi.fn().mockResolvedValue([]) },
+        paymentUpdateToken: { create: vi.fn() },
+      },
+    }));
+    vi.doMock("@/lib/services/email", () => ({ sendDunningEmail: vi.fn() }));
+    vi.doMock("@/lib/services/customer-email", () => ({ resolveCustomerEmail: vi.fn() }));
+    vi.doMock("@/lib/services/payment-tokens", () => ({
+      generatePaymentUpdateToken: vi.fn(),
+    }));
+    vi.doMock("@/lib/services/notifications", () => ({ sendNotification }));
+    vi.doMock("@/lib/logger", () => ({ log: vi.fn() }));
+
+    await import("@/inngest/functions");
+    const handler = capturedHandlers.get("recovery-succeeded-finalize")!;
+    const step = createStepMock();
+
+    await handler({ event: { data: baseEventData }, step });
+
+    expect(sendNotification).toHaveBeenCalledWith({
+      workspaceId: "ws_1",
+      event: "recovery_succeeded",
+      data: {
+        stripeInvoiceId: "inv_1",
+        recoveredAmountCents: 4999,
+      },
+    });
+  });
+
+  it("does not send notification when attempt not found", async () => {
+    vi.resetModules();
+
+    const inngestMock = createInngestMock();
+    const sendNotification = vi.fn();
+
+    vi.doMock("@/lib/inngest/client", () => ({ inngest: inngestMock }));
+    vi.doMock("@/lib/db", () => ({
+      db: {
+        recoveryAttempt: {
+          findUnique: vi.fn().mockResolvedValue(null),
+          update: vi.fn(),
+        },
+        dunningSequence: { findFirst: vi.fn() },
+        workspace: { findUnique: vi.fn() },
+        notificationChannel: { findMany: vi.fn().mockResolvedValue([]) },
+        paymentUpdateToken: { create: vi.fn() },
+      },
+    }));
+    vi.doMock("@/lib/services/email", () => ({ sendDunningEmail: vi.fn() }));
+    vi.doMock("@/lib/services/customer-email", () => ({ resolveCustomerEmail: vi.fn() }));
+    vi.doMock("@/lib/services/payment-tokens", () => ({
+      generatePaymentUpdateToken: vi.fn(),
+    }));
+    vi.doMock("@/lib/services/notifications", () => ({ sendNotification }));
+    vi.doMock("@/lib/logger", () => ({ log: vi.fn() }));
+
+    await import("@/inngest/functions");
+    const handler = capturedHandlers.get("recovery-succeeded-finalize")!;
+    const step = createStepMock();
+
+    await handler({ event: { data: baseEventData }, step });
+
+    expect(sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("uses recoveredAmountCents when available, falls back to amountDueCents", async () => {
+    vi.resetModules();
+
+    const inngestMock = createInngestMock();
+    const sendNotification = vi.fn().mockResolvedValue(undefined);
+    const closedAttempt = {
+      id: "ra_1",
+      status: "recovered",
+      amountDueCents: 9999,
+      recoveredAmountCents: null,
+      endedAt: new Date(),
+    };
+
+    vi.doMock("@/lib/inngest/client", () => ({ inngest: inngestMock }));
+    vi.doMock("@/lib/db", () => ({
+      db: {
+        recoveryAttempt: {
+          findUnique: vi.fn().mockResolvedValue({ id: "ra_1", status: "pending" }),
+          update: vi.fn().mockResolvedValue(closedAttempt),
+        },
+        dunningSequence: { findFirst: vi.fn() },
+        workspace: { findUnique: vi.fn() },
+        notificationChannel: { findMany: vi.fn().mockResolvedValue([]) },
+        paymentUpdateToken: { create: vi.fn() },
+      },
+    }));
+    vi.doMock("@/lib/services/email", () => ({ sendDunningEmail: vi.fn() }));
+    vi.doMock("@/lib/services/customer-email", () => ({ resolveCustomerEmail: vi.fn() }));
+    vi.doMock("@/lib/services/payment-tokens", () => ({
+      generatePaymentUpdateToken: vi.fn(),
+    }));
+    vi.doMock("@/lib/services/notifications", () => ({ sendNotification }));
+    vi.doMock("@/lib/logger", () => ({ log: vi.fn() }));
+
+    await import("@/inngest/functions");
+    const handler = capturedHandlers.get("recovery-succeeded-finalize")!;
+    const step = createStepMock();
+
+    await handler({ event: { data: baseEventData }, step });
+
+    expect(sendNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          recoveredAmountCents: 9999,
+        }),
+      }),
+    );
+  });
 });
 
 /* ====================================================================== */
@@ -614,5 +936,126 @@ describe("preDunningCandidateFunction", () => {
         },
       }),
     );
+  });
+
+  it("sends notification after successful pre-dunning email", async () => {
+    vi.resetModules();
+
+    const inngestMock = createInngestMock();
+    const sendNotification = vi.fn().mockResolvedValue(undefined);
+
+    vi.doMock("@/lib/inngest/client", () => ({ inngest: inngestMock }));
+    vi.doMock("@/lib/db", () => ({
+      db: {
+        recoveryAttempt: { findUnique: vi.fn(), update: vi.fn() },
+        dunningSequence: { findFirst: vi.fn() },
+        workspace: { findUnique: vi.fn() },
+        notificationChannel: { findMany: vi.fn().mockResolvedValue([]) },
+        paymentUpdateToken: { create: vi.fn() },
+      },
+    }));
+    vi.doMock("@/lib/services/email", () => ({
+      sendDunningEmail: vi.fn().mockResolvedValue({ id: "log_1" }),
+    }));
+    vi.doMock("@/lib/services/customer-email", () => ({
+      resolveCustomerEmail: vi.fn().mockResolvedValue("cust@test.com"),
+    }));
+    vi.doMock("@/lib/services/payment-tokens", () => ({
+      generatePaymentUpdateToken: vi.fn(),
+    }));
+    vi.doMock("@/lib/services/notifications", () => ({ sendNotification }));
+    vi.doMock("@/lib/logger", () => ({ log: vi.fn() }));
+
+    await import("@/inngest/functions");
+    const handler = capturedHandlers.get("predunning-candidate-notify")!;
+    const step = createStepMock();
+
+    await handler({ event: { data: baseEventData }, step });
+
+    expect(sendNotification).toHaveBeenCalledWith({
+      workspaceId: "ws_1",
+      event: "predunning_sent",
+      data: {
+        stripeCustomerId: "cus_1",
+        stripeSubscriptionId: "sub_1",
+        expirationDate: "2026-03-15",
+      },
+    });
+  });
+
+  it("does not send notification when email is skipped", async () => {
+    vi.resetModules();
+
+    const inngestMock = createInngestMock();
+    const sendNotification = vi.fn();
+
+    vi.doMock("@/lib/inngest/client", () => ({ inngest: inngestMock }));
+    vi.doMock("@/lib/db", () => ({
+      db: {
+        recoveryAttempt: { findUnique: vi.fn(), update: vi.fn() },
+        dunningSequence: { findFirst: vi.fn() },
+        workspace: { findUnique: vi.fn() },
+        notificationChannel: { findMany: vi.fn().mockResolvedValue([]) },
+        paymentUpdateToken: { create: vi.fn() },
+      },
+    }));
+    vi.doMock("@/lib/services/email", () => ({
+      sendDunningEmail: vi.fn().mockResolvedValue({ id: "log_1" }),
+    }));
+    vi.doMock("@/lib/services/customer-email", () => ({
+      resolveCustomerEmail: vi.fn().mockResolvedValue(null),
+    }));
+    vi.doMock("@/lib/services/payment-tokens", () => ({
+      generatePaymentUpdateToken: vi.fn(),
+    }));
+    vi.doMock("@/lib/services/notifications", () => ({ sendNotification }));
+    vi.doMock("@/lib/logger", () => ({ log: vi.fn() }));
+
+    await import("@/inngest/functions");
+    const handler = capturedHandlers.get("predunning-candidate-notify")!;
+    const step = createStepMock();
+
+    await handler({ event: { data: baseEventData }, step });
+
+    expect(sendNotification).not.toHaveBeenCalled();
+  });
+});
+
+/* ====================================================================== */
+/*  inngestFunctions export                                                */
+/* ====================================================================== */
+
+describe("inngestFunctions export", () => {
+  it("exports exactly 3 registered functions", async () => {
+    vi.resetModules();
+
+    const inngestMock = createInngestMock();
+    vi.doMock("@/lib/inngest/client", () => ({ inngest: inngestMock }));
+    vi.doMock("@/lib/db", () => ({
+      db: {
+        recoveryAttempt: { findUnique: vi.fn(), update: vi.fn() },
+        dunningSequence: { findFirst: vi.fn() },
+        workspace: { findUnique: vi.fn() },
+        notificationChannel: { findMany: vi.fn().mockResolvedValue([]) },
+        paymentUpdateToken: { create: vi.fn() },
+      },
+    }));
+    vi.doMock("@/lib/services/email", () => ({ sendDunningEmail: vi.fn() }));
+    vi.doMock("@/lib/services/customer-email", () => ({ resolveCustomerEmail: vi.fn() }));
+    vi.doMock("@/lib/services/payment-tokens", () => ({
+      generatePaymentUpdateToken: vi.fn(),
+    }));
+    vi.doMock("@/lib/services/notifications", () => ({ sendNotification: vi.fn() }));
+    vi.doMock("@/lib/logger", () => ({ log: vi.fn() }));
+
+    const mod = await import("@/inngest/functions");
+
+    expect(mod.inngestFunctions).toHaveLength(3);
+    expect(inngestMock.createFunction).toHaveBeenCalledTimes(3);
+
+    const registeredIds = [...capturedHandlers.keys()];
+    expect(registeredIds).toContain("recovery-started-sequence");
+    expect(registeredIds).toContain("recovery-succeeded-finalize");
+    expect(registeredIds).toContain("predunning-candidate-notify");
   });
 });
