@@ -25,4 +25,5 @@ export const inngest = new Inngest({
   id: "dunningdog",
   name: "DunningDog",
   middleware: [sentryMiddleware],
+  // Functions are auto-synced on deploy via the Inngest Vercel Integration.
 });
