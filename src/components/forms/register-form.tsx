@@ -63,12 +63,14 @@ export function RegisterForm({ nextPath }: RegisterFormProps) {
       }
 
       if (payload.authenticated) {
+        window.gtag?.("event", "form_submit");
         router.push(payload.next ?? nextTarget);
         router.refresh();
         return;
       }
 
       if (payload.requiresEmailConfirmation) {
+        window.gtag?.("event", "form_submit");
         setConfirmationNotice(
           "Account created. Check your inbox to confirm your email, then sign in.",
         );
