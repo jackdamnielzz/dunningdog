@@ -1,8 +1,80 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, type FormEvent } from "react";
+import { useState, useRef, useEffect, useCallback, type FormEvent, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { MessageCircle, X, Send } from "lucide-react";
+
+function formatInline(text: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  const regex = /(\*\*(.+?)\*\*)|(\[([^\]]+)\]\(([^)]+)\))/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index));
+    }
+    if (match[1]) {
+      nodes.push(<strong key={match.index}>{match[2]}</strong>);
+    } else if (match[3]) {
+      nodes.push(
+        <a
+          key={match.index}
+          href={match[5]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline"
+        >
+          {match[4]}
+        </a>,
+      );
+    }
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+
+  return nodes;
+}
+
+function MessageContent({ content }: { content: string }) {
+  const lines = content.split("\n");
+  const elements: ReactNode[] = [];
+  let listItems: string[] = [];
+  let key = 0;
+
+  function flushList() {
+    if (listItems.length === 0) return;
+    elements.push(
+      <ul key={key++} className="my-1 ml-4 list-disc space-y-0.5">
+        {listItems.map((item, i) => (
+          <li key={i}>{formatInline(item)}</li>
+        ))}
+      </ul>,
+    );
+    listItems = [];
+  }
+
+  for (const line of lines) {
+    const listMatch = line.match(/^[-*•]\s+(.+)/);
+    if (listMatch) {
+      listItems.push(listMatch[1]);
+    } else {
+      flushList();
+      if (line.trim() === "") {
+        elements.push(<br key={key++} />);
+      } else {
+        if (elements.length > 0) elements.push(<br key={key++} />);
+        elements.push(<span key={key++}>{formatInline(line)}</span>);
+      }
+    }
+  }
+  flushList();
+
+  return <>{elements}</>;
+}
 
 const MARKETING_PATHS = ["/", "/pricing", "/contact", "/policies", "/trial-expired"];
 
@@ -194,7 +266,9 @@ export function ChatWidget() {
                       : "bg-zinc-100 text-zinc-800"
                   }`}
                 >
-                  {msg.content || (
+                  {msg.content ? (
+                    <MessageContent content={msg.content} />
+                  ) : (
                     <span className="inline-flex gap-1">
                       <span className="animate-pulse">.</span>
                       <span className="animate-pulse" style={{ animationDelay: "0.2s" }}>.</span>

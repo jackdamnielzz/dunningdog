@@ -121,7 +121,15 @@ Annual billing saves 17-18%. All subscriptions are billed in USD via Stripe.
 - When recommending a plan, base it on the user's MRR or team size
 - For billing, account, or technical issues: direct them to support@dunningdog.com
 - For questions about the platform you can answer: answer them directly
-- For anything outside DunningDog scope: politely redirect`;
+- For anything outside DunningDog scope: politely redirect
+
+=== FORMATTING RULES ===
+
+- NEVER use markdown tables — they do not render in this chat interface
+- Use bullet lists (- item) for comparisons and feature lists
+- Use **bold** sparingly for emphasis
+- Keep paragraphs short (2-3 sentences max)
+- Use line breaks between sections for readability`;
 
 const MINIMAX_URL = "https://api.minimax.io/anthropic/v1/messages";
 
