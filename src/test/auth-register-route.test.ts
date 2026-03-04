@@ -92,7 +92,7 @@ describe("auth register route", () => {
     expect(sendMailMock).toHaveBeenCalledOnce();
     expect(sendMailMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        to: "info@dunningdog.com",
+        to: "niels.maas@maasiso.nl",
         subject: "New signup: new@example.com",
       }),
     );

@@ -52,7 +52,7 @@ function notifyNewRegistration(email: string) {
   transporter
     .sendMail({
       from: `DunningDog <${env.SMTP_FROM_EMAIL}>`,
-      to: "info@dunningdog.com",
+      to: "niels.maas@maasiso.nl",
       subject: `New signup: ${email}`,
       text: `A new user just registered on DunningDog.\n\nEmail: ${email}\nTime: ${now}`,
       html: [
