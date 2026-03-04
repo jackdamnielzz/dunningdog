@@ -4,6 +4,7 @@ import { DevServiceWorkerReset } from "@/components/dev/dev-sw-reset";
 import { PostHogProvider } from "@/components/providers/posthog-provider";
 import { GoogleAnalytics } from "@/components/providers/google-analytics";
 import { RecoveryRedirect } from "@/components/forms/recovery-redirect";
+import { ChatWidget } from "@/components/chat/chat-widget";
 import "./globals.css";
 
 const sora = Sora({
@@ -71,6 +72,7 @@ export default function RootLayout({
         <DevServiceWorkerReset />
         <RecoveryRedirect />
         <PostHogProvider>{children}</PostHogProvider>
+        <ChatWidget />
       </body>
     </html>
   );
