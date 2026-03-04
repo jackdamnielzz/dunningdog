@@ -53,8 +53,7 @@ const envSchema = z.object({
     .default("development-only-encryption-key"),
   ADMIN_EMAILS: z.string().optional(),
   DEMO_MODE: booleanFromEnv.default(false),
-  OPENCLAW_GATEWAY_URL: z.string().url().optional(),
-  OPENCLAW_API_KEY: z.string().min(1).optional(),
+  MINIMAX_API_KEY: z.string().min(1).optional(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

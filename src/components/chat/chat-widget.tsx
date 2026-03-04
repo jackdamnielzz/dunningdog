@@ -118,7 +118,10 @@ export function ChatWidget() {
 
           try {
             const parsed = JSON.parse(data);
-            const content = parsed.choices?.[0]?.delta?.content;
+            const content =
+              parsed.type === "content_block_delta"
+                ? parsed.delta?.text
+                : undefined;
             if (content) {
               setMessages((prev) => {
                 const updated = [...prev];

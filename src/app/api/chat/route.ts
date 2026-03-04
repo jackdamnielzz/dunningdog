@@ -30,6 +30,8 @@ Key information:
 
 Be helpful, concise, and friendly. Answer in the language the user writes in, but default to English. If you don't know something specific, suggest they contact info@dunningdog.com or use the contact form at dunningdog.com/contact. Never make up features or pricing that isn't listed above.`;
 
+const MINIMAX_URL = "https://api.minimax.io/anthropic/v1/messages";
+
 const instance = "/api/chat";
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -48,7 +50,7 @@ function checkRateLimit(ip: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    if (!env.OPENCLAW_GATEWAY_URL || !env.OPENCLAW_API_KEY) {
+    if (!env.MINIMAX_API_KEY) {
       throw new ProblemError({
         title: "Chatbot not configured",
         status: 503,
@@ -92,18 +94,17 @@ export async function POST(request: Request) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30_000);
 
-    const upstream = await fetch(env.OPENCLAW_GATEWAY_URL, {
+    const upstream = await fetch(MINIMAX_URL, {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${env.OPENCLAW_API_KEY}`,
+        "x-api-key": env.MINIMAX_API_KEY,
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "default",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...parsed.data.messages,
-        ],
+        model: "MiniMax-M2.5",
+        system: SYSTEM_PROMPT,
+        messages: parsed.data.messages,
         stream: true,
         max_tokens: 1000,
         temperature: 0.7,
@@ -111,7 +112,7 @@ export async function POST(request: Request) {
       signal: controller.signal,
     }).catch((err) => {
       clearTimeout(timeout);
-      log("error", "OpenClaw gateway unreachable", { error: String(err) });
+      log("error", "MiniMax API unreachable", { error: String(err) });
       throw new ProblemError({
         title: "Chatbot service unavailable",
         status: 503,
@@ -123,7 +124,7 @@ export async function POST(request: Request) {
     clearTimeout(timeout);
 
     if (!upstream.ok) {
-      log("warn", "OpenClaw gateway error", { status: upstream.status });
+      log("warn", "MiniMax API error", { status: upstream.status });
       throw new ProblemError({
         title: "Chatbot service error",
         status: 502,
@@ -141,9 +142,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const stream = upstream.body;
-
-    return new Response(stream, {
+    return new Response(upstream.body, {
       headers: {
         "content-type": "text/event-stream",
         "cache-control": "no-cache",
