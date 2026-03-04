@@ -1,8 +1,11 @@
 import { z } from "zod";
 import { ok, parseJsonBody, routeError } from "@/lib/api";
 import { env } from "@/lib/env";
+import { log } from "@/lib/logger";
 import { ProblemError } from "@/lib/problem";
 import { normalizeNextPath } from "@/lib/safe-redirect";
+import { getSmtpTransporter } from "@/lib/smtp";
+import { escapeHtml } from "@/lib/services/email-template";
 
 const schema = z.object({
   email: z.string().email(),
@@ -38,6 +41,29 @@ function isAlreadyRegisteredMessage(message: string | undefined) {
     return false;
   }
   return message.toLowerCase().includes("already registered");
+}
+
+function notifyNewRegistration(email: string) {
+  const transporter = getSmtpTransporter();
+  if (!transporter) return;
+
+  const now = new Date().toLocaleString("en-US", { timeZone: "Europe/Amsterdam" });
+
+  transporter
+    .sendMail({
+      from: `DunningDog <${env.SMTP_FROM_EMAIL}>`,
+      to: "info@dunningdog.com",
+      subject: `New signup: ${email}`,
+      text: `A new user just registered on DunningDog.\n\nEmail: ${email}\nTime: ${now}`,
+      html: [
+        `<h3>New user registration</h3>`,
+        `<p><strong>Email:</strong> ${escapeHtml(email)}</p>`,
+        `<p><strong>Time:</strong> ${escapeHtml(now)}</p>`,
+      ].join("\n"),
+    })
+    .catch((error) => {
+      log("error", "Failed to send new-registration notification email", { email, error });
+    });
 }
 
 async function grantPasswordToken(email: string, password: string) {
@@ -163,6 +189,8 @@ export async function POST(request: Request) {
         requiresEmailConfirmation = true;
       }
     }
+
+    notifyNewRegistration(input.email);
 
     const response = ok({
       created: true,
