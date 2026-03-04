@@ -43,14 +43,14 @@ function isAlreadyRegisteredMessage(message: string | undefined) {
   return message.toLowerCase().includes("already registered");
 }
 
-function notifyNewRegistration(email: string) {
+async function notifyNewRegistration(email: string) {
   const transporter = getSmtpTransporter();
   if (!transporter) return;
 
   const now = new Date().toLocaleString("en-US", { timeZone: "Europe/Amsterdam" });
 
-  transporter
-    .sendMail({
+  try {
+    await transporter.sendMail({
       from: `DunningDog <${env.SMTP_FROM_EMAIL}>`,
       to: "niels.maas@maasiso.nl",
       subject: `New signup: ${email}`,
@@ -60,10 +60,10 @@ function notifyNewRegistration(email: string) {
         `<p><strong>Email:</strong> ${escapeHtml(email)}</p>`,
         `<p><strong>Time:</strong> ${escapeHtml(now)}</p>`,
       ].join("\n"),
-    })
-    .catch((error) => {
-      log("error", "Failed to send new-registration notification email", { email, error });
     });
+  } catch (error) {
+    log("error", "Failed to send new-registration notification email", { email, error });
+  }
 }
 
 async function grantPasswordToken(email: string, password: string) {
@@ -190,7 +190,7 @@ export async function POST(request: Request) {
       }
     }
 
-    notifyNewRegistration(input.email);
+    await notifyNewRegistration(input.email);
 
     const response = ok({
       created: true,
