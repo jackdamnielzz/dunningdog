@@ -26,6 +26,9 @@ export function MarketingHeader({ variant = "full" }: MarketingHeaderProps) {
             <Link href="/pricing" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
               Pricing
             </Link>
+            <Link href="/docs/api" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
+              API Docs
+            </Link>
             <Link href="/login" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
               Sign in
             </Link>

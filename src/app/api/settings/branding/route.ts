@@ -1,4 +1,4 @@
-import { resolveWorkspaceContextFromRequest } from "@/lib/auth";
+import { resolveWorkspaceContextFromRequest, requireScope } from "@/lib/auth";
 import { parseJsonBody, ok, routeError } from "@/lib/api";
 import { getBranding, upsertBranding, brandingSchema } from "@/lib/services/branding";
 import { requireFeature } from "@/lib/plan-features";
@@ -10,6 +10,7 @@ const instance = "/api/settings/branding";
 export async function GET(request: Request) {
   try {
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    requireScope(workspace, "read:settings");
     await requireActiveWorkspace(workspace.workspaceId);
     const branding = await getBranding(workspace.workspaceId);
     return ok(branding ?? { companyName: null, logoUrl: null, accentColor: DEFAULT_ACCENT_COLOR, footerText: null });

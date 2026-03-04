@@ -1,5 +1,5 @@
 import { createSequence, createSequenceSchema } from "@/lib/services/sequences";
-import { ensureWorkspaceExists, resolveWorkspaceContextFromRequest } from "@/lib/auth";
+import { ensureWorkspaceExists, resolveWorkspaceContextFromRequest, requireScope } from "@/lib/auth";
 import { ok, parseJsonBody, routeError } from "@/lib/api";
 import { reportAnalyticsEvent } from "@/lib/observability";
 import { maxSequenceSteps } from "@/lib/plan-features";
@@ -7,10 +7,46 @@ import { db } from "@/lib/db";
 import { ProblemError } from "@/lib/problem";
 import { requireActiveWorkspace } from "@/lib/trial";
 
+export async function GET(request: Request) {
+  try {
+    const workspace = await resolveWorkspaceContextFromRequest(request);
+    requireScope(workspace, "read:sequences");
+    await ensureWorkspaceExists(workspace.workspaceId);
+    await requireActiveWorkspace(workspace.workspaceId);
+
+    const sequences = await db.dunningSequence.findMany({
+      where: { workspaceId: workspace.workspaceId },
+      include: { steps: { orderBy: { stepOrder: "asc" } } },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return ok({
+      items: sequences.map((seq) => ({
+        id: seq.id,
+        workspaceId: seq.workspaceId,
+        name: seq.name,
+        isEnabled: seq.isEnabled,
+        steps: seq.steps.map((step) => ({
+          id: step.id,
+          delayHours: step.delayHours,
+          subjectTemplate: step.subjectTemplate,
+          bodyTemplate: step.bodyTemplate,
+          status: step.status,
+        })),
+        createdAt: seq.createdAt.toISOString(),
+        updatedAt: seq.updatedAt.toISOString(),
+      })),
+    });
+  } catch (error) {
+    return routeError(error, "/api/dunning/sequences");
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const input = await parseJsonBody(request, createSequenceSchema);
     const workspace = await resolveWorkspaceContextFromRequest(request, input.workspaceId);
+    requireScope(workspace, "write:sequences");
     await ensureWorkspaceExists(workspace.workspaceId);
     await requireActiveWorkspace(workspace.workspaceId);
 

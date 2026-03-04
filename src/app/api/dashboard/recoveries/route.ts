@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ok, routeError } from "@/lib/api";
-import { ensureWorkspaceExists, getWorkspaceIdFromRequest } from "@/lib/auth";
+import { ensureWorkspaceExists, resolveWorkspaceContextFromRequest, requireScope } from "@/lib/auth";
 import { getRecoveryAttempts } from "@/lib/services/dashboard";
 import { requireActiveWorkspace } from "@/lib/trial";
 
@@ -10,7 +10,9 @@ const statusSchema = z
 
 export async function GET(request: Request) {
   try {
-    const workspaceId = await getWorkspaceIdFromRequest(request);
+    const context = await resolveWorkspaceContextFromRequest(request);
+    requireScope(context, "read:recoveries");
+    const workspaceId = context.workspaceId;
     await ensureWorkspaceExists(workspaceId);
     await requireActiveWorkspace(workspaceId);
 

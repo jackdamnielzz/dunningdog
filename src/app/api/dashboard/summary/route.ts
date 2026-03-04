@@ -1,13 +1,15 @@
 import { ok, routeError } from "@/lib/api";
 import { db } from "@/lib/db";
-import { getWorkspaceIdFromRequest, ensureWorkspaceExists } from "@/lib/auth";
+import { resolveWorkspaceContextFromRequest, ensureWorkspaceExists, requireScope } from "@/lib/auth";
 import { getDashboardSummary } from "@/lib/services/dashboard";
 import { requireActiveWorkspace } from "@/lib/trial";
 import { parseWindow } from "@/lib/utils";
 
 export async function GET(request: Request) {
   try {
-    const workspaceId = await getWorkspaceIdFromRequest(request);
+    const context = await resolveWorkspaceContextFromRequest(request);
+    requireScope(context, "read:dashboard");
+    const workspaceId = context.workspaceId;
     await ensureWorkspaceExists(workspaceId);
     await requireActiveWorkspace(workspaceId);
     const { searchParams } = new URL(request.url);

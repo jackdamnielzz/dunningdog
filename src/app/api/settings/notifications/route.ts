@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { resolveWorkspaceContextFromRequest } from "@/lib/auth";
+import { resolveWorkspaceContextFromRequest, requireScope } from "@/lib/auth";
 import { parseJsonBody, ok, routeError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { requireFeature } from "@/lib/plan-features";
@@ -19,6 +19,7 @@ const createSchema = z.object({
 export async function GET(request: Request) {
   try {
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    requireScope(workspace, "read:settings");
     await requireActiveWorkspace(workspace.workspaceId);
     const channels = await db.notificationChannel.findMany({
       where: { workspaceId: workspace.workspaceId },

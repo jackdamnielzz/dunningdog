@@ -37,13 +37,20 @@ async function loadRoute(opts?: {
 }) {
   vi.resetModules();
 
-  const getWorkspaceIdFromRequest = vi.fn().mockResolvedValue(WORKSPACE_ID);
+  const resolveWorkspaceContextFromRequest = vi.fn().mockResolvedValue({
+    workspaceId: WORKSPACE_ID,
+    workspaceName: "Test Workspace",
+    userId: "user_1",
+    source: "authenticated",
+  });
+  const requireScope = vi.fn();
   const ensureWorkspaceExists = vi.fn().mockResolvedValue({ id: WORKSPACE_ID });
   const getRecoveryAttempts = vi.fn().mockResolvedValue(opts?.attempts ?? []);
   const captureException = vi.fn().mockResolvedValue(undefined);
 
   vi.doMock("@/lib/auth", () => ({
-    getWorkspaceIdFromRequest,
+    resolveWorkspaceContextFromRequest,
+    requireScope,
     ensureWorkspaceExists,
   }));
 
@@ -60,7 +67,7 @@ async function loadRoute(opts?: {
   }));
 
   const route = await import("@/app/api/dashboard/recoveries/route");
-  return { route, getWorkspaceIdFromRequest, ensureWorkspaceExists, getRecoveryAttempts };
+  return { route, resolveWorkspaceContextFromRequest, requireScope, ensureWorkspaceExists, getRecoveryAttempts };
 }
 
 describe("GET /api/dashboard/recoveries", () => {

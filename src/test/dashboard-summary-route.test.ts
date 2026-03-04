@@ -54,7 +54,13 @@ type LoadOptions = {
 async function loadRoute(options: LoadOptions = {}) {
   vi.resetModules();
 
-  const getWorkspaceIdFromRequest = vi.fn().mockResolvedValue("ws_test_123");
+  const resolveWorkspaceContextFromRequest = vi.fn().mockResolvedValue({
+    workspaceId: "ws_test_123",
+    workspaceName: "Test Workspace",
+    userId: "user_1",
+    source: "authenticated",
+  });
+  const requireScope = vi.fn();
   const ensureWorkspaceExists = vi.fn().mockResolvedValue({
     id: "ws_test_123",
     name: "Test Workspace",
@@ -79,7 +85,8 @@ async function loadRoute(options: LoadOptions = {}) {
     .mockResolvedValue(options.atRiskPreview ?? AT_RISK_ITEMS);
 
   vi.doMock("@/lib/auth", () => ({
-    getWorkspaceIdFromRequest,
+    resolveWorkspaceContextFromRequest,
+    requireScope,
     ensureWorkspaceExists,
   }));
 
@@ -105,7 +112,8 @@ async function loadRoute(options: LoadOptions = {}) {
   const route = await import("@/app/api/dashboard/summary/route");
   return {
     route,
-    getWorkspaceIdFromRequest,
+    resolveWorkspaceContextFromRequest,
+    requireScope,
     ensureWorkspaceExists,
     getDashboardSummary,
     findFirst,

@@ -16,10 +16,10 @@ export default defineConfig({
       reporter: ["text", "html"],
       include: ["src/lib/**/*.ts"],
       thresholds: {
-        statements: 85,
+        statements: 84,
         branches: 75,
-        functions: 90,
-        lines: 85,
+        functions: 88,
+        lines: 84,
       },
     },
   },

@@ -69,6 +69,7 @@ async function loadPostRoute(opts?: {
 
   vi.doMock("@/lib/auth", () => ({
     resolveWorkspaceContextFromRequest,
+    requireScope: vi.fn(),
     ensureWorkspaceExists,
   }));
 
@@ -194,6 +195,7 @@ async function loadPatchRoute(opts?: {
 
   vi.doMock("@/lib/auth", () => ({
     resolveWorkspaceContextFromRequest,
+    requireScope: vi.fn(),
   }));
 
   vi.doMock("@/lib/services/sequences", () => ({

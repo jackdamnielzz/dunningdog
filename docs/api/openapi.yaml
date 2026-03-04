@@ -2,13 +2,33 @@ openapi: 3.0.3
 info:
   title: DunningDog API
   version: 1.0.0
-  description: Stable v1 API contracts for DunningDog MVP.
+  description: |
+    Stable v1 API contracts for DunningDog.
+
+    ## Authentication
+
+    The API supports two authentication methods:
+
+    - **Bearer token** (JWT) — for browser sessions via `Authorization: Bearer <token>`
+    - **API key** — for programmatic access via `x-api-key: dd_live_...` header (Scale plan only)
+
+    API keys are scoped. Each endpoint requires specific scopes listed below.
+
+    ## Scopes
+
+    | Scope | Description |
+    |-------|-------------|
+    | `read:dashboard` | Read dashboard summary and metrics |
+    | `read:recoveries` | Read and export recovery attempts |
+    | `read:sequences` | Read dunning sequences |
+    | `write:sequences` | Create and update dunning sequences |
+    | `read:settings` | Read workspace settings (branding, notifications) |
   license:
     name: Proprietary
     url: https://dunningdog.com/legal/api-license
 x-doc-owner: Founding Engineer
-x-doc-status: Draft v1
-x-doc-last-reviewed: 2026-02-17
+x-doc-status: v1
+x-doc-last-reviewed: 2026-03-04
 x-doc-linked-adrs:
   - ../adr/ADR-0001-tech-stack.md
   - ../adr/ADR-0002-multi-tenant-model.md
@@ -17,17 +37,18 @@ x-doc-linked-api-references:
   - ./webhook-contracts.md
   - ./error-model.md
 servers:
-  - url: https://api.dunningdog.com
+  - url: https://dunningdog.com
     description: Production
-  - url: https://api-preview.dunningdog.com
-    description: Preview
 security:
   - bearerAuth: []
+  - apiKeyAuth: []
 paths:
   /api/stripe/connect/start:
     post:
       summary: Start Stripe OAuth connect flow
       operationId: startStripeConnect
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -67,6 +88,7 @@ paths:
     get:
       summary: Handle Stripe OAuth callback
       operationId: stripeConnectCallback
+      security: []
       parameters:
         - name: code
           in: query
@@ -144,12 +166,8 @@ paths:
     get:
       summary: Get dashboard summary metrics
       operationId: getDashboardSummary
+      x-required-scope: read:dashboard
       parameters:
-        - name: workspaceId
-          in: query
-          required: true
-          schema:
-            type: string
         - name: window
           in: query
           required: false
@@ -179,12 +197,8 @@ paths:
     get:
       summary: List recovery attempts
       operationId: listRecoveries
+      x-required-scope: read:recoveries
       parameters:
-        - name: workspaceId
-          in: query
-          required: true
-          schema:
-            type: string
         - name: status
           in: query
           required: false
@@ -226,10 +240,73 @@ paths:
         default:
           $ref: "#/components/responses/ProblemResponse"
 
+  /api/dashboard/export:
+    get:
+      summary: Export recovery attempts as CSV
+      operationId: exportRecoveries
+      x-required-scope: read:recoveries
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          description: ISO 8601 date. Defaults to 30 days before endDate.
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          description: ISO 8601 date. Defaults to today.
+          schema:
+            type: string
+            format: date
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/RecoveryStatus"
+      responses:
+        "200":
+          description: CSV file download
+          content:
+            text/csv:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        default:
+          $ref: "#/components/responses/ProblemResponse"
+
   /api/dunning/sequences:
+    get:
+      summary: List dunning sequences
+      operationId: listDunningSequences
+      x-required-scope: read:sequences
+      responses:
+        "200":
+          description: List of sequences with steps
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DunningSequence"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        default:
+          $ref: "#/components/responses/ProblemResponse"
     post:
       summary: Create dunning sequence
       operationId: createDunningSequence
+      x-required-scope: write:sequences
       requestBody:
         required: true
         content:
@@ -254,6 +331,7 @@ paths:
     patch:
       summary: Update dunning sequence
       operationId: updateDunningSequence
+      x-required-scope: write:sequences
       parameters:
         - name: id
           in: path
@@ -281,6 +359,46 @@ paths:
           $ref: "#/components/responses/NotFoundProblem"
         "429":
           $ref: "#/components/responses/TooManyRequestsProblem"
+        default:
+          $ref: "#/components/responses/ProblemResponse"
+
+  /api/settings/branding:
+    get:
+      summary: Get workspace branding
+      operationId: getBranding
+      x-required-scope: read:settings
+      responses:
+        "200":
+          description: Workspace branding settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Branding"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        default:
+          $ref: "#/components/responses/ProblemResponse"
+
+  /api/settings/notifications:
+    get:
+      summary: List notification channels
+      operationId: listNotificationChannels
+      x-required-scope: read:settings
+      responses:
+        "200":
+          description: List of notification channels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NotificationChannel"
+        "401":
+          $ref: "#/components/responses/UnauthorizedProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
         default:
           $ref: "#/components/responses/ProblemResponse"
 
@@ -327,6 +445,11 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API key for programmatic access (Scale plan only). Create keys in Settings > API Keys.
 
   responses:
     ProblemResponse:
@@ -634,6 +757,47 @@ components:
           nullable: true
           allOf:
             - $ref: "#/components/schemas/RecoveryOutcome"
+
+    Branding:
+      type: object
+      properties:
+        companyName:
+          type: string
+          nullable: true
+        logoUrl:
+          type: string
+          nullable: true
+        accentColor:
+          type: string
+          description: Hex color code (e.g. "#10b981")
+        footerText:
+          type: string
+          nullable: true
+
+    NotificationChannel:
+      type: object
+      required: [id, workspaceId, type, webhookUrl, events, createdAt]
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        type:
+          type: string
+          enum: [slack, discord]
+        label:
+          type: string
+        webhookUrl:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+            enum: [recovery_started, recovery_succeeded, recovery_failed, predunning_sent]
+        createdAt:
+          type: string
+          format: date-time
 
     CreateSequenceRequest:
       type: object

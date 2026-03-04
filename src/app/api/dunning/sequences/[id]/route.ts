@@ -1,5 +1,5 @@
 import { updateSequence, updateSequenceSchema } from "@/lib/services/sequences";
-import { resolveWorkspaceContextFromRequest } from "@/lib/auth";
+import { resolveWorkspaceContextFromRequest, requireScope } from "@/lib/auth";
 import { ok, parseJsonBody, routeError } from "@/lib/api";
 import { reportAnalyticsEvent } from "@/lib/observability";
 import { maxSequenceSteps } from "@/lib/plan-features";
@@ -16,6 +16,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const { id } = await params;
     const input = await parseJsonBody(request, updateSequenceSchema);
     const workspace = await resolveWorkspaceContextFromRequest(request);
+    requireScope(workspace, "write:sequences");
     await requireActiveWorkspace(workspace.workspaceId);
 
     if (input.steps && input.steps.length > 0) {

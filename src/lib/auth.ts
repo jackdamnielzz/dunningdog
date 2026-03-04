@@ -13,6 +13,8 @@ export interface WorkspaceContext {
   workspaceName: string;
   userId: string | null;
   source: "authenticated" | "fallback" | "api_key";
+  apiKeyScopes?: string[];
+  apiKeyId?: string;
 }
 
 const isSupabaseAuthConfigured = Boolean(env.SUPABASE_URL && env.SUPABASE_ANON_KEY);
@@ -361,6 +363,9 @@ export async function resolveWorkspaceContextFromRequest(
     const { validateApiKey } = await import("@/lib/services/api-keys");
     const result = await validateApiKey(apiKey);
     if (result) {
+      const { requireFeature } = await import("@/lib/plan-features");
+      await requireFeature(result.workspaceId, "api_access");
+
       const workspace = await db.workspace.findUnique({
         where: { id: result.workspaceId },
       });
@@ -369,6 +374,8 @@ export async function resolveWorkspaceContextFromRequest(
         workspaceName: workspace?.name ?? "API Access",
         userId: null,
         source: "api_key" as const,
+        apiKeyScopes: result.scopes,
+        apiKeyId: result.apiKeyId,
       };
     }
     throw new ProblemError({
@@ -398,6 +405,24 @@ export async function requireWorkspaceContext(currentPath: string): Promise<Work
   );
   await ensureWorkspaceExists(workspace.workspaceId);
   return workspace;
+}
+
+export function requireScope(context: WorkspaceContext, ...requiredScopes: string[]): void {
+  if (context.source !== "api_key") return;
+
+  const missing = requiredScopes.filter(
+    (scope) => !context.apiKeyScopes?.includes(scope),
+  );
+
+  if (missing.length > 0) {
+    throw new ProblemError({
+      title: "Insufficient API key permissions",
+      status: 403,
+      code: "AUTH_FORBIDDEN",
+      detail: `This API key lacks the required scope(s): ${missing.join(", ")}. Update your key permissions in Settings > API Keys.`,
+      meta: { requiredScopes, missingScopes: missing },
+    });
+  }
 }
 
 export async function ensureWorkspaceExists(workspaceId: string) {
