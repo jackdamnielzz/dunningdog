@@ -51,6 +51,7 @@ export function GoogleAnalytics() {
           });
           gtag('js', new Date());
           gtag('config', '${GA_ID}');
+          gtag('config', 'AW-640419421');
         `}
       </Script>
     </>
