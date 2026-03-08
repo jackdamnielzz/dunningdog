@@ -64,6 +64,11 @@ export function RegisterForm({ nextPath }: RegisterFormProps) {
 
       if (payload.authenticated) {
         window.gtag?.("event", "form_submit");
+        window.gtag?.("event", "conversion", {
+          send_to: "AW-640419421/wIyNCNOV5YQcEN2MsLEC",
+          value: 49.0,
+          currency: "USD",
+        });
         router.push(payload.next ?? nextTarget);
         router.refresh();
         return;
@@ -71,6 +76,11 @@ export function RegisterForm({ nextPath }: RegisterFormProps) {
 
       if (payload.requiresEmailConfirmation) {
         window.gtag?.("event", "form_submit");
+        window.gtag?.("event", "conversion", {
+          send_to: "AW-640419421/wIyNCNOV5YQcEN2MsLEC",
+          value: 49.0,
+          currency: "USD",
+        });
         setConfirmationNotice(
           "Account created. Check your inbox to confirm your email, then sign in.",
         );
