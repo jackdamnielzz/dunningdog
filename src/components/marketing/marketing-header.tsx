@@ -43,6 +43,18 @@ export function MarketingHeader({ variant = "full" }: MarketingHeaderProps) {
               Pricing
             </Link>
             <Link
+              href="/solutions"
+              className="hidden text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 sm:inline"
+            >
+              Solutions
+            </Link>
+            <Link
+              href="/compare"
+              className="hidden text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 sm:inline"
+            >
+              Compare
+            </Link>
+            <Link
               href="/docs/api"
               className="hidden text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 sm:inline"
             >

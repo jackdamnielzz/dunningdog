@@ -16,6 +16,12 @@ export function SiteFooter() {
             Contact
           </Link>
           <Link
+            href="/compare"
+            className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+          >
+            Compare
+          </Link>
+          <Link
             href="/docs/api"
             className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
           >
