@@ -5,6 +5,7 @@ import { getAuthenticatedUserIdFromHeaders, resolveWorkspaceContextFromHeaders, 
 import { getTrialStatus, isWorkspaceAccessible } from "@/lib/trial";
 import { PLAN_TIERS } from "@/lib/plans";
 import { UpgradePlanButton } from "@/components/forms/upgrade-plan-button";
+import { LogoutButton } from "@/components/forms/logout-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function TrialExpiredPage() {
@@ -57,6 +58,13 @@ export default async function TrialExpiredPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-sm text-zinc-500">
+            Want to use a different account?
+          </p>
+          <LogoutButton />
         </div>
 
         <p className="text-sm text-zinc-500">
