@@ -2,7 +2,7 @@
   "$schema": "https://stripe.com/stripe-app.schema.json",
   "id": "com.dunningdog.recovery",
   "name": "DunningDog",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "icon": "./public/icon.png",
   "ui_extension": {
     "views": [
