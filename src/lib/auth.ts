@@ -253,22 +253,41 @@ async function resolveWorkspaceForAuthenticatedUser(
     return firstMembership.workspace;
   }
 
-  return db.workspace.create({
-    data: {
-      name: `Workspace ${userId.slice(0, 8)}`,
-      ownerUserId: userId,
-      timezone: "UTC",
-      billingPlan: "starter",
-      isActive: true,
-      trialEndsAt: new Date(Date.now() + TRIAL_DURATION_MS),
-      members: {
-        create: {
-          userId,
-          role: "owner",
+  try {
+    return await db.workspace.create({
+      data: {
+        name: `Workspace ${userId.slice(0, 8)}`,
+        ownerUserId: userId,
+        timezone: "UTC",
+        billingPlan: "starter",
+        isActive: true,
+        trialEndsAt: new Date(Date.now() + TRIAL_DURATION_MS),
+        members: {
+          create: {
+            userId,
+            role: "owner",
+          },
         },
       },
-    },
-  });
+    });
+  } catch {
+    // Race condition: another concurrent request already created the workspace.
+    // Re-query and return the existing one.
+    const existing = await db.workspaceMember.findFirst({
+      where: { userId },
+      include: { workspace: true },
+      orderBy: { createdAt: "asc" },
+    });
+    if (existing) {
+      return existing.workspace;
+    }
+    throw new ProblemError({
+      title: "Workspace creation failed",
+      status: 500,
+      code: "WORKSPACE_CREATE_FAILED",
+      detail: `Could not create or find workspace for user ${userId}.`,
+    });
+  }
 }
 
 export async function getWorkspaceIdFromRequest(

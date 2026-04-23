@@ -74,8 +74,7 @@ DunningDog's Stripe live mode is fully configured:
 STRIPE_SECRET_KEY=sk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...          # Recovery webhook signing secret
 STRIPE_BILLING_WEBHOOK_SECRET=whsec_...  # Billing webhook signing secret
-STRIPE_CONNECT_CLIENT_ID=ca_...          # Connect OAuth client ID
-STRIPE_CONNECT_CLIENT_SECRET=sk_live_... # Same as STRIPE_SECRET_KEY
+STRIPE_APP_CLIENT_ID=ca_...              # Stripe Apps OAuth 2.0 client ID
 STRIPE_PRICE_STARTER_ID=price_...
 STRIPE_PRICE_PRO_ID=price_...
 STRIPE_PRICE_GROWTH_ID=price_...
@@ -83,8 +82,7 @@ STRIPE_PRICE_GROWTH_ID=price_...
 # Test mode (local development — set in .env.local)
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...          # From `stripe listen`
-STRIPE_CONNECT_CLIENT_ID=ca_...          # Test client ID
-STRIPE_CONNECT_CLIENT_SECRET=sk_test_... # Same as test secret key
+STRIPE_APP_CLIENT_ID=ca_...              # Test client ID
 STRIPE_PRICE_STARTER_ID=price_...        # Test price IDs (EUR)
 STRIPE_PRICE_PRO_ID=price_...
 STRIPE_PRICE_GROWTH_ID=price_...
@@ -96,12 +94,14 @@ STRIPE_PRICE_GROWTH_ID=price_...
 | Payment Recovery | `/api/webhooks/stripe` | invoice.payment_failed, invoice.payment_succeeded, customer.subscription.updated, customer.subscription.deleted, charge.failed, charge.refunded |
 | Billing | `/api/webhooks/stripe-billing` | customer.subscription.created, customer.subscription.updated, customer.subscription.deleted |
 
-### Connect OAuth Flow
-- Type: Standard accounts via OAuth 2.0 Authorization Code Grant
+### Stripe Apps OAuth 2.0 Flow
+- Type: Stripe Apps OAuth 2.0 (not legacy Connect OAuth)
+- Authorize URL: `https://marketplace.stripe.com/oauth/v2/authorize`
+- Token endpoint: `https://api.stripe.com/v1/oauth/token`
 - Redirect URIs:
   - Production: `https://dunningdog.com/api/stripe/connect/callback?mode=browser`
   - Local: `http://localhost:3000/api/stripe/connect/callback?mode=browser`
-- Scope: `read_write`
+- Scope: `stripe_apps` (permissions defined in app manifest)
 
 ### Testing Stripe Locally
 1. Install Stripe CLI and login: `stripe login`

@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { isDemoMode } from "@/lib/env";
 import { log } from "@/lib/logger";
 import { getStripeClient } from "@/lib/stripe/client";
-import { decryptText } from "@/lib/crypto";
+import { getValidAccessToken } from "@/lib/stripe/token";
 import { isDatabaseUnavailableError, describeFailure } from "@/lib/runtime-fallback";
 import type Stripe from "stripe";
 
@@ -69,11 +69,11 @@ export async function runPreDunningScan(workspaceId: string): Promise<PreDunning
   const threshold = addDays(new Date(), 14);
 
   // If DB is unavailable, keep the existing demo behavior / graceful fallback.
-  let connected: { stripeAccountId: string; accessTokenEnc: string } | null = null;
+  let connected: { id: string; stripeAccountId: string; accessTokenEnc: string; refreshTokenEnc: string | null; tokenExpiresAt: Date | null } | null = null;
   try {
     connected = await db.connectedStripeAccount.findUnique({
       where: { workspaceId },
-      select: { stripeAccountId: true, accessTokenEnc: true },
+      select: { id: true, stripeAccountId: true, accessTokenEnc: true, refreshTokenEnc: true, tokenExpiresAt: true },
     });
   } catch (error) {
     if (!isDatabaseUnavailableError(error)) throw error;
@@ -88,7 +88,7 @@ export async function runPreDunningScan(workspaceId: string): Promise<PreDunning
 
   if (!isDemoMode && stripe && connected) {
     const stripeAccount = connected.stripeAccountId;
-    const apiKey = decryptText(connected.accessTokenEnc);
+    const apiKey = await getValidAccessToken(connected);
 
     let hasMore = true;
     let startingAfter: string | undefined;

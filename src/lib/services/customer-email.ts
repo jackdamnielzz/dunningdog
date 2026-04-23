@@ -1,7 +1,7 @@
 import type Stripe from "stripe";
 import { db } from "@/lib/db";
 import { getStripeClient } from "@/lib/stripe/client";
-import { decryptText } from "@/lib/crypto";
+import { getValidAccessToken } from "@/lib/stripe/token";
 import { log } from "@/lib/logger";
 
 export function normalizeEmail(value: unknown): string | null {
@@ -54,7 +54,7 @@ export async function resolveCustomerEmail(params: {
   }
 
   try {
-    const accessToken = decryptText(connected.accessTokenEnc);
+    const accessToken = await getValidAccessToken(connected);
     const customer = await stripe.customers.retrieve(stripeCustomerId, {
       apiKey: accessToken,
       stripeAccount: connected.stripeAccountId,

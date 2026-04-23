@@ -146,12 +146,12 @@
 2. API secret key:
    - Go to `Developers` -> `API keys`.
    - Copy secret key (starts with `sk_test_`) -> `STRIPE_SECRET_KEY`.
-3. Connect OAuth client values:
-   - Open `https://dashboard.stripe.com/settings/connect/onboarding-options/oauth`.
-   - Copy test `client_id` (starts with `ca_`) -> `STRIPE_CONNECT_CLIENT_ID`.
-   - Copy client secret -> `STRIPE_CONNECT_CLIENT_SECRET`.
-4. Add callback URL in Stripe Connect OAuth settings:
-   - Add `http://localhost:3000/api/stripe/connect/callback?mode=browser`
+3. Stripe Apps OAuth 2.0 client ID:
+   - Open the Stripe Apps Developer Dashboard for your app and go to the **Settings** tab.
+   - Copy the OAuth `client_id` (starts with `ca_`) -> `STRIPE_APP_CLIENT_ID`.
+   - Note: Stripe Apps OAuth 2.0 uses your default secret key for token exchange — no separate client secret is required.
+4. Add the redirect URI in your Stripe App's `stripe-app.json` `allowed_redirect_uris`:
+   - `http://localhost:3000/api/stripe/connect/callback?mode=browser`
 5. Price IDs for plans:
    - Go to Product Catalog in Stripe.
    - Create or open 3 recurring prices (starter/pro/growth).

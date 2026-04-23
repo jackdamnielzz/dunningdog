@@ -124,8 +124,9 @@ model ConnectedStripeAccount {
   workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   stripeAccountId String   @unique
   accessTokenEnc  String
-  refreshTokenEnc String?
-  scopes          String[]
+  refreshTokenEnc  String?
+  tokenExpiresAt   DateTime?
+  scopes           String[]
   livemode        Boolean
   connectedAt     DateTime @default(now())
   disconnectedAt  DateTime?

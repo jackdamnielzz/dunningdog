@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 type EnvOverrides = {
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
-  STRIPE_CONNECT_CLIENT_ID?: string;
+  STRIPE_APP_CLIENT_ID?: string;
 };
 
 async function loadStripeClient(overrides: EnvOverrides = {}, isDemoMode = false) {
@@ -26,7 +26,7 @@ async function loadStripeClient(overrides: EnvOverrides = {}, isDemoMode = false
     env: {
       STRIPE_SECRET_KEY: overrides.STRIPE_SECRET_KEY,
       STRIPE_WEBHOOK_SECRET: overrides.STRIPE_WEBHOOK_SECRET,
-      STRIPE_CONNECT_CLIENT_ID: overrides.STRIPE_CONNECT_CLIENT_ID,
+      STRIPE_APP_CLIENT_ID: overrides.STRIPE_APP_CLIENT_ID,
     },
     isDemoMode,
   }));
@@ -74,14 +74,14 @@ describe("stripe client helpers", () => {
     const configured = await loadStripeClient({
       STRIPE_SECRET_KEY: "sk_test_123",
       STRIPE_WEBHOOK_SECRET: "whsec_123",
-      STRIPE_CONNECT_CLIENT_ID: "ca_123",
+      STRIPE_APP_CLIENT_ID: "ca_123",
     });
     expect(configured.stripeClient.isStripeConfigured()).toBe(true);
 
     const missingField = await loadStripeClient({
       STRIPE_SECRET_KEY: "sk_test_123",
       STRIPE_WEBHOOK_SECRET: undefined,
-      STRIPE_CONNECT_CLIENT_ID: "ca_123",
+      STRIPE_APP_CLIENT_ID: "ca_123",
     });
     expect(missingField.stripeClient.isStripeConfigured()).toBe(false);
   });

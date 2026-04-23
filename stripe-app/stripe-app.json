@@ -1,0 +1,64 @@
+{
+  "$schema": "https://stripe.com/stripe-app.schema.json",
+  "id": "com.dunningdog.recovery",
+  "name": "DunningDog",
+  "version": "0.0.8",
+  "icon": "./public/icon.png",
+  "ui_extension": {
+    "views": [
+      {
+        "viewport": "stripe.dashboard.payment.detail",
+        "component": "PaymentDetailView"
+      },
+      {
+        "viewport": "stripe.dashboard.home.overview",
+        "component": "OverviewView"
+      },
+      {
+        "viewport": "settings",
+        "component": "SettingsView"
+      }
+    ],
+    "content_security_policy": {
+      "connect-src": [
+        "https://dunningdog.com/api/"
+      ],
+      "purpose": "Connect to DunningDog API to fetch recovery data and manage settings"
+    }
+  },
+  "permissions": [
+    {
+      "permission": "payment_intent_read",
+      "purpose": "Read failed payment data to initiate recovery sequences"
+    },
+    {
+      "permission": "invoice_read",
+      "purpose": "Read invoice data to identify failed subscription payments"
+    },
+    {
+      "permission": "customer_read",
+      "purpose": "Read customer information to send recovery emails"
+    },
+    {
+      "permission": "subscription_read",
+      "purpose": "Read subscription data to track recovery status"
+    },
+    {
+      "permission": "event_read",
+      "purpose": "Listen for payment failure events to trigger recovery workflows"
+    }
+  ],
+  "post_install_action": {
+    "type": "external",
+    "url": "https://dunningdog.com/register?ref=stripe-marketplace"
+  },
+  "constants": {
+    "API_BASE": "https://dunningdog.com/api"
+  },
+  "allowed_redirect_uris": [
+    "https://dunningdog.com/api/stripe/connect/callback"
+  ],
+  "distribution_type": "public",
+  "stripe_api_access_type": "oauth",
+  "sandbox_install_compatible": true
+}

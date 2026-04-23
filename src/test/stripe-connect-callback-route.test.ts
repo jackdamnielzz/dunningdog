@@ -7,7 +7,6 @@ type LoadOptions = {
     expiresAt: Date;
   } | null;
   stripeSecretKey?: string;
-  stripeConnectClientSecret?: string;
 };
 
 const WORKSPACE = {
@@ -44,7 +43,6 @@ async function loadRoute(options: LoadOptions = {}) {
     env: {
       APP_BASE_URL: "http://localhost:3000",
       STRIPE_SECRET_KEY: options.stripeSecretKey,
-      STRIPE_CONNECT_CLIENT_SECRET: options.stripeConnectClientSecret,
     },
   }));
 
@@ -68,8 +66,8 @@ async function loadRoute(options: LoadOptions = {}) {
     encryptText: (text: string) => text,
   }));
 
-  vi.doMock("@/lib/stripe/client", () => ({
-    requireStripeClient: vi.fn(),
+  vi.doMock("@/lib/stripe/oauth", () => ({
+    exchangeOAuthCode: vi.fn(),
   }));
 
   vi.doMock("@/lib/observability", () => ({

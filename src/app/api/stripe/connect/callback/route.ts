@@ -1,10 +1,11 @@
+import { addHours } from "date-fns";
 import { ProblemError } from "@/lib/problem";
 import { ok, routeError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { encryptText } from "@/lib/crypto";
 import { ensureWorkspaceExists } from "@/lib/auth";
-import { requireStripeClient } from "@/lib/stripe/client";
+import { exchangeOAuthCode } from "@/lib/stripe/oauth";
 import { reportAnalyticsEvent } from "@/lib/observability";
 
 export async function GET(request: Request) {
@@ -43,12 +44,8 @@ export async function GET(request: Request) {
     let scope = "read_write";
     let livemode = false;
 
-    if (code && env.STRIPE_SECRET_KEY && env.STRIPE_CONNECT_CLIENT_SECRET) {
-      const stripe = requireStripeClient();
-      const tokenResponse = await stripe.oauth.token({
-        grant_type: "authorization_code",
-        code,
-      });
+    if (code && code !== "demo_code" && env.STRIPE_SECRET_KEY) {
+      const tokenResponse = await exchangeOAuthCode(code);
 
       if (!tokenResponse.stripe_user_id) {
         throw new ProblemError({
@@ -66,12 +63,15 @@ export async function GET(request: Request) {
       livemode = tokenResponse.livemode ?? false;
     }
 
+    const tokenExpiresAt = addHours(new Date(), 1);
+
     const connectedAccount = await db.connectedStripeAccount.upsert({
       where: { workspaceId: workspace.id },
       update: {
         stripeAccountId,
         accessTokenEnc: encryptText(accessToken),
         refreshTokenEnc: refreshToken ? encryptText(refreshToken) : null,
+        tokenExpiresAt,
         scopes: scope.split(" "),
         livemode,
         disconnectedAt: null,
@@ -82,6 +82,7 @@ export async function GET(request: Request) {
         stripeAccountId,
         accessTokenEnc: encryptText(accessToken),
         refreshTokenEnc: refreshToken ? encryptText(refreshToken) : null,
+        tokenExpiresAt,
         scopes: scope.split(" "),
         livemode,
       },

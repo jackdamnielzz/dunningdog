@@ -25,7 +25,7 @@ export function isStripeConfigured() {
   return Boolean(
     env.STRIPE_SECRET_KEY &&
       env.STRIPE_WEBHOOK_SECRET &&
-      env.STRIPE_CONNECT_CLIENT_ID,
+      env.STRIPE_APP_CLIENT_ID,
   );
 }
 

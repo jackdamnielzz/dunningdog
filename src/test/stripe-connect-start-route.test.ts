@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 type LoadOptions = {
-  stripeConnectClientId?: string;
+  stripeAppClientId?: string;
 };
 
 async function loadRoute(options: LoadOptions = {}) {
@@ -36,7 +36,7 @@ async function loadRoute(options: LoadOptions = {}) {
   vi.doMock("@/lib/env", () => ({
     env: {
       APP_BASE_URL: "http://localhost:3000",
-      STRIPE_CONNECT_CLIENT_ID: options.stripeConnectClientId,
+      STRIPE_APP_CLIENT_ID: options.stripeAppClientId,
     },
   }));
 
@@ -76,7 +76,7 @@ async function loadRoute(options: LoadOptions = {}) {
 }
 
 describe("stripe connect start route", () => {
-  it("returns demo redirect URL when STRIPE_CONNECT_CLIENT_ID is not set", async () => {
+  it("returns demo redirect URL when STRIPE_APP_CLIENT_ID is not set", async () => {
     const { route } = await loadRoute();
     const request = new Request("http://localhost/api/stripe/connect/start", {
       method: "POST",
@@ -94,9 +94,9 @@ describe("stripe connect start route", () => {
     expect(payload.redirectUrl).toContain("state=deterministic_state_value");
   });
 
-  it("returns Stripe authorize URL when STRIPE_CONNECT_CLIENT_ID is set", async () => {
+  it("returns Stripe authorize URL when STRIPE_APP_CLIENT_ID is set", async () => {
     const { route } = await loadRoute({
-      stripeConnectClientId: "ca_test_abc123",
+      stripeAppClientId: "ca_test_abc123",
     });
     const request = new Request("http://localhost/api/stripe/connect/start", {
       method: "POST",
@@ -109,10 +109,9 @@ describe("stripe connect start route", () => {
 
     expect(response.status).toBe(200);
     expect(payload.state).toBe("deterministic_state_value");
-    expect(payload.redirectUrl).toContain("https://connect.stripe.com/oauth/authorize");
+    expect(payload.redirectUrl).toContain("https://marketplace.stripe.com/oauth/v2/authorize");
     expect(payload.redirectUrl).toContain("client_id=ca_test_abc123");
     expect(payload.redirectUrl).toContain("state=deterministic_state_value");
-    expect(payload.redirectUrl).toContain("scope=read_write");
   });
 
   it("creates OAuth state in database", async () => {

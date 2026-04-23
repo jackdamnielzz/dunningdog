@@ -35,14 +35,13 @@ export async function POST(request: Request) {
     const browserCallbackUrl = `${callbackUrl}?mode=browser`;
     let redirectUrl = `${callbackUrl}?code=demo_code&state=${state}&mode=browser`;
 
-    if (env.STRIPE_CONNECT_CLIENT_ID) {
-      const url = new URL("https://connect.stripe.com/oauth/authorize");
-      url.searchParams.set("response_type", "code");
-      url.searchParams.set("client_id", env.STRIPE_CONNECT_CLIENT_ID);
-      url.searchParams.set("scope", "read_write");
-      url.searchParams.set("state", state);
+    if (env.STRIPE_APP_CLIENT_ID) {
+      const url = new URL(
+        "https://marketplace.stripe.com/oauth/v2/authorize",
+      );
+      url.searchParams.set("client_id", env.STRIPE_APP_CLIENT_ID);
       url.searchParams.set("redirect_uri", browserCallbackUrl);
-      url.searchParams.set("stripe_landing", "login");
+      url.searchParams.set("state", state);
       redirectUrl = url.toString();
     }
 
@@ -51,7 +50,7 @@ export async function POST(request: Request) {
       distinctId: workspace.workspaceId,
       properties: {
         workspaceId: workspace.workspaceId,
-        oauthMode: env.STRIPE_CONNECT_CLIENT_ID ? "live" : "demo",
+        oauthMode: env.STRIPE_APP_CLIENT_ID ? "live" : "demo",
       },
     });
 
