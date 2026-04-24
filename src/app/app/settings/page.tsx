@@ -3,7 +3,6 @@ import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
 import { confirmBillingCheckoutSession } from "@/lib/services/billing";
 import { isStripeConfigured } from "@/lib/stripe/client";
 import { isDatabaseUnavailableError, describeFailure } from "@/lib/runtime-fallback";
-import { getDemoConnectedStripeAccount } from "@/lib/demo-data";
 import { log } from "@/lib/logger";
 import { getBranding } from "@/lib/services/branding";
 import { planHasFeature } from "@/lib/plan-features";
@@ -57,12 +56,12 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         throw error;
       }
 
-      log("warn", "Using demo connected stripe account due to database connectivity issue", {
+      log("warn", "Could not load connected stripe account, treating as unconnected", {
         workspaceId: workspace.workspaceId,
         reason: describeFailure(error),
       });
 
-      return getDemoConnectedStripeAccount(workspace.workspaceId);
+      return null;
     }
   })();
 
