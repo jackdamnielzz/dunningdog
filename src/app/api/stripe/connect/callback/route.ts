@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
     const state = searchParams.get("state");
-    const mode = searchParams.get("mode");
+    const wantsJson = (request.headers.get("accept") ?? "").includes("application/json");
 
     if (!state) {
       throw new ProblemError({
@@ -124,14 +124,14 @@ export async function GET(request: Request) {
       },
     });
 
-    if (mode === "browser") {
-      return Response.redirect(
-        `${env.APP_BASE_URL}/app/settings?connected=1&workspaceId=${workspace.id}`,
-        302,
-      );
+    if (wantsJson) {
+      return ok(payload);
     }
 
-    return ok(payload);
+    return Response.redirect(
+      `${env.APP_BASE_URL}/app/settings?connected=1&workspaceId=${workspace.id}`,
+      302,
+    );
   } catch (error) {
     return routeError(error, "/api/stripe/connect/callback");
   }

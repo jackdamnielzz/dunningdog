@@ -134,7 +134,9 @@ describe("stripe connect callback route", () => {
       },
     });
     const response = await route.GET(
-      new Request("http://localhost/api/stripe/connect/callback?code=demo_code&state=valid_state"),
+      new Request("http://localhost/api/stripe/connect/callback?code=demo_code&state=valid_state", {
+        headers: { accept: "application/json" },
+      }),
     );
     const payload = await response.json();
 
@@ -148,7 +150,7 @@ describe("stripe connect callback route", () => {
     expect(deleteState).toHaveBeenCalledTimes(1);
   });
 
-  it("returns 302 redirect when mode=browser", async () => {
+  it("returns 302 redirect by default (browser flow)", async () => {
     const { route } = await loadRoute({
       oauthState: {
         state: "valid_state",
@@ -158,7 +160,7 @@ describe("stripe connect callback route", () => {
     });
     const response = await route.GET(
       new Request(
-        "http://localhost/api/stripe/connect/callback?code=demo_code&state=valid_state&mode=browser",
+        "http://localhost/api/stripe/connect/callback?code=demo_code&state=valid_state",
       ),
     );
 
