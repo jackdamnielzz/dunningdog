@@ -32,15 +32,14 @@ export async function POST(request: Request) {
     });
 
     const callbackUrl = `${env.APP_BASE_URL}/api/stripe/connect/callback`;
-    const browserCallbackUrl = `${callbackUrl}?mode=browser`;
-    let redirectUrl = `${callbackUrl}?code=demo_code&state=${state}&mode=browser`;
+    let redirectUrl = `${callbackUrl}?code=demo_code&state=${state}`;
 
     if (env.STRIPE_APP_CLIENT_ID) {
       const url = new URL(
         "https://marketplace.stripe.com/oauth/v2/authorize",
       );
       url.searchParams.set("client_id", env.STRIPE_APP_CLIENT_ID);
-      url.searchParams.set("redirect_uri", browserCallbackUrl);
+      url.searchParams.set("redirect_uri", callbackUrl);
       url.searchParams.set("state", state);
       redirectUrl = url.toString();
     }
