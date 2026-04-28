@@ -9,6 +9,17 @@ export interface OAuthTokenResponse {
 }
 
 /**
+ * The Stripe Apps OAuth /v1/oauth/token endpoint must be authenticated with
+ * the **app publisher** account's secret key (the account that owns the
+ * Stripe App), not the main DunningDog SaaS account's key. They are different
+ * accounts with different secret keys. Falls back to STRIPE_SECRET_KEY for
+ * environments where the publisher key isn't set yet.
+ */
+function getAppPublisherKey(): string | undefined {
+  return env.STRIPE_APP_PUBLISHER_SECRET_KEY ?? env.STRIPE_SECRET_KEY;
+}
+
+/**
  * Exchange an authorization code for access + refresh tokens
  * using Stripe Apps OAuth 2.0 (direct HTTP POST, not legacy Connect SDK).
  */
@@ -18,7 +29,7 @@ export async function exchangeOAuthCode(
   const response = await fetch("https://api.stripe.com/v1/oauth/token", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+      Authorization: `Bearer ${getAppPublisherKey()}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({
@@ -46,7 +57,7 @@ export async function refreshOAuthToken(
   const response = await fetch("https://api.stripe.com/v1/oauth/token", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+      Authorization: `Bearer ${getAppPublisherKey()}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({

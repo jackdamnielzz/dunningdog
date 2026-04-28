@@ -15,13 +15,17 @@ export async function GET(request: Request) {
     const state = searchParams.get("state");
     const wantsJson = (request.headers.get("accept") ?? "").includes("application/json");
 
-    const oauthState = state
-      ? await db.stripeOAuthState.findUnique({ where: { state } })
-      : null;
+    let oauthState: Awaited<ReturnType<typeof db.stripeOAuthState.findUnique>> = null;
+    if (state) {
+      try {
+        oauthState = await db.stripeOAuthState.findUnique({ where: { state } });
+      } catch {
+        // DB error on state lookup — treat as marketplace install rather than 500.
+        oauthState = null;
+      }
+    }
 
-    const isAppInitiated = oauthState && oauthState.expiresAt >= new Date();
-
-    if (!isAppInitiated) {
+    if (!oauthState || oauthState.expiresAt < new Date()) {
       // Marketplace-initiated install (no app-side state, or expired). The user
       // installed the app from the Stripe App Marketplace without first signing
       // up on dunningdog.com. Redirect them to the register page so they can
