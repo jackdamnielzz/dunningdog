@@ -15,25 +15,22 @@ export async function GET(request: Request) {
     const state = searchParams.get("state");
     const wantsJson = (request.headers.get("accept") ?? "").includes("application/json");
 
-    if (!state) {
-      throw new ProblemError({
-        title: "Invalid OAuth state",
-        status: 400,
-        code: "AUTH_OAUTH_STATE_INVALID",
-        detail: "Missing state value from Stripe callback.",
-      });
-    }
+    const oauthState = state
+      ? await db.stripeOAuthState.findUnique({ where: { state } })
+      : null;
 
-    const oauthState = await db.stripeOAuthState.findUnique({
-      where: { state },
-    });
-    if (!oauthState || oauthState.expiresAt < new Date()) {
-      throw new ProblemError({
-        title: "Invalid OAuth state",
-        status: 400,
-        code: "AUTH_OAUTH_STATE_INVALID",
-        detail: "State is invalid or expired.",
-      });
+    const isAppInitiated = oauthState && oauthState.expiresAt >= new Date();
+
+    if (!isAppInitiated) {
+      // Marketplace-initiated install (no app-side state, or expired). The user
+      // installed the app from the Stripe App Marketplace without first signing
+      // up on dunningdog.com. Redirect them to the register page so they can
+      // create an account; once signed in, they can complete the connection
+      // through the normal in-app "Connect Stripe" flow.
+      return Response.redirect(
+        `${env.APP_BASE_URL}/register?ref=stripe-marketplace`,
+        302,
+      );
     }
 
     const workspace = await ensureWorkspaceExists(oauthState.workspaceId);
@@ -89,7 +86,7 @@ export async function GET(request: Request) {
     });
 
     await db.stripeOAuthState.delete({
-      where: { state },
+      where: { state: oauthState.state },
     });
 
     const payload = {

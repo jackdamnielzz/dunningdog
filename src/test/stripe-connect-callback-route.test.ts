@@ -86,29 +86,27 @@ async function loadRoute(options: LoadOptions = {}) {
 }
 
 describe("stripe connect callback route", () => {
-  it("returns 400 when state param is missing", async () => {
+  it("redirects to register when state param is missing (marketplace install)", async () => {
     const { route } = await loadRoute();
     const response = await route.GET(
       new Request("http://localhost/api/stripe/connect/callback?code=demo_code"),
     );
-    const payload = await response.json();
 
-    expect(response.status).toBe(400);
-    expect(payload.code).toBe("AUTH_OAUTH_STATE_INVALID");
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toContain("/register?ref=stripe-marketplace");
   });
 
-  it("returns 400 when state is not found in DB", async () => {
+  it("redirects to register when state is not found in DB (marketplace install)", async () => {
     const { route } = await loadRoute({ oauthState: null });
     const response = await route.GET(
       new Request("http://localhost/api/stripe/connect/callback?code=demo_code&state=unknown_state"),
     );
-    const payload = await response.json();
 
-    expect(response.status).toBe(400);
-    expect(payload.code).toBe("AUTH_OAUTH_STATE_INVALID");
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toContain("/register?ref=stripe-marketplace");
   });
 
-  it("returns 400 when state is expired", async () => {
+  it("redirects to register when state is expired", async () => {
     const { route } = await loadRoute({
       oauthState: {
         state: "expired_state",
@@ -119,10 +117,9 @@ describe("stripe connect callback route", () => {
     const response = await route.GET(
       new Request("http://localhost/api/stripe/connect/callback?code=demo_code&state=expired_state"),
     );
-    const payload = await response.json();
 
-    expect(response.status).toBe(400);
-    expect(payload.code).toBe("AUTH_OAUTH_STATE_INVALID");
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toContain("/register?ref=stripe-marketplace");
   });
 
   it("returns JSON with connected account for valid demo flow", async () => {
